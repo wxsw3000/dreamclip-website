@@ -41,9 +41,9 @@ jobs:
               sudo docker rm $CONTAINER_NAME
             fi
             
-            # 构建新镜像并启动（映射服务器 8080 端口）
+            # 构建新镜像并启动（映射服务器 80 端口）
             sudo docker build -t $CONTAINER_NAME:latest .
-            sudo docker run -d --name $CONTAINER_NAME -p 8080:80 --restart always $CONTAINER_NAME:latest
+            sudo docker run -d --name $CONTAINER_NAME -p 80:80 --restart always $CONTAINER_NAME:latest
             
             # 清理无用镜像
             sudo docker image prune -f
