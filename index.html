@@ -294,18 +294,18 @@
 
         <!-- ===== 导航 ===== -->
         <nav class="navbar">
-            <div class="logo">
+            <a href="index.html" class="logo" style="text-decoration:none;">
                 <i class="fas fa-moon"></i>
                 <span class="dream">Dream</span><span class="clip">Clip</span>
-            </div>
+            </a>
             <div class="hamburger" id="hamburger">
                 <i class="fas fa-bars"></i>
             </div>
             <div class="nav-links" id="navLinks">
-                <a href="/" class="active">情绪胶囊</a>
+                <a href="index.html" class="active">情绪胶囊</a>
                 <a href="#">游戏库</a>
                 <a href="#">日志</a>
-                <a href="/about.html">关于</a>
+                <a href="about.html">关于</a>
                 <a href="#" class="nav-cta"><i class="fas fa-play"></i> 开始玩</a>
             </div>
         </nav>
@@ -318,42 +318,42 @@
 
         <!-- ===== 胶囊网格 ===== -->
         <div class="capsule-grid">
-            <div class="capsule insomnia" onclick="location.href='/capsule/insomnia-radio.html'">
+            <div class="capsule insomnia" onclick="location.href='capsule/insomnia-radio.html'">
                 <span class="icon">🌙</span>
                 <div class="label">#失眠</div>
                 <div class="sub">凌晨三点的自语</div>
                 <div class="read-time"><i class="far fa-clock"></i> 6 min</div>
             </div>
 
-            <div class="capsule broken" onclick="location.href='/capsule/broken-sakura.html'">
+            <div class="capsule broken" onclick="location.href='capsule/broken-sakura.html'">
                 <span class="icon">💔</span>
                 <div class="label">#心碎</div>
                 <div class="sub">关于告别的练习</div>
                 <div class="read-time"><i class="far fa-clock"></i> 8 min</div>
             </div>
 
-            <div class="capsule san" onclick="location.href='#'">
+            <div class="capsule san" onclick="alert('该胶囊筹备中，敬请期待！')">
                 <span class="icon">🌀</span>
                 <div class="label">#San值狂掉</div>
                 <div class="sub">不可名状的恐惧</div>
                 <div class="read-time"><i class="far fa-clock"></i> 5 min</div>
             </div>
 
-            <div class="capsule heal" onclick="location.href='#'">
+            <div class="capsule heal" onclick="alert('该胶囊筹备中，敬请期待！')">
                 <span class="icon">🌸</span>
                 <div class="label">#被治愈</div>
                 <div class="sub">世界温柔的一面</div>
                 <div class="read-time"><i class="far fa-clock"></i> 7 min</div>
             </div>
 
-            <div class="capsule peace" onclick="location.href='#'">
+            <div class="capsule peace" onclick="alert('该胶囊筹备中，敬请期待！')">
                 <span class="icon">🍃</span>
                 <div class="label">#寻找平静</div>
                 <div class="sub">与自我和解的瞬间</div>
                 <div class="read-time"><i class="far fa-clock"></i> 4 min</div>
             </div>
 
-            <div class="capsule twilight" onclick="location.href='#'">
+            <div class="capsule twilight" onclick="alert('该胶囊筹备中，敬请期待！')">
                 <span class="icon">🌆</span>
                 <div class="label">#逢魔时刻</div>
                 <div class="sub">黄昏与秘密的交界</div>
@@ -368,11 +368,11 @@
                     <h2>🌙 今日精选 · 「失眠」胶囊</h2>
                     <span class="sub">《凌晨三点的电台》—— 你收到一封来自过去的信</span>
                 </div>
-                <span style="color:#5a5a78; font-size:13px; cursor:pointer;">查看全部 →</span>
+                <span style="color:#5a5a78; font-size:13px; cursor:pointer;" onclick="location.href='capsule/insomnia-radio.html'">查看全部 →</span>
             </div>
 
             <div class="featured-preview">
-                <img class="cover" src="/images/placeholder.jpg" alt="失眠胶囊封面" />
+                <img class="cover" src="images/placeholder.jpg" alt="失眠胶囊封面" />
                 <div class="body">
                     <span class="mood-tag">#失眠 · 治愈系</span>
                     <h3>凌晨三点的电台</h3>
@@ -385,7 +385,7 @@
                         <span><i class="far fa-comment"></i> 47</span>
                         <span><i class="far fa-clock"></i> 约 6 min</span>
                     </div>
-                    <a href="/capsule/insomnia-radio.html" class="read-btn"><i class="fas fa-play"></i> 开启胶囊</a>
+                    <a href="capsule/insomnia-radio.html" class="read-btn"><i class="fas fa-play"></i> 开启胶囊</a>
                 </div>
             </div>
         </div>
@@ -393,9 +393,9 @@
         <!-- ===== 页脚 ===== -->
         <footer class="footer">
             <div class="footer-links">
-                <a href="/about.html">关于我们</a>
-                <a href="/privacy.html">隐私政策</a>
-                <a href="/contact.html">联系我们</a>
+                <a href="about.html">关于我们</a>
+                <a href="privacy.html">隐私政策</a>
+                <a href="contact.html">联系我们</a>
             </div>
             <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
                 <span>© 2026 DreamClip · 用爱发电</span>
