@@ -21,7 +21,8 @@ jobs:
             # 1. 切换到/创建项目目录
             WORKDIR="/var/www/dreamclip-website"
             if [ ! -d "$WORKDIR" ]; then
-              mkdir -p "$WORKDIR"
+              sudo mkdir -p "$WORKDIR"
+              sudo chown -R $USER:$USER "$WORKDIR"
               git clone https://github.com/${{ github.repository }}.git "$WORKDIR"
             fi
             
@@ -35,14 +36,14 @@ jobs:
             CONTAINER_NAME="dreamclip-website"
             
             # 停止并删除旧容器（如果存在）
-            if [ $(docker ps -aq -f name=^/${CONTAINER_NAME}$) ]; then
-              docker stop $CONTAINER_NAME
-              docker rm $CONTAINER_NAME
+            if [ $(sudo docker ps -aq -f name=^/${CONTAINER_NAME}$) ]; then
+              sudo docker stop $CONTAINER_NAME
+              sudo docker rm $CONTAINER_NAME
             fi
             
-            # 构建新镜像并启动（映射服务器 80 端口，可按需修改端口）
-            docker build -t $CONTAINER_NAME:latest .
-            docker run -d --name $CONTAINER_NAME -p 80:80 --restart always $CONTAINER_NAME:latest
+            # 构建新镜像并启动
+            sudo docker build -t $CONTAINER_NAME:latest .
+            sudo docker run -d --name $CONTAINER_NAME -p 80:80 --restart always $CONTAINER_NAME:latest
             
             # 清理无用镜像
-            docker image prune -f
+            sudo docker image prune -f
