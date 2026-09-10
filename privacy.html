@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>隐私政策 · DreamClip</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz@14..32&family=Noto+Sans+SC:wght@300;400;600;700;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <link rel="stylesheet" href="/css/style.css" />
+    <style>
+        .privacy-content {
+            max-width: 720px;
+            margin: 40px auto;
+            padding: 0 16px;
+        }
+        .privacy-content h1 {
+            font-size: 32px;
+            font-weight: 900;
+            margin-bottom: 12px;
+        }
+        .privacy-content h2 {
+            font-size: 20px;
+            font-weight: 700;
+            margin: 30px 0 12px;
+            color: #a78bfa;
+        }
+        .privacy-content p {
+            color: #b0b0c8;
+            font-size: 15px;
+            line-height: 2;
+            margin-bottom: 14px;
+        }
+        .privacy-content ul {
+            color: #b0b0c8;
+            font-size: 15px;
+            line-height: 2;
+            padding-left: 24px;
+            margin-bottom: 14px;
+        }
+        .privacy-content .updated {
+            color: #5a5a78;
+            font-size: 14px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.04);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="navbar">
+            <div class="logo">
+                <i class="fas fa-moon"></i>
+                <span class="dream">Dream</span><span class="clip">Clip</span>
+            </div>
+            <div class="hamburger" id="hamburger">
+                <i class="fas fa-bars"></i>
+            </div>
+            <div class="nav-links" id="navLinks">
+                <a href="/">情绪胶囊</a>
+                <a href="#">游戏库</a>
+                <a href="#">日志</a>
+                <a href="/about.html">关于</a>
+                <a href="#" class="nav-cta"><i class="fas fa-play"></i> 开始玩</a>
+            </div>
+        </nav>
+
+        <div class="privacy-content">
+            <h1>🔒 隐私政策</h1>
+            <p>DreamClip（以下简称「本平台」）重视每一位用户的隐私。本隐私政策解释我们如何收集、使用和保护您的信息。</p>
+
+            <h2>📌 我们收集哪些信息</h2>
+            <ul>
+                <li><strong>基本访问数据</strong>：当您访问本平台时，我们的服务器会自动记录您的IP地址、浏览器类型、访问时间等标准日志信息。</li>
+                <li><strong>Cookie</strong>：本平台可能使用 Cookie 来改善您的浏览体验。您可以随时在浏览器设置中禁用 Cookie。</li>
+                <li><strong>您主动提供的信息</strong>：如果您通过联系表单或邮件与我们沟通，我们会保存您的联系方式仅用于回复您的询问。</li>
+            </ul>
+
+            <h2>📊 第三方服务</h2>
+            <ul>
+                <li><strong>Google AdSense</strong>：本平台未来可能接入 Google AdSense 广告服务。Google 可能会使用 Cookie 来展示个性化广告。您可以访问 <a href="https://www.google.com/policies/technologies/ads/" style="color:#a78bfa;" target="_blank">Google 广告设置</a> 管理您的广告偏好。</li>
+                <li><strong>Google Analytics</strong>：本平台可能使用 Google Analytics 分析网站流量。Google Analytics 会使用 Cookie 收集匿名数据。</li>
+            </ul>
+
+            <h2>🛡️ 数据安全</h2>
+            <p>本平台采用 HTTPS 加密传输，保护您与服务器之间的通信安全。我们不会主动向第三方出售或共享您的个人信息，除非法律法规要求。</p>
+
+            <h2>📝 您的权利</h2>
+            <p>您有权随时访问、更正或删除您的个人信息。如您有任何关于隐私的疑问，请通过 <strong>hello@dreamclip.cn</strong> 联系我们。</p>
+
+            <div class="updated">
+                最后更新：2026年9月9日
+            </div>
+        </div>
+
+        <footer class="footer">
+            <div class="footer-links">
+                <a href="/about.html">关于我们</a>
+                <a href="/privacy.html">隐私政策</a>
+                <a href="/contact.html">联系我们</a>
+            </div>
+            <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+                <span>© 2026 DreamClip · 用爱发电</span>
+                <div class="footer-social">
+                    <a href="#" aria-label="B站"><i class="fab fa-bilibili"></i></a>
+                    <a href="#" aria-label="微博"><i class="fab fa-weibo"></i></a>
+                    <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                    <a href="#" aria-label="GitHub"><i class="fab fa-github"></i></a>
+                </div>
+            </div>
+        </footer>
+    </div>
+    <script>
+        const hamburger = document.getElementById('hamburger');
+        const navLinks = document.getElementById('navLinks');
+        hamburger.addEventListener('click', () => { navLinks.classList.toggle('open'); });
+    </script>
+</body>
+</html>

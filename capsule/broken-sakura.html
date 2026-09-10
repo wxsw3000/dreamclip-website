@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>樱花的告别 · #心碎 · DreamClip</title>
+    <meta name="description" content="她站在樱花树下，说了一句『再见』。我以为那只是一次普通的离别。" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz@14..32&family=Noto+Sans+SC:wght@300;400;600;700;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+
+    <div class="container">
+
+        <nav class="navbar">
+            <div class="logo">
+                <i class="fas fa-moon"></i>
+                <span class="dream">Dream</span><span class="clip">Clip</span>
+            </div>
+            <div class="hamburger" id="hamburger">
+                <i class="fas fa-bars"></i>
+            </div>
+            <div class="nav-links" id="navLinks">
+                <a href="/" class="active">情绪胶囊</a>
+                <a href="#">游戏库</a>
+                <a href="#">日志</a>
+                <a href="/about.html">关于</a>
+                <a href="#" class="nav-cta"><i class="fas fa-play"></i> 开始玩</a>
+            </div>
+        </nav>
+
+        <div class="capsule-header">
+            <div class="breadcrumb">
+                <a href="/">首页</a>  /  <span style="color:#8a8aa6;">#心碎</span>
+            </div>
+            <span class="mood-tag broken">#心碎 · 致郁系</span>
+            <h1>樱花的告别</h1>
+            <div class="meta">
+                <span><i class="far fa-calendar-alt"></i> 2026.09.07</span>
+                <span><i class="far fa-clock"></i> 约 8 分钟</span>
+                <span><i class="fas fa-star" style="color:#fbbf24;"></i> 4.7</span>
+            </div>
+        </div>
+
+        <div class="capsule-body">
+            <img class="cover" src="/images/placeholder.jpg" alt="樱花的告别" />
+
+            <div class="story">
+
+                <p>那天樱花开了。</p>
+
+                <p>她站在树下，穿着一件白色的连衣裙，风吹起她的裙摆和花瓣——那画面美得像一张被精心构图过的照片。她说了一句："再见。"</p>
+
+                <p>我以为那只是一次普通的离别。</p>
+
+                <p>我们认识三年。从大学图书馆里的第一次对视，到深夜食堂里的无数次长谈。她总说我是个"迟钝的人"，我不承认，但现在回想起来，她可能是对的。</p>
+
+                <p>她走的时候，没有回头。</p>
+
+                <hr style="border-color: rgba(255,255,255,0.06); margin: 28px 0;" />
+
+                <p>第二年的春天，我又去了那棵樱花树下。花还在开，人已经不在了。我翻出手机里她发的最后一条消息——</p>
+
+                <p class="highlight-text">「你知道吗？樱花飘落的速度是每秒五厘米。」</p>
+
+                <p>我当时不知道这句话什么意思。后来我查了，是《秒速五厘米》里的台词。那部电影讲的是……两个人在漫长的时光里，一点一点地远离彼此。</p>
+
+                <p>我坐在树下，忽然明白了她为什么要在樱花盛开的那天说"再见"。</p>
+
+                <p>因为樱花凋谢只需要一场雨。而我们之间的告别，用了整整三年。</p>
+
+                <p style="text-align:center; color:#5a5a78; font-size:14px; margin-top:40px;">—— 完 ——</p>
+
+            </div>
+        </div>
+
+        <div class="comments-section">
+            <h3><i class="far fa-comment"></i> 时空回响 · 留下你的吐槽</h3>
+            <div class="placeholder">
+                💔 评论功能即将上线 · 你也可以在心里留下你的回响
+            </div>
+        </div>
+
+        <footer class="footer">
+            <div class="footer-links">
+                <a href="/about.html">关于我们</a>
+                <a href="/privacy.html">隐私政策</a>
+                <a href="/contact.html">联系我们</a>
+            </div>
+            <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+                <span>© 2026 DreamClip · 用爱发电</span>
+                <div class="footer-social">
+                    <a href="#" aria-label="B站"><i class="fab fa-bilibili"></i></a>
+                    <a href="#" aria-label="微博"><i class="fab fa-weibo"></i></a>
+                    <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                    <a href="#" aria-label="GitHub"><i class="fab fa-github"></i></a>
+                </div>
+            </div>
+        </footer>
+
+    </div>
+
+    <script>
+        const hamburger = document.getElementById('hamburger');
+        const navLinks = document.getElementById('navLinks');
+        hamburger.addEventListener('click', () => {
+            navLinks.classList.toggle('open');
+        });
+    </script>
+
+</body>
+</html>
