@@ -109,6 +109,15 @@
 
                 <p style="text-align:center; color:#5a5a78; font-size:14px; margin-top:40px;">—— 完 ——</p>
 
+                <!-- 通关/打卡高光海报区块 -->
+                <div class="finish-card-box">
+                    <h4>📻 观测完成 · 记录此时此刻的情绪</h4>
+                    <p>将你在《凌晨三点的电台》打出的结局与感受，一键生成专属二次元高光海报</p>
+                    <button class="btn-trigger-poster" id="btnGenPoster">
+                        <i class="fas fa-sparkles"></i> 一键生成高光海报
+                    </button>
+                </div>
+
             </div>
         </div>
 
@@ -140,11 +149,23 @@
 
     </div>
 
+    <script src="../js/poster-generator.js"></script>
     <script>
         const hamburger = document.getElementById('hamburger');
         const navLinks = document.getElementById('navLinks');
         hamburger.addEventListener('click', () => {
             navLinks.classList.toggle('open');
+        });
+
+        document.getElementById('btnGenPoster').addEventListener('click', () => {
+            window.dreamClipPoster.open({
+                title: "凌晨三点的电台",
+                mood: "#失眠 · 治愈系",
+                coverImg: "../images/placeholder.jpg",
+                ending: "True End: 星空下的晚安",
+                quote: "「你知道吗？其实每一颗星星都是一封没有寄出去的信。」",
+                observer: "观测者 #9527"
+            });
         });
     </script>
 

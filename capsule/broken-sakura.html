@@ -74,6 +74,15 @@
 
                 <p style="text-align:center; color:#5a5a78; font-size:14px; margin-top:40px;">—— 完 ——</p>
 
+                <!-- 通关/打卡高光海报区块 -->
+                <div class="finish-card-box">
+                    <h4>🌸 观测完成 · 记录此时此刻的情绪</h4>
+                    <p>将你在《樱花的告别》打出的结局与感受，一键生成专属二次元高光海报</p>
+                    <button class="btn-trigger-poster" id="btnGenPoster">
+                        <i class="fas fa-sparkles"></i> 一键生成高光海报
+                    </button>
+                </div>
+
             </div>
         </div>
 
@@ -103,11 +112,23 @@
 
     </div>
 
+    <script src="../js/poster-generator.js"></script>
     <script>
         const hamburger = document.getElementById('hamburger');
         const navLinks = document.getElementById('navLinks');
         hamburger.addEventListener('click', () => {
             navLinks.classList.toggle('open');
+        });
+
+        document.getElementById('btnGenPoster').addEventListener('click', () => {
+            window.dreamClipPoster.open({
+                title: "樱花的告别",
+                mood: "#心碎 · 致郁系",
+                coverImg: "../images/placeholder.jpg",
+                ending: "True End: 漫长的告别",
+                quote: "「樱花飘落的速度是每秒五厘米，而我们之间的告别，用了整整三年。」",
+                observer: "观测者 #9527"
+            });
         });
     </script>
 

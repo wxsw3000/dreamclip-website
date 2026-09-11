@@ -386,7 +386,12 @@
                         <span><i class="far fa-comment"></i> 47</span>
                         <span><i class="far fa-clock"></i> 约 6 min</span>
                     </div>
-                    <a href="capsule/insomnia-radio.html" class="read-btn"><i class="fas fa-play"></i> 开启胶囊</a>
+                    <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-top:16px;">
+                        <a href="capsule/insomnia-radio.html" class="read-btn"><i class="fas fa-play"></i> 开启胶囊</a>
+                        <button class="read-btn" id="btnHomePoster" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(167,139,250,0.3); color: #c4b5fd;">
+                            <i class="fas fa-sparkles"></i> 试用高光海报
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -411,11 +416,23 @@
 
     </div>
 
+    <script src="js/poster-generator.js"></script>
     <script>
         const hamburger = document.getElementById('hamburger');
         const navLinks = document.getElementById('navLinks');
         hamburger.addEventListener('click', () => {
             navLinks.classList.toggle('open');
+        });
+
+        document.getElementById('btnHomePoster').addEventListener('click', () => {
+            window.dreamClipPoster.open({
+                title: "凌晨三点的电台",
+                mood: "#失眠 · 治愈系",
+                coverImg: "images/placeholder.jpg",
+                ending: "True End: 星空下的晚安",
+                quote: "「你知道吗？其实每一颗星星都是一封没有寄出去的信。」",
+                observer: "观测者 #9527"
+            });
         });
     </script>
 
