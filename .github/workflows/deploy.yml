@@ -1,9 +1,12 @@
 name: Deploy to Server via Docker
 
+run-name: "🚀 部署 DreamClip 站点到服务器"
+
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   deploy:
