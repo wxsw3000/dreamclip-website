@@ -138,6 +138,7 @@ async def proxy_to_universe(path: str, request: Request):
 
 # ==================== 反向代理：基座 SuperAdmin 控制台 (/admin) ====================
 @app.api_route("/admin", methods=["GET"])
+@app.api_route("/admin/", methods=["GET"])
 async def proxy_admin_root():
     """管理后台首页直通"""
     async with httpx.AsyncClient(timeout=10.0) as client:
@@ -145,11 +146,16 @@ async def proxy_admin_root():
         return Response(content=resp.content, status_code=resp.status_code, media_type="text/html")
 
 @app.api_route("/admin/login", methods=["GET"])
+@app.api_route("/admin/login/", methods=["GET"])
 async def proxy_admin_login():
     """管理后台登录页直通"""
     async with httpx.AsyncClient(timeout=10.0) as client:
         resp = await client.get(f"{settings.BASE_SERVICE_URL.rstrip('/')}/login")
         return Response(content=resp.content, status_code=resp.status_code, media_type="text/html")
+
+@app.get("/login", include_in_schema=False)
+def portal_login_page():
+    return serve_static_page("login.html")
 
 # ==================== 反向代理：微服务 Swagger 文档中心 ====================
 @app.get("/base/docs", include_in_schema=False)

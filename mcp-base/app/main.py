@@ -215,6 +215,7 @@ if not os.path.exists(static_dir):
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 @app.get("/", include_in_schema=False)
+@app.get("/admin", include_in_schema=False)
 def root():
     """根路径自动重定向到 SuperAdmin Web 控制台"""
     index_file = os.path.join(static_dir, "index.html")
@@ -223,6 +224,7 @@ def root():
     return RedirectResponse(url="/docs")
 
 @app.get("/login", include_in_schema=False)
+@app.get("/admin/login", include_in_schema=False)
 def login_page():
     login_file = os.path.join(static_dir, "login.html")
     if os.path.exists(login_file):
