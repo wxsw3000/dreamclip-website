@@ -28,7 +28,7 @@ async function api(path, options = {}) {
     if (resp.status === 401) {
       localStorage.removeItem('mcp_token');
       localStorage.removeItem('mcp_user');
-      window.location.href = '/admin/login';
+      window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname);
       return null;
     }
     return await resp.json();
@@ -82,7 +82,7 @@ function refreshCurrentTab() {
 function handleLogout() {
   localStorage.removeItem('mcp_token');
   localStorage.removeItem('mcp_user');
-  window.location.href = '/admin/login';
+  window.location.href = '/login';
 }
 
 function openModal(id) {
@@ -369,7 +369,7 @@ async function updateConfig(key, inputId) {
 window.addEventListener('DOMContentLoaded', () => {
   const token = getToken();
   if (!token) {
-    window.location.href = '/admin/login';
+    window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname);
     return;
   }
   const user = getUser();

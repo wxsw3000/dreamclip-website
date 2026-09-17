@@ -221,19 +221,31 @@
       };
 
       try {
-        const resp = await fetch('/api/base/auth/login', {
+        // 优先尝试 /api/v1/auth/login，兼容 /api/base/auth/login
+        let resp = await fetch('/api/v1/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
+        if (!resp.ok) {
+          resp = await fetch('/api/base/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+        }
         const res = await resp.json();
 
         if (res.code === 200 && res.data) {
           localStorage.setItem('mcp_token', res.data.access_token);
           localStorage.setItem('mcp_user', JSON.stringify(res.data.user_info));
-          showToast("登录成功，正在进入...", "#16a34a");
+          showToast("单点登录成功，正在进入...", "#16a34a");
           setTimeout(() => {
-            if (res.data.user_info && res.data.user_info.is_superadmin) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirectUrl = urlParams.get('redirect');
+            if (redirectUrl) {
+              window.location.href = redirectUrl;
+            } else if (res.data.user_info && res.data.user_info.is_superadmin) {
               window.location.href = "/admin";
             } else {
               window.location.href = "/";
@@ -245,7 +257,7 @@
           btn.disabled = false;
         }
       } catch (err) {
-        showToast("底座连接失败: " + err.message, "#dc2626");
+        showToast("服务连接异常: " + err.message, "#dc2626");
         btn.innerText = "登 录 统 一 门 户";
         btn.disabled = false;
       }
