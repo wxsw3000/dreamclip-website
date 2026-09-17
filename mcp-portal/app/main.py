@@ -71,6 +71,73 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+static_dir = os.path.join(os.path.dirname(__file__), "static")
+if not os.path.exists(static_dir):
+    os.makedirs(static_dir, exist_ok=True)
+
+# ==================== 智能反向代理核心函数 ====================
+async def forward_request(request: Request, target_url: str) -> Response:
+    query_params = dict(request.query_params)
+    headers = dict(request.headers)
+    headers.pop("host", None)
+    headers.pop("content-length", None)
+    body = await request.body()
+    
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.request(
+                method=request.method,
+                url=target_url,
+                params=query_params,
+                content=body,
+                headers=headers
+            )
+            resp_headers = dict(resp.headers)
+            resp_headers.pop("transfer-encoding", None)
+            resp_headers.pop("content-encoding", None)
+            
+            return Response(
+                content=resp.content,
+                status_code=resp.status_code,
+                headers=resp_headers,
+                media_type=resp.headers.get("content-type")
+            )
+    except Exception as e:
+        logger.error("Virtual host proxy error to %s: %s", target_url, e)
+        return JSONResponse(status_code=502, content={"code": 502, "message": f"微服务通信失败: {str(e)}"})
+
+# ==================== Host 虚拟主机智能分流中间件 ====================
+@app.middleware("http")
+async def host_virtual_routing_middleware(request: Request, call_next):
+    raw_host = request.headers.get("host", "")
+    host = raw_host.split(":")[0].strip().lower()
+    path = request.url.path
+
+    # 1. 独立子域名：base.dreamclip.cn / admin.dreamclip.cn -> 直达 MagicStar MCP 模块化配置底座
+    if host in ["base.dreamclip.cn", "admin.dreamclip.cn"]:
+        if path.startswith("/static/"):
+            return await call_next(request)
+        target_url = f"{settings.BASE_SERVICE_URL.rstrip('/')}{path}"
+        return await forward_request(request, target_url)
+
+    # 2. 独立子域名：universe.dreamclip.cn -> 直达 角色宇宙与内容独立微服务
+    elif host in ["universe.dreamclip.cn"]:
+        if path in ["/", ""]:
+            path = "/docs"
+        target_url = f"{settings.UNIVERSE_SERVICE_URL.rstrip('/')}{path}"
+        return await forward_request(request, target_url)
+
+    # 3. 独立子域名：game.dreamclip.cn / games.dreamclip.cn -> 直达 AVG 互动游戏中心
+    elif host in ["game.dreamclip.cn", "games.dreamclip.cn"]:
+        if path in ["/", ""]:
+            file_path = os.path.join(static_dir, "games.html")
+            if os.path.exists(file_path):
+                return FileResponse(file_path)
+        return await call_next(request)
+
+    # 4. 默认主站与统一网关
+    return await call_next(request)
+
 @app.get("/health", summary="健康检查端点 (供底座心跳探测)")
 def health():
     return {
@@ -80,64 +147,20 @@ def health():
         "version": settings.VERSION
     }
 
-# ==================== 反向代理：底座接口 (/api/base/** & /api/v1/**) ====================
+# ==================== 路径模式反向代理：底座接口 (/api/base/** & /api/v1/**) ====================
 @app.api_route("/api/base/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH"])
 @app.api_route("/api/v1/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH"])
 async def proxy_to_base(path: str, request: Request):
     target_url = f"{settings.BASE_SERVICE_URL.rstrip('/')}/api/v1/{path}"
-    query_params = dict(request.query_params)
-    headers = dict(request.headers)
-    headers.pop("host", None)
-    body = await request.body()
-    
-    try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await client.request(
-                method=request.method,
-                url=target_url,
-                params=query_params,
-                content=body,
-                headers=headers
-            )
-            return Response(
-                content=resp.content,
-                status_code=resp.status_code,
-                headers=dict(resp.headers),
-                media_type=resp.headers.get("content-type")
-            )
-    except Exception as e:
-        logger.error("Proxy to base error: %s", e)
-        return JSONResponse(status_code=502, content={"code": 502, "message": f"底座服务通信失败: {str(e)}"})
+    return await forward_request(request, target_url)
 
-# ==================== 反向代理：宇宙与内容接口 (/api/universe/**) ====================
+# ==================== 路径模式反向代理：宇宙与内容接口 (/api/universe/**) ====================
 @app.api_route("/api/universe/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH"])
 async def proxy_to_universe(path: str, request: Request):
     target_url = f"{settings.UNIVERSE_SERVICE_URL.rstrip('/')}/api/v1/{path}"
-    query_params = dict(request.query_params)
-    headers = dict(request.headers)
-    headers.pop("host", None)
-    body = await request.body()
-    
-    try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await client.request(
-                method=request.method,
-                url=target_url,
-                params=query_params,
-                content=body,
-                headers=headers
-            )
-            return Response(
-                content=resp.content,
-                status_code=resp.status_code,
-                headers=dict(resp.headers),
-                media_type=resp.headers.get("content-type")
-            )
-    except Exception as e:
-        logger.error("Proxy to universe error: %s", e)
-        return JSONResponse(status_code=502, content={"code": 502, "message": f"角色宇宙内容服务通信失败: {str(e)}"})
+    return await forward_request(request, target_url)
 
-# ==================== 反向代理：基座 SuperAdmin 控制台 (/admin) ====================
+# ==================== 路径模式反向代理：基座 SuperAdmin 控制台 (/admin) ====================
 @app.api_route("/admin", methods=["GET"])
 @app.api_route("/admin/", methods=["GET"])
 async def proxy_admin_root():
@@ -158,7 +181,7 @@ async def proxy_admin_login():
 def portal_login_page():
     return serve_static_page("login.html")
 
-# ==================== 反向代理：微服务 Swagger 文档中心 ====================
+# ==================== 路径模式反向代理：微服务 Swagger 文档中心 ====================
 @app.get("/base/docs", include_in_schema=False)
 async def proxy_base_docs():
     async with httpx.AsyncClient(timeout=10.0) as client:
@@ -184,10 +207,6 @@ async def proxy_universe_openapi():
         return Response(content=resp.content, status_code=resp.status_code, media_type="application/json")
 
 # ==================== 静态资源与页面路由 ====================
-static_dir = os.path.join(os.path.dirname(__file__), "static")
-if not os.path.exists(static_dir):
-    os.makedirs(static_dir, exist_ok=True)
-
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 def serve_static_page(filename: str):
