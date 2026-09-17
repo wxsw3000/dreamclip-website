@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>登录 - 制造能力平台服务底座 (MCP-Base)</title>
+  <link rel="stylesheet" href="/static/assets/css/admin.css">
+  <style>
+    body {
+      background: radial-gradient(circle at 10% 20%, #0f172a 0%, #1e293b 90%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .login-card {
+      width: 400px;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(10px);
+      padding: 36px 32px;
+      border-radius: var(--radius-lg);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .login-header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .brand-icon {
+      width: 52px;
+      height: 52px;
+      background: linear-gradient(135deg, #0284c7, #1e3a8a);
+      border-radius: 12px;
+      margin: 0 auto 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);
+    }
+    .login-header h2 {
+      font-size: 20px;
+      font-weight: 800;
+      color: #0f172a;
+    }
+    .login-header p {
+      font-size: 12.5px;
+      color: #64748b;
+      margin-top: 4px;
+    }
+    .quick-tips {
+      margin-top: 22px;
+      padding: 12px 14px;
+      background: #f1f5f9;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      color: #475569;
+      border-left: 3px solid #0284c7;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-card">
+    <div class="login-header">
+      <div class="brand-icon">⚡</div>
+      <h2>制造能力平台 (MCP)</h2>
+      <p>企业开放服务底座 · 超级管理员控制台</p>
+    </div>
+
+    <form id="loginForm" onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label class="form-label">超级管理员账号</label>
+        <input type="text" id="username" class="form-control" value="superadmin" placeholder="输入超管账号" required autocomplete="username">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">管理员密码</label>
+        <input type="password" id="password" class="form-control" value="123456" placeholder="输入密码" required autocomplete="current-password">
+      </div>
+
+      <button type="submit" id="submitBtn" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 10px; margin-top: 10px;">
+        登 录 控 制 台
+      </button>
+
+      <div class="quick-tips">
+        <strong>💡 系统预置管理员凭据：</strong><br>
+        账号：<code>superadmin</code> / 密码：<code>123456</code>
+      </div>
+    </form>
+  </div>
+
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script>
+    function showToast(msg, type='info') {
+      const c = document.getElementById('toastContainer');
+      const t = document.createElement('div');
+      t.className = `toast toast-${type}`;
+      t.innerText = msg;
+      c.appendChild(t);
+      setTimeout(() => t.remove(), 3000);
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      btn.innerText = "正在验证...";
+      btn.disabled = true;
+
+      const payload = {
+        username: document.getElementById('username').value.trim(),
+        password: document.getElementById('password').value
+      };
+
+      try {
+        const resp = await fetch('/api/v1/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const res = await resp.json();
+
+        if (res.code === 200 && res.data) {
+          localStorage.setItem('mcp_token', res.data.access_token);
+          localStorage.setItem('mcp_user', JSON.stringify(res.data.user_info));
+          showToast("登录成功，正在进入控制台...", "success");
+          setTimeout(() => {
+            window.location.href = "/";
+          }, 500);
+        } else {
+          showToast(res.message || "登录失败", "danger");
+          btn.innerText = "登 录 控 制 台";
+          btn.disabled = false;
+        }
+      } catch (err) {
+        showToast("服务连接异常: " + err.message, "danger");
+        btn.innerText = "登 录 控 制 台";
+        btn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>

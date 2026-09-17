@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>正在载入游戏 - DreamClip</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <style>
+    .game-frame-container {
+      position: relative;
+      width: 100%;
+      height: 680px;
+      background: #000;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--border-glow);
+      box-shadow: 0 15px 40px rgba(0,0,0,0.8);
+      margin-bottom: 2rem;
+    }
+    .game-iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-container">
+      <div class="logo-area">
+        <a href="/" style="display:flex; align-items:center; gap:0.75rem;">
+          <div class="logo-icon">🌌</div>
+          <span class="logo-title">DreamClip</span>
+        </a>
+      </div>
+      <nav class="nav-links">
+        <a href="/" class="nav-link">角色宇宙</a>
+        <a href="/#capsules-section" class="nav-link">情绪胶囊</a>
+        <a href="/games" class="nav-link active">AVG 游戏</a>
+        <a href="/about" class="nav-link">关于平台</a>
+      </nav>
+      <div class="header-actions" id="header-auth-area"></div>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+      <div>
+        <h1 id="game-title" style="font-size:1.6rem; font-weight:700;">正在加载游戏章节...</h1>
+        <span id="game-meta" style="font-size:0.85rem; color:var(--text-secondary);"></span>
+      </div>
+      <div style="display:flex; gap:0.75rem;">
+        <button class="btn btn-outline" onclick="toggleFullscreen()">⛶ 全屏运行</button>
+        <a href="/games" class="btn btn-outline">退出游戏</a>
+      </div>
+    </div>
+
+    <!-- 游戏独立容器 -->
+    <div class="game-frame-container" id="game-container">
+      <iframe id="game-iframe" class="game-iframe" allow="autoplay; fullscreen" src="about:blank"></iframe>
+    </div>
+
+    <!-- Google AdSense 游戏页下方广告位 -->
+    <div class="adsense-slot">
+      <span class="ad-label">Advertisement</span>
+      <div>[ Google AdSense 游戏页面下方互动推荐广告位 ]</div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-brand">
+        <h3>DreamClip 角色宇宙</h3>
+        <p>连接每一次真实的情感共鸣。</p>
+      </div>
+      <div class="footer-links">
+        <h4>平台合规与支持</h4>
+        <ul>
+          <li><a href="/about">关于我们</a></li>
+          <li><a href="/privacy">隐私政策</a></li>
+          <li><a href="/terms">服务条款</a></li>
+          <li><a href="/contact">联系我们</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 DreamClip (dreamclip.cn) All rights reserved.</span>
+    </div>
+  </footer>
+
+  <script src="/static/js/api.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      const pathParts = window.location.pathname.split('/');
+      const chapterCode = pathParts[pathParts.length - 1] || 'demo-ch1-lost-signal';
+
+      const res = await DreamClipAPI.universe.getAvgChapters();
+      if (res.code === 200 && res.data) {
+        const game = res.data.find(g => g.chapter_code === chapterCode) || res.data[0];
+        if (game) {
+          document.title = `${game.chapter_name} - DreamClip AVG`;
+          document.getElementById("game-title").innerText = game.chapter_name;
+          document.getElementById("game-meta").innerText = `章节 0${game.chapter_no} · ${game.worldview_title || '深空信箱'} · 主角：${game.character_name || '雷文'}`;
+          
+          // 传递 SSO 令牌与用户信息给游戏 iframe
+          const token = localStorage.getItem("dreamclip_token") || "";
+          const iframe = document.getElementById("game-iframe");
+          const urlWithAuth = `${game.game_url}?token=${encodeURIComponent(token)}`;
+          iframe.src = urlWithAuth;
+        }
+      }
+    });
+
+    function toggleFullscreen() {
+      const container = document.getElementById("game-container");
+      if (!document.fullscreenElement) {
+        container.requestFullscreen().catch(err => alert("无法进入全屏: " + err.message));
+      } else {
+        document.exitFullscreen();
+      }
+    }
+  </script>
+</body>
+</html>

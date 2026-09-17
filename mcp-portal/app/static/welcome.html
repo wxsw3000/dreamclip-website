@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>数字化工作台 - MCP Unified Portal</title>
+  <link rel="stylesheet" href="/static/assets/css/portal.css">
+  <style>
+    body {
+      padding: 32px;
+      background: radial-gradient(circle at 10% 20%, #0f172a 0%, #020617 100%);
+      color: #f8fafc;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    .welcome-card {
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 20px;
+      padding: 32px;
+      max-width: 900px;
+      margin: 0 auto;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    }
+    .welcome-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      background: rgba(56, 189, 248, 0.18);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      color: #38bdf8;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+    .welcome-title {
+      font-size: 24px;
+      font-weight: 800;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, #fff 0%, #93c5fd 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .welcome-sub {
+      font-size: 14px;
+      color: #94a3b8;
+      line-height: 1.6;
+      margin-bottom: 28px;
+    }
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+    }
+    .feature-item {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 18px;
+    }
+    .feature-icon { font-size: 24px; margin-bottom: 8px; }
+    .feature-name { font-size: 14.5px; font-weight: 700; color: #f8fafc; margin-bottom: 4px; }
+    .feature-desc { font-size: 12px; color: #94a3b8; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <div class="welcome-card">
+    <div class="welcome-badge">⚡ 单点登录 · 全微服务协同底座</div>
+    <h1 class="welcome-title">欢迎进入电科智联制造能力平台 (MCP)</h1>
+    <p class="welcome-sub">
+      当前已通过统一门户单点登录中心完成鉴权。所有独立部署的制造微服务（主数据、工艺路线、BOM配方、底座治理中心等）均已无缝授信就绪。
+    </p>
+
+    <div class="feature-grid">
+      <div class="feature-item">
+        <div class="feature-icon">📱</div>
+        <div class="feature-name">应用桌面试图</div>
+        <div class="feature-desc">类似 iOS / Android 现代应用桌面，快速发现并启动全厂各类数字化制造微服务。</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">🔑</div>
+        <div class="feature-name">统一单点登录 (SSO)</div>
+        <div class="feature-desc">全平台微服务共享统一身份认证，其他服务无需任何登录页面即可免密访问。</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">🔌</div>
+        <div class="feature-name">微服务健康心跳</div>
+        <div class="feature-desc">底座 20 秒异步自动探测，实时感知各业务服务的在线可用性与网络延迟。</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

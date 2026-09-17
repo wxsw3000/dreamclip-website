@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>控制台 - 制造能力平台服务底座 (MCP-Base)</title>
+  <link rel="stylesheet" href="/static/assets/css/admin.css">
+</head>
+<body>
+
+<div class="app-container">
+  <!-- 侧边栏 -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo-icon">⚡</div>
+      <div class="logo-text">
+        <h1>MCP-BASE 底座</h1>
+        <p>企业开放制造服务中心</p>
+      </div>
+    </div>
+
+    <div class="sidebar-menu">
+      <div class="menu-category">服务治理</div>
+      <a class="nav-item active" onclick="switchTab('tab-dashboard', this)">
+        <span class="icon">📊</span>
+        <span>控制台大盘</span>
+      </a>
+      <a class="nav-item" onclick="switchTab('tab-services', this)">
+        <span class="icon">🔌</span>
+        <span>微服务接入治理</span>
+      </a>
+
+      <div class="menu-category">系统设置</div>
+      <a class="nav-item" onclick="switchTab('tab-users', this)">
+        <span class="icon">👥</span>
+        <span>用户与权限中心</span>
+      </a>
+      <a class="nav-item" onclick="switchTab('tab-configs', this)">
+        <span class="icon">⚙️</span>
+        <span>字典与全局参数</span>
+      </a>
+
+      <div class="menu-category">开发者生态</div>
+      <a class="nav-item" href="/docs" target="_blank">
+        <span class="icon">📖</span>
+        <span>原生 Swagger API</span>
+      </a>
+      <a class="nav-item" href="/redoc" target="_blank">
+        <span class="icon">📑</span>
+        <span>ReDoc 规范文档</span>
+      </a>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="user-badge">
+        <div class="user-avatar" id="avatarText">SA</div>
+        <div class="user-info">
+          <div class="name" id="userName">superadmin</div>
+          <span class="role-tag" id="userRoleTag">平台超级管理员</span>
+        </div>
+        <button class="btn-logout" title="退出登录" onclick="handleLogout()">🚪</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- 主体工作区 -->
+  <div class="main-wrapper">
+    <header class="top-header">
+      <div class="header-title" id="pageTitle">
+        <span>📊</span> 平台总览大盘
+      </div>
+      <div class="header-actions">
+        <div class="live-indicator">
+          <span class="live-dot"></span>
+          <span>健康心跳轮询中 (20s)</span>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="refreshCurrentTab()">🔄 刷新数据</button>
+      </div>
+    </header>
+
+    <main class="content-body">
+      <!-- 1. 控制台大盘 -->
+      <section id="tab-dashboard" class="tab-pane active">
+        <div class="grid-4">
+          <div class="stat-card">
+            <div>
+              <div class="stat-lbl">已接入微服务</div>
+              <div class="stat-val" id="statServicesTotal">0</div>
+            </div>
+            <div class="stat-icon" style="background:#eff6ff; color:#2563eb;">🔌</div>
+          </div>
+          <div class="stat-card">
+            <div>
+              <div class="stat-lbl">在线健康服务</div>
+              <div class="stat-val" id="statServicesHealthy" style="color:var(--success)">0</div>
+            </div>
+            <div class="stat-icon" style="background:var(--success-bg); color:var(--success);">🟢</div>
+          </div>
+          <div class="stat-card">
+            <div>
+              <div class="stat-lbl">底座运行状态</div>
+              <div class="stat-val" style="color:var(--success); font-size:20px; margin-top:8px;">NORMAL</div>
+            </div>
+            <div class="stat-icon" style="background:var(--success-bg); color:var(--success);">🚀</div>
+          </div>
+          <div class="stat-card">
+            <div>
+              <div class="stat-lbl">平台管理用户</div>
+              <div class="stat-val" id="statUsersTotal">0</div>
+            </div>
+            <div class="stat-icon" style="background:#ede9fe; color:#7c3aed;">👥</div>
+          </div>
+        </div>
+
+        <div class="panel-card">
+          <div class="panel-header">
+            <div class="panel-title">
+              <span>🔌</span> 微服务实时运行健康大盘
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="switchTab('tab-services', document.querySelectorAll('.nav-item')[1])">管理微服务</button>
+          </div>
+          <div class="panel-body">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>服务编码</th>
+                  <th>微服务名称</th>
+                  <th>分类</th>
+                  <th>技术栈</th>
+                  <th>基础 URL</th>
+                  <th>健康状态</th>
+                  <th>响应耗时</th>
+                  <th>最近心跳</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="dashboardServicesTable">
+                <tr><td colspan="9" style="text-align:center; color:#94a3b8;">正在拉取微服务列表...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel-card">
+          <div class="panel-header">
+            <div class="panel-title">
+              <span>📝</span> 最近超级管理员登录审计日志
+            </div>
+          </div>
+          <div class="panel-body">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>用户名</th>
+                  <th>登录状态</th>
+                  <th>登录时间</th>
+                  <th>日志信息</th>
+                </tr>
+              </thead>
+              <tbody id="dashboardLoginsTable">
+                <tr><td colspan="4" style="text-align:center; color:#94a3b8;">暂无登录日志</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. 微服务接入与治理 -->
+      <section id="tab-services" class="tab-pane">
+        <div class="panel-card">
+          <div class="panel-header">
+            <div class="panel-title">
+              <span>🔌</span> 平台微服务接入治理与健康监控
+            </div>
+            <div style="display:flex; gap:10px;">
+              <button class="btn btn-primary btn-sm" onclick="openRegisterServiceModal()">+ 登记接入新微服务</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>服务编码</th>
+                  <th>服务名称</th>
+                  <th>部署地址 (Base URL)</th>
+                  <th>实时健康</th>
+                  <th>响应耗时</th>
+                  <th>最近心跳</th>
+                  <th>文档地址</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="serviceListTable">
+                <tr><td colspan="8" style="text-align:center; color:#94a3b8;">加载中...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. 用户与权限中心 -->
+      <section id="tab-users" class="tab-pane">
+        <div class="panel-card">
+          <div class="panel-header">
+            <div class="panel-title">
+              <span>👥</span> 平台用户列表
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="openUserModal()">+ 新增用户</button>
+          </div>
+          <div class="panel-body">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>用户名</th>
+                  <th>姓名</th>
+                  <th>超管标识</th>
+                  <th>绑定角色</th>
+                  <th>状态</th>
+                  <th>创建时间</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="userListTable">
+                <tr><td colspan="7" style="text-align:center; color:#94a3b8;">加载中...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. 字典与参数设置 -->
+      <section id="tab-configs" class="tab-pane">
+        <div class="panel-card">
+          <div class="panel-header">
+            <div class="panel-title">
+              <span>⚙️</span> 平台全局运行参数
+            </div>
+          </div>
+          <div class="panel-body">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>参数键名</th>
+                  <th>参数描述</th>
+                  <th>参数值</th>
+                  <th>系统内置</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="configListTable">
+                <tr><td colspan="5" style="text-align:center; color:#94a3b8;">加载中...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<!-- 模态窗：登记/编辑微服务 -->
+<div id="serviceModal" class="modal-overlay">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <span id="serviceModalTitle">登记接入新微服务</span>
+      <button class="btn-outline btn-sm" onclick="closeModal('serviceModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <form id="serviceForm" onsubmit="saveService(event)">
+        <input type="hidden" id="svc_id">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">微服务编码 *</label>
+            <input type="text" id="svc_code" class="form-control" placeholder="如 mcp-service-mdm" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">微服务名称 *</label>
+            <input type="text" id="svc_name" class="form-control" placeholder="如 制造主数据微服务" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">部署地址 (Base URL) *</label>
+          <input type="text" id="svc_url" class="form-control" placeholder="如 http://127.0.0.1:8080" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">健康检查端点 (Health URL)</label>
+            <input type="text" id="svc_health" class="form-control" value="/actuator/health" placeholder="如 /actuator/health 或 /health">
+          </div>
+          <div class="form-group">
+            <label class="form-label">API 文档地址 (Docs URL)</label>
+            <input type="text" id="svc_docs" class="form-control" value="/doc.html" placeholder="如 /doc.html 或 /docs">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">功能说明备注</label>
+          <textarea id="svc_desc" class="form-control" rows="2" placeholder="填写微服务核心功能说明"></textarea>
+        </div>
+        <div class="modal-footer" style="margin: 0 -20px -20px; padding: 12px 20px;">
+          <button type="button" class="btn btn-outline" onclick="closeModal('serviceModal')">取消</button>
+          <button type="submit" id="svcSubmitBtn" class="btn btn-primary">提 交 接入</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div id="toastContainer" class="toast-container"></div>
+
+<script src="/static/assets/js/admin.js"></script>
+</body>
+</html>

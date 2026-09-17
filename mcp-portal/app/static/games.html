@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AVG 互动游戏专区 - DreamClip</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <header class="header">
+    <div class="header-container">
+      <div class="logo-area">
+        <a href="/" style="display:flex; align-items:center; gap:0.75rem;">
+          <div class="logo-icon">🌌</div>
+          <span class="logo-title">DreamClip</span>
+        </a>
+      </div>
+      <nav class="nav-links">
+        <a href="/" class="nav-link">角色宇宙</a>
+        <a href="/#capsules-section" class="nav-link">情绪胶囊</a>
+        <a href="/games" class="nav-link active">AVG 游戏</a>
+        <a href="/about" class="nav-link">关于平台</a>
+      </nav>
+      <div class="header-actions" id="header-auth-area"></div>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div style="margin-bottom:2.5rem;">
+      <h1 style="font-size:2rem; font-weight:800; margin-bottom:0.5rem;">🎮 独立 AVG 互动章节专区</h1>
+      <p style="color:var(--text-secondary);">所有游戏采用 HTML5 标准技术独立解耦运行，无缝集成 DreamClip 角色宇宙与统一身份凭据。</p>
+    </div>
+
+    <div class="cards-grid" id="all-games-list">
+      <!-- 动态加载全部游戏章节 -->
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-brand">
+        <h3>DreamClip 角色宇宙</h3>
+        <p>连接每一次真实的情感共鸣。</p>
+      </div>
+      <div class="footer-links">
+        <h4>平台合规与支持</h4>
+        <ul>
+          <li><a href="/about">关于我们</a></li>
+          <li><a href="/privacy">隐私政策</a></li>
+          <li><a href="/terms">服务条款</a></li>
+          <li><a href="/contact">联系我们</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 DreamClip (dreamclip.cn) All rights reserved.</span>
+    </div>
+  </footer>
+
+  <script src="/static/js/api.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      const res = await DreamClipAPI.universe.getAvgChapters();
+      if (res.code === 200 && res.data) {
+        document.getElementById("all-games-list").innerHTML = res.data.map(g => `
+          <div class="char-card">
+            <img src="${g.cover_image}" style="width:100%; height:180px; object-fit:cover; border-radius:12px; margin-bottom:1rem;" alt="${g.chapter_name}">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+              <span style="font-size:0.8rem; color:#818cf8; font-weight:600;">CHAPTER 0${g.chapter_no}</span>
+              <span style="font-size:0.75rem; color:var(--text-muted);">⏱️ 约 ${g.playtime_mins} 分钟</span>
+            </div>
+            <h3 style="font-size:1.2rem; font-weight:700; margin-bottom:0.6rem;">${g.chapter_name}</h3>
+            <p style="font-size:0.85rem; color:var(--text-secondary); line-height:1.5; margin-bottom:1.5rem; flex:1;">${g.summary}</p>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:auto; border-top:1px solid var(--border-color); padding-top:0.85rem;">
+              <span style="font-size:0.85rem; color:#10b981; font-weight:600;">${g.is_free ? '✨ 免费体验' : '🔒 需解锁'}</span>
+              <a href="/game/${g.chapter_code}" class="btn btn-primary" style="padding:0.45rem 1rem; font-size:0.85rem;">进入游戏 →</a>
+            </div>
+          </div>
+        `).join('');
+      }
+    });
+  </script>
+</body>
+</html>

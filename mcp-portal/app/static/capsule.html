@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>情绪胶囊阅读 - DreamClip</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+  <!-- 顶部导航 -->
+  <header class="header">
+    <div class="header-container">
+      <div class="logo-area">
+        <a href="/" style="display:flex; align-items:center; gap:0.75rem;">
+          <div class="logo-icon">🌌</div>
+          <span class="logo-title">DreamClip</span>
+        </a>
+      </div>
+      <nav class="nav-links">
+        <a href="/" class="nav-link">角色宇宙</a>
+        <a href="/#capsules-section" class="nav-link active">情绪胶囊</a>
+        <a href="/games" class="nav-link">AVG 游戏</a>
+        <a href="/about" class="nav-link">关于平台</a>
+      </nav>
+      <div class="header-actions" id="header-auth-area"></div>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="article-container" id="capsule-container">
+      
+      <!-- 加载中占位 -->
+      <div id="loading-spinner" style="text-align:center; padding:4rem 0; color:var(--text-muted);">
+        正在从星穹打捞情绪信件...
+      </div>
+
+      <article id="article-content" style="display:none;">
+        
+        <!-- 文章头部 -->
+        <header class="article-header">
+          <div style="display:flex; justify-content:center; gap:0.6rem; margin-bottom:1rem;">
+            <span class="personality-pill pill-blue" id="article-mood-pill">情绪共鸣</span>
+            <span style="font-size:0.8rem; color:var(--text-muted); padding:0.15rem 0.6rem; background:rgba(255,255,255,0.05); border-radius:10px;" id="article-time-badge">⏱️ 3 分钟阅读</span>
+          </div>
+          <h1 class="article-title" id="article-title">正在加载...</h1>
+          <div class="article-meta-bar">
+            <span id="article-author" style="display:flex; align-items:center; gap:0.4rem;"></span>
+            <span id="article-worldview"></span>
+            <span id="article-views"></span>
+          </div>
+        </header>
+
+        <!-- Google AdSense 广告位 1：文章顶部自适应横幅 -->
+        <div class="adsense-slot">
+          <span class="ad-label">Advertisement</span>
+          <div>[ Google AdSense 文章顶部自适应广告位 ]</div>
+        </div>
+
+        <!-- 文章正文 -->
+        <div class="article-body" id="article-body-text">
+          <!-- 正文由 JS 渲染 -->
+        </div>
+
+        <!-- Google AdSense 广告位 2：文章文末原生匹配广告位 -->
+        <div class="adsense-slot">
+          <span class="ad-label">Advertisement</span>
+          <div>[ Google AdSense 文末原生信息流与图文推荐广告位 ]</div>
+        </div>
+
+        <!-- 共鸣与互动按钮 -->
+        <div style="display:flex; justify-content:center; gap:1.5rem; margin: 2.5rem 0;">
+          <button class="btn btn-primary" id="like-btn" onclick="handleLike()" style="padding:0.75rem 2rem; font-size:1rem; border-radius:30px;">
+            ❤️ 感到共鸣 (<span id="like-count">0</span>)
+          </button>
+          <a href="/" class="btn btn-outline" style="padding:0.75rem 1.5rem; font-size:1rem; border-radius:30px;">
+            🌌 返回宇宙
+          </a>
+        </div>
+
+        <!-- 角色档案联动卡片 -->
+        <div class="char-card" id="character-link-card" style="margin-top:3rem;">
+          <!-- 动态加载当前角色 -->
+        </div>
+
+      </article>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-brand">
+        <h3>DreamClip 角色宇宙</h3>
+        <p>面向新一代读者的情绪胶囊与角色互动平台。连接每一次真实的情感共鸣。</p>
+      </div>
+      <div class="footer-links">
+        <h4>内容导航</h4>
+        <ul>
+          <li><a href="/">世界观探索</a></li>
+          <li><a href="/#capsules-section">情绪胶囊阅读</a></li>
+          <li><a href="/games">AVG 互动体验</a></li>
+        </ul>
+      </div>
+      <div class="footer-links">
+        <h4>平台合规与支持</h4>
+        <ul>
+          <li><a href="/about">关于我们 (About Us)</a></li>
+          <li><a href="/privacy">隐私政策 (Privacy Policy)</a></li>
+          <li><a href="/terms">服务条款 (Terms of Service)</a></li>
+          <li><a href="/contact">联系我们 (Contact Us)</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 DreamClip (dreamclip.cn) All rights reserved.</span>
+    </div>
+  </footer>
+
+  <script src="/static/js/api.js"></script>
+  <script>
+    let currentCapsuleId = null;
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      const pathParts = window.location.pathname.split('/');
+      const slugOrId = pathParts[pathParts.length - 1] || '1';
+
+      const res = await DreamClipAPI.universe.getCapsuleDetail(slugOrId);
+      document.getElementById("loading-spinner").style.display = "none";
+
+      if (res.code === 200 && res.data) {
+        const c = res.data;
+        currentCapsuleId = c.id;
+        document.title = `${c.title} - DreamClip 情绪胶囊`;
+
+        document.getElementById("article-title").innerText = c.title;
+        document.getElementById("article-mood-pill").innerText = `🏷️ ${c.mood_tag || '治愈'} · ${c.word_count} 字`;
+        document.getElementById("article-time-badge").innerText = `⏱️ 预计阅读 ${c.reading_time_mins || 3} 分钟`;
+        document.getElementById("article-author").innerHTML = `
+          <img src="${c.character_avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=c'}" style="width:24px; height:24px; border-radius:50%;">
+          ${c.character_name || '信使'}
+        `;
+        document.getElementById("article-worldview").innerText = `🌐 ${c.worldview_title || '星穹纪元'}`;
+        document.getElementById("article-views").innerText = `👁️ ${c.view_count} 次阅读`;
+        document.getElementById("like-count").innerText = c.like_count;
+
+        // 简单 Markdown 转段落渲染
+        const paragraphs = c.content_md.split('\n\n').map(p => {
+          if (p.startsWith('### ')) return `<h3>${p.replace('### ', '')}</h3>`;
+          if (p.startsWith('*') && p.endsWith('*')) return `<p style="font-style:italic; color:#93c5fd;">${p.slice(1, -1)}</p>`;
+          return `<p>${p.replace(/\n/g, '<br>')}</p>`;
+        }).join('');
+
+        document.getElementById("article-body-text").innerHTML = paragraphs;
+        document.getElementById("article-content").style.display = "block";
+      } else {
+        document.getElementById("capsule-container").innerHTML = `
+          <div style="text-align:center; padding:4rem 0;">
+            <h2>未找到对应的情绪胶囊</h2>
+            <p style="color:var(--text-secondary); margin:1rem 0;">这封情绪信件可能已在星轨中迷失或已下线。</p>
+            <a href="/" class="btn btn-primary">返回主站</a>
+          </div>
+        `;
+      }
+    });
+
+    async function handleLike() {
+      if (!currentCapsuleId) return;
+      const res = await DreamClipAPI.universe.likeCapsule(currentCapsuleId);
+      if (res.code === 200) {
+        document.getElementById("like-count").innerText = res.data;
+        const btn = document.getElementById("like-btn");
+        btn.style.transform = "scale(1.1)";
+        setTimeout(() => btn.style.transform = "scale(1)", 200);
+      }
+    }
+  </script>
+</body>
+</html>

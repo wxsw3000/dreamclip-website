@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>联系我们 (Contact Us) - DreamClip</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <header class="header">
+    <div class="header-container">
+      <div class="logo-area">
+        <a href="/" style="display:flex; align-items:center; gap:0.75rem;">
+          <div class="logo-icon">🌌</div>
+          <span class="logo-title">DreamClip</span>
+        </a>
+      </div>
+      <nav class="nav-links">
+        <a href="/" class="nav-link">角色宇宙</a>
+        <a href="/#capsules-section" class="nav-link">情绪胶囊</a>
+        <a href="/games" class="nav-link">AVG 游戏</a>
+        <a href="/about" class="nav-link">关于平台</a>
+      </nav>
+      <div class="header-actions" id="header-auth-area"></div>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="article-container" style="background:var(--bg-card); padding:3rem; border-radius:16px; border:1px solid var(--border-color);">
+      <h1 style="font-size:2.2rem; font-weight:800; margin-bottom:1.5rem; background:linear-gradient(to right, #fff, #93c5fd); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">
+        联系我们 (Contact Us)
+      </h1>
+      <p style="font-size:1.05rem; color:var(--text-secondary); line-height:1.8; margin-bottom:2rem;">
+        无论您是对 DreamClip 角色宇宙的建议、原创故事合作、独立 AVG 游戏接入，还是商务广告垂询，我们都非常期待听到您的声音。
+      </p>
+
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:1.5rem; margin-bottom:2.5rem;">
+        <div style="background:rgba(255,255,255,0.03); padding:1.5rem; border-radius:12px; border:1px solid var(--border-color);">
+          <div style="font-size:1.5rem; margin-bottom:0.5rem;">📧 官方站长邮箱</div>
+          <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:0.5rem;">日常咨询与合规联络</p>
+          <a href="mailto:admin@dreamclip.cn" style="color:var(--accent-indigo); font-weight:600;">admin@dreamclip.cn</a>
+        </div>
+
+        <div style="background:rgba(255,255,255,0.03); padding:1.5rem; border-radius:12px; border:1px solid var(--border-color);">
+          <div style="font-size:1.5rem; margin-bottom:0.5rem;">🤝 创作者与游戏合作</div>
+          <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:0.5rem;">剧本投稿与独立H5游戏接入</p>
+          <a href="mailto:partner@dreamclip.cn" style="color:var(--accent-indigo); font-weight:600;">partner@dreamclip.cn</a>
+        </div>
+
+        <div style="background:rgba(255,255,255,0.03); padding:1.5rem; border-radius:12px; border:1px solid var(--border-color);">
+          <div style="font-size:1.5rem; margin-bottom:0.5rem;">🌐 官方主站域名</div>
+          <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:0.5rem;">全网统一入口</p>
+          <a href="https://dreamclip.cn" target="_blank" style="color:var(--accent-indigo); font-weight:600;">https://dreamclip.cn</a>
+        </div>
+      </div>
+
+      <div style="border-top:1px solid var(--border-color); padding-top:2rem;">
+        <h3 style="font-size:1.2rem; margin-bottom:1rem; color:#fff;">💡 快速留言与反馈</h3>
+        <form onsubmit="handleContactSubmit(event)">
+          <div class="form-group">
+            <label class="form-label">您的称谓 / 邮箱</label>
+            <input type="text" id="contact-name" class="form-input" placeholder="例如：旅人 / user@example.com" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">反馈主题</label>
+            <input type="text" id="contact-subject" class="form-input" placeholder="例如：世界观设定探讨 / 功能建议" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">留言内容</label>
+            <textarea id="contact-content" class="form-input" rows="5" placeholder="请写下您的想法与建议..." required></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary" style="padding:0.65rem 1.8rem;">发送留言</button>
+          <span id="contact-tip" style="margin-left:1rem; font-size:0.85rem; color:#10b981; display:none;">感谢您的留言！我们已收到您的心声。</span>
+        </form>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-brand">
+        <h3>DreamClip 角色宇宙</h3>
+        <p>连接每一次真实的情感共鸣。</p>
+      </div>
+      <div class="footer-links">
+        <h4>平台合规与支持</h4>
+        <ul>
+          <li><a href="/about">关于我们</a></li>
+          <li><a href="/privacy">隐私政策</a></li>
+          <li><a href="/terms">服务条款</a></li>
+          <li><a href="/contact">联系我们</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 DreamClip (dreamclip.cn) All rights reserved.</span>
+    </div>
+  </footer>
+
+  <script src="/static/js/api.js"></script>
+  <script>
+    function handleContactSubmit(e) {
+      e.preventDefault();
+      document.getElementById("contact-tip").style.display = "inline";
+      document.getElementById("contact-name").value = "";
+      document.getElementById("contact-subject").value = "";
+      document.getElementById("contact-content").value = "";
+    }
+  </script>
+</body>
+</html>

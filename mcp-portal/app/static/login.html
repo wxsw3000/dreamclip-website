@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>统一单点登录 - 电科智联制造能力平台 (MCP Portal)</title>
+  <link rel="stylesheet" href="/static/assets/css/portal.css">
+  <style>
+    body {
+      background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .login-container {
+      width: 440px;
+      background: #ffffff;
+      padding: 42px 38px;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--surface-border);
+      position: relative;
+    }
+
+    .brand-header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .logo-badge {
+      width: 52px;
+      height: 52px;
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      border-radius: 14px;
+      margin: 0 auto 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(29, 78, 216, 0.35);
+    }
+    .brand-header h2 {
+      font-size: 20px;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: 0.5px;
+    }
+    .brand-header p {
+      font-size: 13px;
+      color: #64748b;
+      margin-top: 6px;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #334155;
+      margin-bottom: 6px;
+    }
+    .form-control {
+      width: 100%;
+      height: 44px;
+      padding: 0 14px;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      color: #0f172a;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .form-control:focus {
+      border-color: #2563eb;
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+
+    .btn-login {
+      width: 100%;
+      height: 46px;
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      color: #ffffff;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 14.5px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 14px;
+      box-shadow: 0 4px 12px rgba(29, 78, 216, 0.3);
+      transition: all 0.2s;
+      letter-spacing: 0.5px;
+    }
+    .btn-login:hover {
+      background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(29, 78, 216, 0.4);
+    }
+    .btn-login:active {
+      transform: translateY(0);
+    }
+    .btn-login:disabled {
+      background: #94a3b8;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .quick-info {
+      margin-top: 24px;
+      padding: 12px 14px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      color: #64748b;
+      line-height: 1.6;
+      border-left: 3px solid #2563eb;
+    }
+    .quick-info code {
+      color: #1d4ed8;
+      font-weight: 700;
+      background: #eff6ff;
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+
+    .footer-note {
+      margin-top: 24px;
+      font-size: 12px;
+      color: #94a3b8;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-container">
+    <div class="brand-header">
+      <div class="logo-badge">⚡</div>
+      <h2>电科智联制造能力平台</h2>
+      <p>统一数字化门户 · 单点登录中心 (SSO)</p>
+    </div>
+
+    <form onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label class="form-label">统一身份账号</label>
+        <input type="text" id="username" class="form-control" value="superadmin" placeholder="输入超管账号或员工工号" required autocomplete="username">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">安全登录密码</label>
+        <input type="password" id="password" class="form-control" value="123456" placeholder="输入安全登录密码" required autocomplete="current-password">
+      </div>
+
+      <button type="submit" id="submitBtn" class="btn-login">
+        登 录 统 一 门 户
+      </button>
+
+      <div class="quick-info">
+        <strong>💡 统一单点登录说明 (SSO)：</strong><br>
+        在此处登录后，全平台所有业务微服务（主数据 MDM、底座控制台等）均自动免密授信接入。<br>
+        系统内置超管账号：<code>superadmin</code> / 密码：<code>123456</code>
+      </div>
+    </form>
+  </div>
+
+  <div class="footer-note">
+    电科智联 MCP · 通用微服务底座与治理平台 v1.0
+  </div>
+
+  <div id="toastBox" style="display:none; position:fixed; top:24px; right:24px; padding:12px 20px; background:#dc2626; color:#fff; border-radius:8px; font-size:13px; font-weight:600; z-index:9999; box-shadow:0 10px 25px rgba(0,0,0,0.15);"></div>
+
+  <script>
+    function showToast(msg, bg = '#dc2626') {
+      const box = document.getElementById('toastBox');
+      box.innerText = msg;
+      box.style.background = bg;
+      box.style.display = 'block';
+      setTimeout(() => { box.style.display = 'none'; }, 3000);
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      btn.innerText = "正在向底座认证...";
+      btn.disabled = true;
+
+      const payload = {
+        username: document.getElementById('username').value.trim(),
+        password: document.getElementById('password').value
+      };
+
+      try {
+        const resp = await fetch('/api/base/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const res = await resp.json();
+
+        if (res.code === 200 && res.data) {
+          localStorage.setItem('mcp_token', res.data.access_token);
+          localStorage.setItem('mcp_user', JSON.stringify(res.data.user_info));
+          showToast("单点登录认证成功，正在进入工作台...", "#16a34a");
+          setTimeout(() => {
+            window.location.href = "/";
+          }, 350);
+        } else {
+          showToast(res.message || "登录认证失败，请检查账号密码", "#dc2626");
+          btn.innerText = "登 录 统 一 门 户";
+          btn.disabled = false;
+        }
+      } catch (err) {
+        showToast("底座连接失败: " + err.message, "#dc2626");
+        btn.innerText = "登 录 统 一 门 户";
+        btn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>

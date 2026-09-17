@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>深空信箱：失落的深空信标 - AVG Demo</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body {
+      background: #020617;
+      color: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* 背景与粒子画布 */
+    #game-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    /* 角色立绘区域 */
+    .character-stage {
+      position: absolute;
+      bottom: 160px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: all 0.4s ease;
+    }
+
+    .character-avatar-large {
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      border: 3px solid rgba(99, 102, 241, 0.5);
+      background: radial-gradient(circle, #1e1b4b, #0f172a);
+      box-shadow: 0 0 30px rgba(99, 102, 241, 0.4);
+      object-fit: cover;
+    }
+
+    /* 对话框 */
+    .dialogue-container {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - 40px);
+      max-width: 900px;
+      background: rgba(15, 23, 42, 0.92);
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      border-radius: 16px;
+      padding: 1.5rem 2rem;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+      z-index: 10;
+      min-height: 140px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      cursor: pointer;
+    }
+
+    .speaker-name {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #818cf8;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .dialogue-text {
+      font-size: 1.05rem;
+      line-height: 1.7;
+      color: #e2e8f0;
+      flex: 1;
+    }
+
+    .click-hint {
+      align-self: flex-end;
+      font-size: 0.75rem;
+      color: #64748b;
+      animation: pulse 1.5s infinite;
+    }
+
+    /* 抉择分支按钮 */
+    .choices-overlay {
+      position: absolute;
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100%;
+      max-width: 600px;
+      display: none;
+      flex-direction: column;
+      gap: 1rem;
+      z-index: 20;
+    }
+
+    .choice-btn {
+      background: linear-gradient(135deg, rgba(30, 27, 75, 0.95), rgba(15, 23, 42, 0.95));
+      border: 1px solid rgba(99, 102, 241, 0.6);
+      color: #fff;
+      padding: 1rem 1.5rem;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+      text-align: left;
+    }
+
+    .choice-btn:hover {
+      background: linear-gradient(135deg, #4338ca, #312e81);
+      border-color: #a5b4fc;
+      transform: scale(1.02);
+    }
+
+    /* 顶部 HUD */
+    .game-hud {
+      position: absolute;
+      top: 15px;
+      left: 20px;
+      right: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+    }
+
+    .hud-badge {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 0.4rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      color: #94a3b8;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="game-canvas"></canvas>
+
+  <!-- 顶部状态栏 -->
+  <div class="game-hud">
+    <div class="hud-badge" id="hud-chapter">深空信箱 · 第一章</div>
+    <div class="hud-badge" id="hud-resonance">💖 情绪共鸣度: 100%</div>
+  </div>
+
+  <!-- 角色舞台立绘 -->
+  <div class="character-stage" id="char-stage">
+    <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Raven07&backgroundColor=0284c7" class="character-avatar-large" id="char-img" alt="Raven">
+  </div>
+
+  <!-- 选项分支 -->
+  <div class="choices-overlay" id="choices-box"></div>
+
+  <!-- 主对话框 -->
+  <div class="dialogue-container" id="dialogue-box" onclick="nextScriptStep()">
+    <div>
+      <div class="speaker-name" id="speaker-name">雷文 (Raven)</div>
+      <div class="dialogue-text" id="dialogue-text">正在初始化深空通信频道...</div>
+    </div>
+    <div class="click-hint" id="click-hint">▼ 点击继续</div>
+  </div>
+
+  <script>
+    // 简易星空粒子背景动画
+    const canvas = document.getElementById("game-canvas");
+    const ctx = canvas.getContext("2d");
+    let stars = [];
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      stars = Array.from({ length: 120 }, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: Math.random() * 2,
+        speed: Math.random() * 0.5 + 0.1,
+        alpha: Math.random() * 0.8 + 0.2
+      }));
+    }
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+
+    function animateStars() {
+      ctx.fillStyle = "#020617";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      stars.forEach(s => {
+        ctx.fillStyle = `rgba(165, 180, 252, ${s.alpha})`;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+        ctx.fill();
+        s.y += s.speed;
+        if (s.y > canvas.height) s.y = 0;
+      });
+      requestAnimationFrame(animateStars);
+    }
+    animateStars();
+
+    // 游戏剧情剧本脚本
+    const script = [
+      { speaker: "系统广播", text: "【警告】检测到底层星轨 7 号废弃区存在未知频段的情绪广播信号……", avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=System&backgroundColor=334155" },
+      { speaker: "雷文 (Raven)", text: "凌晨三点零四分。这个时间点，除了失眠的亡灵，谁还会向旧星轨发送信件？", avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Raven07&backgroundColor=0284c7" },
+      { speaker: "雷文 (Raven)", text: "（推开地下仓库生锈的门，幽蓝色的义眼在黑暗中闪烁微光）", avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Raven07&backgroundColor=0284c7" },
+      { speaker: "雷文 (Raven)", text: "找到了，就是这个散发着微弱暖光的树脂信封。你打算怎么做？", avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Raven07&backgroundColor=0284c7",
+        choices: [
+          { text: "1. 接入义眼神经接口，直接解析信件中的记忆音频", target: 4, resonanceDelta: 20 },
+          { text: "2. 小心将信封收好，带回浮空温室交给露娜莉亚", target: 6, resonanceDelta: 15 }
+        ]
+      },
+      // 路径 1
+      { speaker: "雷文 (Raven)", text: "（指尖触碰晶体）……耳边传来了旧时代的吉他声和一个女孩轻柔的哼唱：“如果我忘记了春天的味道……”", avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Raven07&backgroundColor=0284c7" },
+      { speaker: "雷文 (Raven)", text: "真是罕见。在所有情感都被明码标价的今天，这段记忆居然没有一丝杂质。我们打捞成功了。", avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Raven07&backgroundColor=0284c7", end: true },
+      // 路径 2
+      { speaker: "露娜莉亚 (Lunaria)", text: "雷文！你看，这封信刚放进花圃，旁边的星芒夜光草就全部开花了呢！", avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Lunaria&backgroundColor=f59e0b" },
+      { speaker: "露娜莉亚 (Lunaria)", text: "谢谢你把这份温暖带回来。今晚的梦境一定格外甜美。", avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Lunaria&backgroundColor=f59e0b", end: true }
+    ];
+
+    let currentStep = 0;
+    let resonance = 100;
+    let isTyping = false;
+
+    function renderStep() {
+      if (currentStep >= script.length) return;
+      const data = script[currentStep];
+
+      document.getElementById("speaker-name").innerText = data.speaker;
+      document.getElementById("char-img").src = data.avatar;
+
+      // 打字机效果
+      const textEl = document.getElementById("dialogue-text");
+      textEl.innerText = "";
+      let i = 0;
+      isTyping = true;
+      const fullText = data.text;
+
+      const timer = setInterval(() => {
+        if (i < fullText.length) {
+          textEl.innerText += fullText.charAt(i);
+          i++;
+        } else {
+          clearInterval(timer);
+          isTyping = false;
+          if (data.choices) {
+            showChoices(data.choices);
+          } else if (data.end) {
+            document.getElementById("click-hint").innerText = "✨ 本章节试玩完成！点击重新开始";
+          }
+        }
+      }, 25);
+    }
+
+    function showChoices(choices) {
+      const box = document.getElementById("choices-box");
+      box.innerHTML = choices.map(c => `
+        <button class="choice-btn" onclick="selectChoice(${c.target}, ${c.resonanceDelta})">${c.text}</button>
+      `).join('');
+      box.style.display = "flex";
+      document.getElementById("dialogue-box").style.pointerEvents = "none";
+    }
+
+    function selectChoice(targetIndex, delta) {
+      resonance += delta;
+      document.getElementById("hud-resonance").innerText = `💖 情绪共鸣度: ${resonance}%`;
+      document.getElementById("choices-box").style.display = "none";
+      document.getElementById("dialogue-box").style.pointerEvents = "auto";
+      currentStep = targetIndex;
+      renderStep();
+    }
+
+    function nextScriptStep() {
+      if (isTyping) return;
+      const current = script[currentStep];
+      if (current && current.choices) return;
+      if (current && current.end) {
+        currentStep = 0;
+        resonance = 100;
+        document.getElementById("hud-resonance").innerText = `💖 情绪共鸣度: 100%`;
+        document.getElementById("click-hint").innerText = "▼ 点击继续";
+        renderStep();
+        return;
+      }
+      currentStep++;
+      if (currentStep < script.length) {
+        renderStep();
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      renderStep();
+    });
+  </script>
+</body>
+</html>
