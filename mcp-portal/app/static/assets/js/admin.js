@@ -1,5 +1,5 @@
-// DreamClip Base Control Console Core JS
-// Supports direct Base service (8000) and Portal Reverse Proxy (https://dreamclip.cn/admin)
+// MagicStar MCP (Modular Configuration Platform) Control Console Core JS
+// Supports direct Base service (8000) and Portal Reverse Proxy (/admin)
 
 const API_BASE = '/api/v1';
 
@@ -58,9 +58,9 @@ function switchTab(tabId, el) {
   if (el) el.classList.add('active');
 
   const titles = {
-    'tab-dashboard': '<span>📊</span> DreamClip 核心底座大盘',
+    'tab-dashboard': '<span>📊</span> MagicStar MCP 模块化配置平台大盘',
     'tab-services': '<span>🔌</span> 微服务接入与健康治理',
-    'tab-users': '<span>👥</span> 用户与画像中心',
+    'tab-users': '<span>👥</span> 用户与权限中心',
     'tab-configs': '<span>⚙️</span> 字典与全局参数设置'
   };
   if (titles[tabId]) {

@@ -7,8 +7,8 @@ logger = logging.getLogger("mcp-universe.register")
 async def register_to_base():
     """微服务启动时自动向 Base 底座服务注册自身"""
     payload = {
-        "service_code": "dreamclip-service-universe",
-        "service_name": "DreamClip 角色宇宙与内容微服务",
+        "service_code": "mcp-service-universe",
+        "service_name": "角色宇宙与内容微服务",
         "tech_stack": "PYTHON",
         "base_url": f"http://127.0.0.1:{settings.SERVER_PORT}",
         "health_url": "/health",
@@ -17,7 +17,7 @@ async def register_to_base():
         "category": "UNIVERSE",
         "version": settings.VERSION,
         "status": "ACTIVE",
-        "description": "提供世界观管理、角色档案立绘、情绪胶囊原创图文与AVG章节元数据支撑"
+        "description": "提供世界观设定、角色档案立绘、情绪胶囊原创深度图文与AVG互动剧本元数据"
     }
 
     try:

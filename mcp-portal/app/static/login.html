@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>登录 - DreamClip 角色宇宙与内容互动平台</title>
+  <title>统一单点登录 - MagicStar 模块化配置平台 (Modular Configuration Platform)</title>
   <link rel="stylesheet" href="/static/assets/css/portal.css">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22><text y=%2222%22 font-size=%2222%22>🌌</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22><text y=%2222%22 font-size=%2222%22>⭐</text></svg>">
   <style>
     body {
       background: radial-gradient(circle at 10% 20%, #090d16 0%, #111827 50%, #1e1b4b 100%);
@@ -161,41 +161,41 @@
 
   <div class="login-container">
     <div class="brand-header">
-      <div class="logo-badge">🌌</div>
-      <h2>DreamClip 统一登录</h2>
-      <p>角色宇宙 · 情绪胶囊 · AVG互动中心</p>
+      <div class="logo-badge">⭐</div>
+      <h2>MagicStar 统一单点登录</h2>
+      <p>Modular Configuration Platform · 单点登录中心 (SSO)</p>
     </div>
 
     <form onsubmit="handleLogin(event)">
       <div class="form-group">
-        <label class="form-label">用户名</label>
-        <input type="text" id="username" class="form-control" value="superadmin" placeholder="输入用户名" required autocomplete="username">
+        <label class="form-label">统一身份账号</label>
+        <input type="text" id="username" class="form-control" value="superadmin" placeholder="输入超管账号或用户账号" required autocomplete="username">
       </div>
 
       <div class="form-group">
-        <label class="form-label">登录密码</label>
+        <label class="form-label">安全登录密码</label>
         <input type="password" id="password" class="form-control" value="123456" placeholder="输入密码" required autocomplete="current-password">
       </div>
 
       <button type="submit" id="submitBtn" class="btn-login">
-        登 录
+        登 录 统 一 门 户
       </button>
 
       <div class="quick-info">
-        <strong>💡 登录提示：</strong><br>
-        系统内置超管账号：<code>superadmin</code> / 密码：<code>123456</code><br>
-        超管登录后可直接访问 <a href="/admin" style="color:#38bdf8; text-decoration:underline;">底座管理控制台</a>
+        <strong>💡 统一单点登录 (SSO) 说明：</strong><br>
+        登录后即可无缝访问 MagicStar 模块化配置平台管理大盘与各业务子系统。<br>
+        系统预置超管账号：<code>superadmin</code> / 密码：<code>123456</code>
       </div>
 
       <div class="links-row">
-        <a href="/">← 返回主站首页</a>
+        <a href="/">← 返回应用门户</a>
         <a href="/admin">底座控制台 →</a>
       </div>
     </form>
   </div>
 
   <div class="footer-note">
-    DreamClip · 角色宇宙与微服务治理平台
+    MagicStar MCP · Modular Configuration Platform v1.0
   </div>
 
   <div id="toastBox" style="display:none; position:fixed; top:24px; right:24px; padding:12px 20px; background:#dc2626; color:#fff; border-radius:8px; font-size:13px; font-weight:600; z-index:9999; box-shadow:0 10px 25px rgba(0,0,0,0.3);"></div>
@@ -241,12 +241,12 @@
           }, 400);
         } else {
           showToast(res.message || "登录失败，请检查账号密码", "#dc2626");
-          btn.innerText = "登 录";
+          btn.innerText = "登 录 统 一 门 户";
           btn.disabled = false;
         }
       } catch (err) {
         showToast("底座连接失败: " + err.message, "#dc2626");
-        btn.innerText = "登 录";
+        btn.innerText = "登 录 统 一 门 户";
         btn.disabled = false;
       }
     }

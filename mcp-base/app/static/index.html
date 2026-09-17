@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DreamClip 核心底座控制台 - 微服务与角色宇宙治理</title>
+  <title>MagicStar MCP 控制台 - Modular Configuration Platform</title>
   <link rel="stylesheet" href="/static/assets/css/admin.css">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22><text y=%2222%22 font-size=%2222%22>🌌</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22><text y=%2222%22 font-size=%2222%22>⭐</text></svg>">
 </head>
 <body>
 
@@ -13,10 +13,10 @@
   <!-- 侧边栏 -->
   <aside class="sidebar">
     <div class="sidebar-header">
-      <div class="logo-icon">🌌</div>
+      <div class="logo-icon">⭐</div>
       <div class="logo-text">
-        <h1>DreamClip 底座</h1>
-        <p>微服务与角色宇宙治理</p>
+        <h1>MagicStar MCP</h1>
+        <p>Modular Configuration Platform</p>
       </div>
     </div>
 
@@ -41,18 +41,18 @@
         <span>字典与全局参数</span>
       </a>
 
-      <div class="menu-category">开发者与主站生态</div>
+      <div class="menu-category">开发者与应用生态</div>
       <a class="nav-item" href="/base/docs" target="_blank">
         <span class="icon">📖</span>
         <span>底座 Swagger API ↗</span>
       </a>
       <a class="nav-item" href="/universe/docs" target="_blank">
         <span class="icon">🪐</span>
-        <span>宇宙 Swagger API ↗</span>
+        <span>业务微服务 API ↗</span>
       </a>
       <a class="nav-item" href="/" target="_blank">
-        <span class="icon">🏠</span>
-        <span>返回 DreamClip 主站 ↗</span>
+        <span class="icon">🌐</span>
+        <span>前往统一应用门户 ↗</span>
       </a>
     </div>
 
@@ -72,7 +72,7 @@
   <div class="main-wrapper">
     <header class="top-header">
       <div class="header-title" id="pageTitle">
-        <span>📊</span> DreamClip 核心底座大盘
+        <span>📊</span> MagicStar MCP 模块化配置平台大盘
       </div>
       <div class="header-actions">
         <div class="live-indicator">
@@ -149,7 +149,7 @@
         <div class="panel-card">
           <div class="panel-header">
             <div class="panel-title">
-              <span>📝</span> 最近超级管理员登录审计日志
+              <span>📝</span> 最近管理员登录审计日志
             </div>
           </div>
           <div class="panel-body">
@@ -218,8 +218,8 @@
                 <tr>
                   <th>用户名</th>
                   <th>姓名</th>
-                  <th>性格色彩</th>
-                  <th>星座画像</th>
+                  <th>个性标签</th>
+                  <th>用户属性</th>
                   <th>超管标识</th>
                   <th>状态</th>
                   <th>创建时间</th>
@@ -276,11 +276,11 @@
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">微服务编码 *</label>
-            <input type="text" id="svc_code" class="form-control" placeholder="如 dreamclip-service-universe" required>
+            <input type="text" id="svc_code" class="form-control" placeholder="如 mcp-service-universe" required>
           </div>
           <div class="form-group">
             <label class="form-label">微服务名称 *</label>
-            <input type="text" id="svc_name" class="form-control" placeholder="如 角色宇宙与内容服务" required>
+            <input type="text" id="svc_name" class="form-control" placeholder="如 业务微服务" required>
           </div>
         </div>
         <div class="form-group">
@@ -336,17 +336,17 @@
           </div>
           <div class="form-group">
             <label class="form-label">电子邮箱</label>
-            <input type="email" id="new_email" class="form-control" placeholder="user@dreamclip.cn">
+            <input type="email" id="new_email" class="form-control" placeholder="user@domain.com">
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">性格色彩</label>
+            <label class="form-label">个性色彩/标签</label>
             <input type="text" id="new_personality" class="form-control" placeholder="如 #38bdf8 / 蔚蓝极光">
           </div>
           <div class="form-group">
-            <label class="form-label">星座 / 画像</label>
-            <input type="text" id="new_zodiac" class="form-control" placeholder="如 天蝎座 / 探索者">
+            <label class="form-label">属性/画像</label>
+            <input type="text" id="new_zodiac" class="form-control" placeholder="如 探索者 / 开发者">
           </div>
         </div>
         <div class="modal-footer" style="margin: 0 -20px -20px; padding: 12px 20px;">

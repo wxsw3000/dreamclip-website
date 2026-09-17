@@ -3,7 +3,7 @@ from typing import List
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "DreamClip 角色宇宙与内容微服务 (Universe-Service)"
+    PROJECT_NAME: str = "角色宇宙与内容微服务 (Universe-Service)"
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
     
@@ -13,12 +13,12 @@ class Settings(BaseSettings):
     # 基础底座服务地址 (用于自注册)
     BASE_SERVICE_URL: str = os.getenv("BASE_SERVICE_URL", "http://127.0.0.1:8000")
     
-    # 本地数据库配置 (优先 MySQL dreamclip_universe_db，失败自动回退 sqlite)
+    # 本地数据库配置 (优先 MySQL mcp_universe_db，失败自动回退 sqlite)
     MYSQL_USER: str = os.getenv("MYSQL_USER", "root")
     MYSQL_PASSWORD: str = os.getenv("MYSQL_PASSWORD", "19870404")
     MYSQL_HOST: str = os.getenv("MYSQL_HOST", "127.0.0.1")
     MYSQL_PORT: str = os.getenv("MYSQL_PORT", "3306")
-    MYSQL_DB: str = os.getenv("MYSQL_DB", "dreamclip_universe_db")
+    MYSQL_DB: str = os.getenv("MYSQL_DB", "mcp_universe_db")
     
     @property
     def SQLALCHEMY_DATABASE_URI(self) -> str:

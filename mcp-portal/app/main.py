@@ -14,20 +14,20 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(na
 logger = logging.getLogger("mcp-portal")
 
 async def register_self_to_base():
-    """向底座 (dreamclip-base / 8000) 自动注册门户框架服务自身"""
+    """向底座 (mcp-base / 8000) 自动注册门户框架服务自身"""
     if not settings.AUTO_REGISTER_TO_BASE:
         return
     
     register_url = f"{settings.BASE_SERVICE_URL.rstrip('/')}/api/v1/microservices/register"
     payload = {
-        "service_code": "dreamclip-portal",
-        "service_name": "DreamClip 统一主站与角色宇宙门户",
+        "service_code": "mcp-portal",
+        "service_name": "MagicStar 统一应用门户与网关",
         "tech_stack": "PYTHON",
         "category": "BASE",
         "base_url": f"http://127.0.0.1:{settings.SERVER_PORT}",
         "health_url": "/health",
         "docs_url": "/docs",
-        "description": "面向C端用户的角色宇宙沉浸门户、情绪胶囊阅读器、AVG游戏分发与AdSense广告合规主站"
+        "description": "MagicStar 模块化配置平台的统一路由网关、SSO 认证与微服务应用门户"
     }
     
     for attempt in range(1, 4):
@@ -35,7 +35,7 @@ async def register_self_to_base():
             async with httpx.AsyncClient(timeout=3.0) as client:
                 resp = await client.post(register_url, json=payload)
                 if resp.is_success:
-                    logger.info("Successfully registered dreamclip-portal to base (%s)", register_url)
+                    logger.info("Successfully registered mcp-portal to base (%s)", register_url)
                     return
                 else:
                     logger.warning("Failed to register to base (status %s): %s", resp.status_code, resp.text)
@@ -49,17 +49,17 @@ async def lifespan(app: FastAPI):
     logger.info("  %s 启动中...", settings.PROJECT_NAME)
     logger.info("  访问入口: \thttp://localhost:%s", settings.SERVER_PORT)
     logger.info("  连接底座: \thttp://127.0.0.1:8000")
-    logger.info("  连接宇宙: \thttp://127.0.0.1:8081")
+    logger.info("  连接业务: \thttp://127.0.0.1:8081")
     logger.info("============================================================")
     
     asyncio.create_task(register_self_to_base())
     yield
-    logger.info("DreamClip-Portal application shutdown complete.")
+    logger.info("MagicStar-Portal application shutdown complete.")
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    description="DreamClip 统一主站：角色宇宙、情绪胶囊深度阅读与AVG互动游戏分发中心。",
+    description="MagicStar 模块化配置平台统一应用门户与微服务路由网关中心。",
     lifespan=lifespan
 )
 
@@ -75,7 +75,8 @@ app.add_middleware(
 def health():
     return {
         "status": "UP",
-        "service": "dreamclip-portal",
+        "service": "mcp-portal",
+        "platform": "MagicStar-MCP",
         "version": settings.VERSION
     }
 

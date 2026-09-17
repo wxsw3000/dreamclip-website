@@ -103,7 +103,7 @@ def init_db_and_seed_data():
         cfg_count = db.query(SysConfig).count()
         if cfg_count == 0:
             configs = [
-                SysConfig(config_key="sys.platform.name", config_name="平台系统全称", config_value="DreamClip 角色宇宙与内容互动平台", is_system=1),
+                SysConfig(config_key="sys.platform.name", config_name="平台系统全称", config_value="MagicStar 模块化配置平台 (Modular Configuration Platform)", is_system=1),
                 SysConfig(config_key="sys.auth.jwt_expire_hours", config_name="JWT登录有效期(小时)", config_value="168", is_system=1),
                 SysConfig(config_key="sys.health_check.interval_seconds", config_name="微服务心跳探测周期(秒)", config_value="20", is_system=1)
             ]
@@ -112,11 +112,11 @@ def init_db_and_seed_data():
             logger.info("Initialized system global configurations")
 
         # 6. 检查并正式注册核心系统门户框架 (mcp-portal / 3000)
-        portal_svc = db.query(SysMicroservice).filter(SysMicroservice.service_code == "dreamclip-portal").first()
+        portal_svc = db.query(SysMicroservice).filter(SysMicroservice.service_code == "mcp-portal").first()
         if not portal_svc:
             portal_svc = SysMicroservice(
-                service_code="dreamclip-portal",
-                service_name="DreamClip 统一主站与角色宇宙门户",
+                service_code="mcp-portal",
+                service_name="MagicStar 统一应用门户与网关",
                 tech_stack="PYTHON",
                 base_url="http://127.0.0.1:3000",
                 health_url="/health",
@@ -125,18 +125,18 @@ def init_db_and_seed_data():
                 category="BASE",
                 version="1.0.0",
                 status="ACTIVE",
-                description="面向C端用户的角色宇宙沉浸门户、情绪胶囊阅读器、AVG游戏分发与AdSense广告合规主站"
+                description="MagicStar 模块化配置平台的统一路由网关、SSO 认证与微服务应用门户"
             )
             db.add(portal_svc)
             db.commit()
-            logger.info("Initialized core microservice registration: dreamclip-portal (Port 3000)")
+            logger.info("Initialized core microservice registration: mcp-portal (Port 3000)")
 
         # 7. 检查并正式注册服务底座与治理中心自身 (mcp-base / 8000)
-        base_svc = db.query(SysMicroservice).filter(SysMicroservice.service_code == "dreamclip-base").first()
+        base_svc = db.query(SysMicroservice).filter(SysMicroservice.service_code == "mcp-base").first()
         if not base_svc:
             base_svc = SysMicroservice(
-                service_code="dreamclip-base",
-                service_name="DreamClip 核心服务底座与治理中心",
+                service_code="mcp-base",
+                service_name="MagicStar MCP 核心配置治理底座",
                 tech_stack="PYTHON",
                 base_url=f"http://127.0.0.1:{settings.SERVER_PORT}",
                 health_url="/health",
@@ -146,11 +146,11 @@ def init_db_and_seed_data():
                 version="1.0.0",
                 status="ACTIVE",
                 health_status="HEALTHY",
-                description="用户中心、性格画像、微服务生命周期治理、20秒健康心跳巡检与统一SSO鉴权"
+                description="通用用户中心、多租户管理、微服务生命周期治理、20秒健康心跳巡检与统一SSO鉴权"
             )
             db.add(base_svc)
             db.commit()
-            logger.info("Initialized core microservice registration: dreamclip-base (Port 8000)")
+            logger.info("Initialized core microservice registration: mcp-base (Port 8000)")
 
     finally:
         db.close()
@@ -183,7 +183,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    description="DreamClip 核心服务底座：支持用户中心、性格画像画像标签、异构微服务能力注册与20秒实时健康心跳探测。",
+    description="MagicStar MCP (Modular Configuration Platform) 模块化配置平台：纯粹通用的微服务治理中枢、多租户分配、统一SSO鉴权与异构微服务健康探测。",
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json",
@@ -202,7 +202,7 @@ app.add_middleware(
 @app.get("/health", tags=["00.健康探活"])
 def health():
     """标准健康探活端点"""
-    return {"status": "UP", "service": "dreamclip-base", "code": 200}
+    return {"status": "UP", "service": "mcp-base", "platform": "MagicStar-MCP", "code": 200}
 
 # 挂载 API V1 路由
 app.include_router(api_v1_router, prefix=settings.API_V1_STR)

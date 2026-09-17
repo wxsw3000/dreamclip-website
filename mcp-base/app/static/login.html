@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>登录 - DreamClip 核心底座控制台</title>
+  <title>登录 - MagicStar MCP 模块化配置平台</title>
   <link rel="stylesheet" href="/static/assets/css/admin.css">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22><text y=%2222%22 font-size=%2222%22>🌌</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22><text y=%2222%22 font-size=%2222%22>⭐</text></svg>">
   <style>
     body {
       background: radial-gradient(circle at 10% 20%, #090d16 0%, #111827 50%, #1e1b4b 100%);
@@ -79,9 +79,9 @@
 
   <div class="login-card">
     <div class="login-header">
-      <div class="brand-icon">🌌</div>
-      <h2>DreamClip 控制台</h2>
-      <p>微服务与角色宇宙治理中心 · 统一鉴权</p>
+      <div class="brand-icon">⭐</div>
+      <h2>MagicStar MCP 控制台</h2>
+      <p>Modular Configuration Platform · 模块化配置底座</p>
     </div>
 
     <form id="loginForm" onsubmit="handleLogin(event)">
@@ -104,7 +104,7 @@
         账号：<code>superadmin</code> / 密码：<code>123456</code>
       </div>
 
-      <a href="/" class="back-link">← 返回 DreamClip 主站首页</a>
+      <a href="/" class="back-link">← 前往统一应用门户</a>
     </form>
   </div>
 
@@ -144,7 +144,6 @@
           localStorage.setItem('mcp_user', JSON.stringify(res.data.user_info));
           showToast("登录成功，正在进入控制台...", "success");
           setTimeout(() => {
-            // 如果是在主站反向代理路径下，进入 /admin
             window.location.href = "/admin";
           }, 500);
         } else {
