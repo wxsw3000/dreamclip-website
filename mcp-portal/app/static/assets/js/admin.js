@@ -151,6 +151,17 @@ function getHealthBadge(status) {
   return '<span class="badge badge-warning">⚪ 未检测</span>';
 }
 
+function getDocsLink(s) {
+  if (!s.docs_url) return '<span style="color:#94a3b8;">-</span>';
+  let url = s.base_url + s.docs_url;
+  if (s.service_code === 'mcp-base') {
+    url = '/base/docs';
+  } else if (s.service_code === 'mcp-service-universe') {
+    url = '/universe/docs';
+  }
+  return `<a href="${url}" target="_blank" style="color:#2563eb; text-decoration:none; font-weight:600;">📖 文档 ↗</a>`;
+}
+
 // ---------------- 2. Microservices ----------------
 async function loadMicroservices() {
   const res = await api('/microservices?size=50');
@@ -169,7 +180,7 @@ async function loadMicroservices() {
       <td>${s.response_time_ms ? s.response_time_ms + 'ms' : '-'}</td>
       <td>${s.last_heartbeat ? s.last_heartbeat.replace('T', ' ').substring(0, 19) : '-'}</td>
       <td>
-        ${s.docs_url ? `<a href="${s.base_url + s.docs_url}" target="_blank" style="color:#2563eb; text-decoration:none; font-weight:600;">${s.docs_url} ↗</a>` : '-'}
+        ${getDocsLink(s)}
       </td>
       <td style="white-space:nowrap;">
         <button class="btn btn-outline btn-sm" onclick="editService(${s.id})">✏️ 编辑</button>
