@@ -48,8 +48,8 @@ async def lifespan(app: FastAPI):
     logger.info("============================================================")
     logger.info("  %s 启动中...", settings.PROJECT_NAME)
     logger.info("  访问入口: \thttp://localhost:%s", settings.SERVER_PORT)
-    logger.info("  连接底座: \thttp://127.0.0.1:8000", )
-    logger.info("  连接宇宙: \thttp://127.0.0.1:8081", )
+    logger.info("  连接底座: \thttp://127.0.0.1:8000")
+    logger.info("  连接宇宙: \thttp://127.0.0.1:8081")
     logger.info("============================================================")
     
     asyncio.create_task(register_self_to_base())
@@ -79,8 +79,9 @@ def health():
         "version": settings.VERSION
     }
 
-# ==================== 反向代理：底座接口 (/api/base/**) ====================
+# ==================== 反向代理：底座接口 (/api/base/** & /api/v1/**) ====================
 @app.api_route("/api/base/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH"])
+@app.api_route("/api/v1/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH"])
 async def proxy_to_base(path: str, request: Request):
     target_url = f"{settings.BASE_SERVICE_URL.rstrip('/')}/api/v1/{path}"
     query_params = dict(request.query_params)
@@ -134,6 +135,46 @@ async def proxy_to_universe(path: str, request: Request):
     except Exception as e:
         logger.error("Proxy to universe error: %s", e)
         return JSONResponse(status_code=502, content={"code": 502, "message": f"角色宇宙内容服务通信失败: {str(e)}"})
+
+# ==================== 反向代理：基座 SuperAdmin 控制台 (/admin) ====================
+@app.api_route("/admin", methods=["GET"])
+async def proxy_admin_root():
+    """管理后台首页直通"""
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        resp = await client.get(f"{settings.BASE_SERVICE_URL.rstrip('/')}/")
+        return Response(content=resp.content, status_code=resp.status_code, media_type="text/html")
+
+@app.api_route("/admin/login", methods=["GET"])
+async def proxy_admin_login():
+    """管理后台登录页直通"""
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        resp = await client.get(f"{settings.BASE_SERVICE_URL.rstrip('/')}/login")
+        return Response(content=resp.content, status_code=resp.status_code, media_type="text/html")
+
+# ==================== 反向代理：微服务 Swagger 文档中心 ====================
+@app.get("/base/docs", include_in_schema=False)
+async def proxy_base_docs():
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        resp = await client.get(f"{settings.BASE_SERVICE_URL.rstrip('/')}/docs")
+        return Response(content=resp.content, status_code=resp.status_code, media_type="text/html")
+
+@app.get("/base/openapi.json", include_in_schema=False)
+async def proxy_base_openapi():
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        resp = await client.get(f"{settings.BASE_SERVICE_URL.rstrip('/')}/openapi.json")
+        return Response(content=resp.content, status_code=resp.status_code, media_type="application/json")
+
+@app.get("/universe/docs", include_in_schema=False)
+async def proxy_universe_docs():
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        resp = await client.get(f"{settings.UNIVERSE_SERVICE_URL.rstrip('/')}/docs")
+        return Response(content=resp.content, status_code=resp.status_code, media_type="text/html")
+
+@app.get("/universe/openapi.json", include_in_schema=False)
+async def proxy_universe_openapi():
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        resp = await client.get(f"{settings.UNIVERSE_SERVICE_URL.rstrip('/')}/openapi.json")
+        return Response(content=resp.content, status_code=resp.status_code, media_type="application/json")
 
 # ==================== 静态资源与页面路由 ====================
 static_dir = os.path.join(os.path.dirname(__file__), "static")
