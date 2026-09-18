@@ -50,14 +50,18 @@ def create_user(
     if existing:
         return Result.fail(f"用户名 {req.username} 已存在", code=400)
 
-    user_dict = req.model_dump(exclude={"password"})
+    user_dict = req.model_dump(exclude={"password", "role_ids"})
     user_dict["password_hash"] = get_password_hash(req.password)
     new_user = SysUser(**user_dict)
     
-    # 默认分配操作员角色
-    default_role = db.query(SysRole).filter(SysRole.role_code == "ROLE_OPERATOR", SysRole.is_deleted == 0).first()
-    if default_role:
-        new_user.roles.append(default_role)
+    if req.role_ids:
+        roles = db.query(SysRole).filter(SysRole.id.in_(req.role_ids), SysRole.is_deleted == 0).all()
+        new_user.roles = roles
+    else:
+        # 默认分配操作员角色
+        default_role = db.query(SysRole).filter(SysRole.role_code == "ROLE_OPERATOR", SysRole.is_deleted == 0).first()
+        if default_role:
+            new_user.roles.append(default_role)
 
     db.add(new_user)
     db.commit()

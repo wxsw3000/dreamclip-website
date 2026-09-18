@@ -24,3 +24,14 @@
 3. 跨域 SSO 统一身份凭证同步：
    - PortalOS 与 Universe 主站登录时双向同步 mcp_token、mcp_user、dreamclip_token、dreamclip_user，实现全平台统一身份无缝切换。
    - 从 PortalOS 启动 Base 底座时自动携带 SSO Token 免密直通。
+
+四、Base 底座业务解耦与全链路 IAM 闭环修复 (2026-09-18)
+1. 业务与技术底座彻底解耦：
+   - 移除 Base 中 `SysUser` 模型上耦合的上层宇宙业务字段 (`personality_color`, `zodiac`, `unlocked_data`)，杜绝 MySQL 1054 字段缺失异常。
+   - 平台用户的所属角色直接对应自定义平台角色 (`SysRole.role_name` / `SysRole.role_code`)，如 `ROLE_SUPER_ADMIN`、`ROLE_OPERATOR` 或管理员自定义新增的角色，不再展示性格色彩。
+2. 用户与角色管理全流程修复：
+   - 新增用户 (`userModal`)：支持在弹窗中多选勾选直接分配平台角色，移除多余业务字段，修复 JS 异常。
+   - 编辑用户与改密 (`editUserModal`)：支持随时重置用户密码、修改昵称与邮箱、勾选重新分配平台角色。
+   - 自定义平台角色 (`roleModal`)：修复按钮点击与弹窗加载事件，支持完整创建、修改、删除平台角色。
+   - 角色应用权限分配 (`rolePermissionModal`)：支持获取全量微服务节点与菜单并持久化赋权。
+   - Pydantic 模型全量补充 `ConfigDict(from_attributes=True)`，保证多对多关联与嵌套 DTO 序列化 100% 畅通。

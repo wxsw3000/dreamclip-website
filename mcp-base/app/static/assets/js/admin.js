@@ -4,12 +4,13 @@
 const API_BASE = '/api/v1';
 
 function getToken() {
-  return localStorage.getItem('mcp_token');
+  return localStorage.getItem('mcp_token') || localStorage.getItem('dreamclip_token');
 }
 
 function getUser() {
   try {
-    return JSON.parse(localStorage.getItem('mcp_user'));
+    const raw = localStorage.getItem('mcp_user') || localStorage.getItem('dreamclip_user');
+    return raw ? JSON.parse(raw) : null;
   } catch (e) {
     return null;
   }
@@ -28,6 +29,8 @@ async function api(path, options = {}) {
     if (resp.status === 401) {
       localStorage.removeItem('mcp_token');
       localStorage.removeItem('mcp_user');
+      localStorage.removeItem('dreamclip_token');
+      localStorage.removeItem('dreamclip_user');
       window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname);
       return null;
     }
@@ -94,6 +97,8 @@ function refreshCurrentTab() {
 function handleLogout() {
   localStorage.removeItem('mcp_token');
   localStorage.removeItem('mcp_user');
+  localStorage.removeItem('dreamclip_token');
+  localStorage.removeItem('dreamclip_user');
   window.location.href = '/login';
 }
 
@@ -110,7 +115,7 @@ function closeModal(id) {
 // ---------------- 1. Dashboard ----------------
 async function loadDashboard() {
   const res = await api('/dashboard/stats');
-  if (!res || res.code !== 200) return;
+  if (!res || res.code !== 200 || !res.data) return;
 
   const d = res.data;
   document.getElementById('statServicesTotal').innerText = d.microservices.total;
@@ -118,103 +123,86 @@ async function loadDashboard() {
   document.getElementById('statUsersTotal').innerText = d.users.total;
 
   // 渲染大盘微服务简表
-  const svcRes = await api('/microservices?size=10');
-  if (svcRes && svcRes.code === 200) {
-    const tbody = document.getElementById('dashboardServicesTable');
-    if (svcRes.data.records.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#94a3b8;">暂无接入的微服务</td></tr>';
+  const svcTable = document.getElementById('dashboardServicesTable');
+  if (svcTable && d.microservices.list) {
+    if (d.microservices.list.length === 0) {
+      svcTable.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#94a3b8;">暂无注册微服务</td></tr>';
     } else {
-      tbody.innerHTML = svcRes.data.records.map(s => `
+      svcTable.innerHTML = d.microservices.list.map(s => `
         <tr>
-          <td><code>${s.service_code}</code></td>
           <td><strong>${s.service_name}</strong></td>
-          <td><span class="badge badge-tenant">${s.category || 'BASE'}</span></td>
-          <td><span class="badge badge-tech">${s.tech_stack || 'PYTHON'}</span></td>
-          <td><code>${s.base_url}</code></td>
-          <td>${getHealthBadge(s.health_status)}</td>
-          <td>${s.response_time_ms ? s.response_time_ms + 'ms' : '-'}</td>
+          <td><code>${s.service_code}</code></td>
+          <td><span class="badge ${s.health_status === 'HEALTHY' ? 'badge-success' : 'badge-danger'}">${s.health_status}</span></td>
+          <td>${s.response_time_ms ? s.response_time_ms.toFixed(1) + 'ms' : '-'}</td>
           <td>${s.last_heartbeat ? s.last_heartbeat.replace('T', ' ').substring(0, 19) : '-'}</td>
-          <td style="white-space:nowrap;">
-            <button class="btn btn-outline btn-sm" onclick="probeService(${s.id})">🔍 探测</button>
-          </td>
         </tr>
       `).join('');
     }
   }
 
   // 渲染登录日志
-  const lbody = document.getElementById('dashboardLoginsTable');
-  if (d.recent_logins && d.recent_logins.length > 0) {
-    lbody.innerHTML = d.recent_logins.map(l => `
-      <tr>
-        <td><strong>${l.username}</strong></td>
-        <td><span class="badge ${l.status === 'SUCCESS' ? 'badge-success' : 'badge-danger'}">${l.status}</span></td>
-        <td>${l.login_time}</td>
-        <td>${l.msg || '-'}</td>
-      </tr>
-    `).join('');
+  const loginTable = document.getElementById('dashboardLoginsTable');
+  if (loginTable && d.recent_logins) {
+    if (d.recent_logins.length === 0) {
+      loginTable.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#94a3b8;">暂无登录日志</td></tr>';
+    } else {
+      loginTable.innerHTML = d.recent_logins.map(l => `
+        <tr>
+          <td><code>${l.username}</code></td>
+          <td><span class="badge ${l.status === 'SUCCESS' ? 'badge-success' : 'badge-danger'}">${l.status}</span></td>
+          <td>${l.created_at ? l.created_at.replace('T', ' ').substring(0, 19) : '-'}</td>
+          <td>${l.msg || '-'}</td>
+        </tr>
+      `).join('');
+    }
   }
 }
 
-function getHealthBadge(status) {
-  if (status === 'HEALTHY') return '<span class="badge badge-success">🟢 在线健康</span>';
-  if (status === 'UNHEALTHY') return '<span class="badge badge-warning">🟡 响应异常</span>';
-  if (status === 'DOWN') return '<span class="badge badge-danger">🔴 离线/不可达</span>';
-  return '<span class="badge badge-warning">⚪ 未检测</span>';
-}
+// ---------------- 2. Microservices Management ----------------
+let cachedServicesList = [];
 
-function getDocsLink(s) {
-  if (!s.docs_url) return '<span style="color:#94a3b8;">-</span>';
-  let url = s.base_url + s.docs_url;
-  if (s.service_code === 'mcp-base') {
-    url = '/base/docs';
-  } else if (s.service_code === 'mcp-service-universe') {
-    url = '/universe/docs';
-  }
-  return `<a href="${url}" target="_blank" style="color:#2563eb; text-decoration:none; font-weight:600;">📖 文档 ↗</a>`;
-}
-
-// ---------------- 2. Microservices ----------------
 async function loadMicroservices() {
-  const res = await api('/microservices?size=50');
+  const res = await api('/microservices');
   const tbody = document.getElementById('serviceListTable');
-  if (!res || res.code !== 200 || res.data.records.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#94a3b8;">暂无接入的微服务</td></tr>';
+  if (!tbody) return;
+  if (!res || res.code !== 200 || !res.data || res.data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#94a3b8;">暂未注册任何微服务节点</td></tr>';
     return;
   }
+  cachedServicesList = res.data;
 
-  tbody.innerHTML = res.data.records.map(s => `
+  tbody.innerHTML = res.data.map(s => `
     <tr>
       <td><code>${s.service_code}</code></td>
       <td><strong>${s.service_name}</strong></td>
-      <td><code>${s.base_url}</code></td>
-      <td>${getHealthBadge(s.health_status)}</td>
-      <td>${s.response_time_ms ? s.response_time_ms + 'ms' : '-'}</td>
+      <td><a href="${s.base_url}" target="_blank" style="color:var(--primary); text-decoration:none;">${s.base_url}</a></td>
+      <td>
+        <span class="badge ${s.health_status === 'HEALTHY' ? 'badge-success' : (s.health_status === 'DOWN' ? 'badge-danger' : 'badge-warning')}">
+          ${s.health_status}
+        </span>
+      </td>
+      <td>${s.response_time_ms ? s.response_time_ms.toFixed(1) + 'ms' : '-'}</td>
       <td>${s.last_heartbeat ? s.last_heartbeat.replace('T', ' ').substring(0, 19) : '-'}</td>
       <td>
-        ${getDocsLink(s)}
+        ${s.docs_url ? `<a href="${s.base_url.replace(/\\/$/, '') + s.docs_url}" target="_blank" class="btn btn-outline btn-sm">Swagger</a>` : '-'}
       </td>
       <td style="white-space:nowrap;">
-        <button class="btn btn-outline btn-sm" onclick="editService(${s.id})">✏️ 编辑</button>
-        <button class="btn btn-outline btn-sm" onclick="probeService(${s.id})">🔍 探测</button>
-        <button class="btn btn-outline btn-sm" style="color:var(--danger)" onclick="deleteService(${s.id})">注销</button>
+        <button class="btn btn-outline btn-sm" onclick="probeService(${s.id})">⚡ 探活</button>
+        <button class="btn btn-outline btn-sm" onclick="openEditServiceModal(${s.id})">✏️ 编辑</button>
+        ${!['mcp-base', 'mcp-portal'].includes(s.service_code) ? `<button class="btn btn-outline btn-sm" style="color:var(--danger)" onclick="deleteService(${s.id})">注销</button>` : ''}
       </td>
     </tr>
   `).join('');
 }
 
 async function probeService(id) {
-  showToast("正在发起健康心跳探测...", "info");
-  const res = await api(`/microservices/${id}/probe`, { method: 'POST' });
+  showToast("正在执行微服务健康探活...", "info");
+  const res = await api(`/microservices/${id}/health-check`, { method: 'POST' });
   if (res && res.code === 200) {
-    const d = res.data;
-    const msg = `探测结果: ${d.health_status === 'HEALTHY' ? '🟢 正常在线' : '🔴 离线 (' + (d.error_msg || '') + ')'} (耗时: ${d.response_time_ms}ms)`;
-    showToast(msg, d.health_status === 'HEALTHY' ? 'success' : 'danger');
-    const activeTab = document.querySelector('.tab-pane.active');
-    if (activeTab && activeTab.id === 'tab-dashboard') loadDashboard();
-    else loadMicroservices();
+    showToast(`探活完成: ${res.data.health_status} (${res.data.response_time_ms.toFixed(1)}ms)`, res.data.health_status === 'HEALTHY' ? 'success' : 'danger');
+    loadMicroservices();
   } else {
-    showToast(res ? res.message : "探测失败", "danger");
+    showToast(res ? res.message : "探活失败", "danger");
   }
 }
 
@@ -222,28 +210,28 @@ function openRegisterServiceModal() {
   document.getElementById('serviceForm').reset();
   document.getElementById('svc_id').value = '';
   document.getElementById('svc_code').disabled = false;
-  document.getElementById('serviceModalTitle').innerText = '登记接入新微服务';
-  document.getElementById('svcSubmitBtn').innerText = '提 交 接入';
+  document.getElementById('serviceModalTitle').innerText = '登记接入新微服务节点';
   openModal('serviceModal');
 }
 
-async function editService(id) {
-  const res = await api(`/microservices/${id}`);
-  if (!res || res.code !== 200) {
-    showToast("获取微服务信息失败", "danger");
-    return;
-  }
-  const s = res.data;
+function openEditServiceModal(id) {
+  const s = cachedServicesList.find(item => item.id === id);
+  if (!s) return;
+
   document.getElementById('svc_id').value = s.id;
   document.getElementById('svc_code').value = s.service_code;
-  document.getElementById('svc_code').disabled = true;
+  document.getElementById('svc_code').disabled = true; // 编码不可修改
   document.getElementById('svc_name').value = s.service_name;
-  document.getElementById('svc_url').value = s.base_url;
-  document.getElementById('svc_health').value = s.health_url;
-  document.getElementById('svc_docs').value = s.docs_url || '';
+  document.getElementById('svc_base_url').value = s.base_url;
+  document.getElementById('svc_health_url').value = s.health_url || '/health';
+  document.getElementById('svc_docs_url').value = s.docs_url || '/docs';
+  document.getElementById('svc_gateway_prefix').value = s.gateway_prefix || '';
+  document.getElementById('svc_tech_stack').value = s.tech_stack || 'PYTHON';
+  document.getElementById('svc_category').value = s.category || 'BIZ';
+  document.getElementById('svc_status').value = s.status || 'ACTIVE';
   document.getElementById('svc_desc').value = s.description || '';
-  document.getElementById('serviceModalTitle').innerText = `编辑微服务配置: ${s.service_code}`;
-  document.getElementById('svcSubmitBtn').innerText = '保存微服务配置';
+
+  document.getElementById('serviceModalTitle').innerText = `编辑微服务: ${s.service_name}`;
   openModal('serviceModal');
 }
 
@@ -253,10 +241,14 @@ async function saveService(e) {
   const payload = {
     service_code: document.getElementById('svc_code').value.trim(),
     service_name: document.getElementById('svc_name').value.trim(),
-    base_url: document.getElementById('svc_url').value.trim(),
-    health_url: document.getElementById('svc_health').value.trim(),
-    docs_url: document.getElementById('svc_docs').value.trim(),
-    description: document.getElementById('svc_desc').value.trim()
+    base_url: document.getElementById('svc_base_url').value.trim(),
+    health_url: document.getElementById('svc_health_url').value.trim(),
+    docs_url: document.getElementById('svc_docs_url').value.trim() || undefined,
+    gateway_prefix: document.getElementById('svc_gateway_prefix').value.trim() || undefined,
+    tech_stack: document.getElementById('svc_tech_stack').value,
+    category: document.getElementById('svc_category').value,
+    status: document.getElementById('svc_status').value,
+    description: document.getElementById('svc_desc').value.trim() || undefined
   };
 
   let res;
@@ -273,7 +265,7 @@ async function saveService(e) {
   }
 
   if (res && res.code === 200) {
-    showToast(svcId ? "微服务配置修改成功" : "微服务已成功接入", "success");
+    showToast(svcId ? "微服务配置修改成功" : "微服务接入注册成功！", "success");
     closeModal('serviceModal');
     loadMicroservices();
   } else {
@@ -296,14 +288,15 @@ let cachedRolesList = [];
 async function loadUsers() {
   const res = await api('/system/users?size=50');
   const tbody = document.getElementById('userListTable');
-  if (!res || res.code !== 200 || res.data.records.length === 0) {
+  if (!tbody) return;
+  if (!res || res.code !== 200 || !res.data || !res.data.records || res.data.records.length === 0) {
     tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#94a3b8;">暂无用户数据</td></tr>';
     return;
   }
 
   tbody.innerHTML = res.data.records.map(u => {
     const rolesStr = (u.roles && u.roles.length > 0)
-      ? u.roles.map(r => `<span class="badge badge-tech">${r.role_name}</span>`).join(' ')
+      ? u.roles.map(r => `<span class="badge badge-tech" title="${r.role_code}">${r.role_name}</span>`).join(' ')
       : '<span class="badge badge-outline">未分配角色</span>';
 
     return `
@@ -324,13 +317,18 @@ async function loadUsers() {
 }
 
 async function openEditUserModal(userId) {
-  // 先获取所有角色
+  // 先获取全量角色列表
   const rolesRes = await api('/system/roles');
-  if (rolesRes && rolesRes.code === 200) {
+  if (rolesRes && rolesRes.code === 200 && rolesRes.data) {
     cachedRolesList = rolesRes.data;
   }
 
   const res = await api(`/system/users?size=100`);
+  if (!res || res.code !== 200 || !res.data || !res.data.records) {
+    showToast("获取用户列表失败", "danger");
+    return;
+  }
+
   const user = res.data.records.find(u => u.id === userId);
   if (!user) {
     showToast("未找到该用户信息", "danger");
@@ -341,17 +339,17 @@ async function openEditUserModal(userId) {
   document.getElementById('edit_user_username').value = user.username;
   document.getElementById('edit_user_realname').value = user.real_name || '';
   document.getElementById('edit_user_email').value = user.email || '';
-  document.getElementById('edit_user_pwd').value = ''; // 留空则不修改
+  document.getElementById('edit_user_pwd').value = ''; // 留空则不修改密码
   document.getElementById('edit_user_status').value = user.status;
   document.getElementById('edit_user_superadmin').checked = Boolean(user.is_superadmin);
 
-  // 渲染角色选择多选框
+  // 渲染平台角色复选框
   const rolesContainer = document.getElementById('edit_user_roles_box');
   const userRoleIds = (user.roles || []).map(r => r.id);
   rolesContainer.innerHTML = cachedRolesList.map(r => `
-    <label style="display:inline-flex; align-items:center; gap:5px; margin-right:12px; font-size:13px; cursor:pointer;">
+    <label style="display:inline-flex; align-items:center; gap:6px; margin-right:14px; margin-bottom:6px; font-size:13px; font-weight:600; cursor:pointer;">
       <input type="checkbox" name="editUserRole" value="${r.id}" ${userRoleIds.includes(r.id) ? 'checked' : ''}>
-      ${r.role_name} (${r.role_code})
+      ${r.role_name} <span style="font-size:11px; color:#64748b; font-weight:normal;">(${r.role_code})</span>
     </label>
   `).join('');
 
@@ -402,20 +400,35 @@ async function deleteUser(userId) {
   }
 }
 
-function openUserModal() {
+async function openUserModal() {
   document.getElementById('userForm').reset();
+  const rolesRes = await api('/system/roles');
+  if (rolesRes && rolesRes.code === 200 && rolesRes.data) {
+    cachedRolesList = rolesRes.data;
+  }
+  const container = document.getElementById('new_user_roles_box');
+  if (container) {
+    container.innerHTML = cachedRolesList.map(r => `
+      <label style="display:inline-flex; align-items:center; gap:6px; margin-right:14px; margin-bottom:6px; font-size:13px; font-weight:600; cursor:pointer;">
+        <input type="checkbox" name="newUserRole" value="${r.id}" ${r.role_code === 'ROLE_OPERATOR' ? 'checked' : ''}>
+        ${r.role_name} <span style="font-size:11px; color:#64748b; font-weight:normal;">(${r.role_code})</span>
+      </label>
+    `).join('');
+  }
   openModal('userModal');
 }
 
 async function saveNewUser(e) {
   e.preventDefault();
+  const selectedRoleIds = Array.from(document.querySelectorAll('input[name="newUserRole"]:checked'))
+    .map(cb => parseInt(cb.value));
+
   const payload = {
     username: document.getElementById('new_username').value.trim(),
     password: document.getElementById('new_password').value,
     real_name: document.getElementById('new_real_name').value.trim(),
     email: document.getElementById('new_email').value.trim() || undefined,
-    personality_color: document.getElementById('new_personality').value.trim() || undefined,
-    zodiac: document.getElementById('new_zodiac').value.trim() || undefined
+    role_ids: selectedRoleIds
   };
 
   const res = await api('/system/users', {
@@ -424,7 +437,7 @@ async function saveNewUser(e) {
   });
 
   if (res && res.code === 200) {
-    showToast("用户创建成功！", "success");
+    showToast("平台用户创建成功！", "success");
     closeModal('userModal');
     loadUsers();
   } else {
@@ -436,7 +449,8 @@ async function saveNewUser(e) {
 async function loadRoles() {
   const res = await api('/system/roles');
   const tbody = document.getElementById('roleListTable');
-  if (!res || res.code !== 200 || res.data.length === 0) {
+  if (!tbody) return;
+  if (!res || res.code !== 200 || !res.data || res.data.length === 0) {
     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#94a3b8;">暂无角色数据</td></tr>';
     return;
   }
@@ -445,7 +459,7 @@ async function loadRoles() {
   tbody.innerHTML = res.data.map(r => {
     const menusStr = (r.menus && r.menus.length > 0)
       ? r.menus.map(m => `<span class="badge badge-tenant">${m.menu_name}</span>`).join(' ')
-      : '<span style="color:#94a3b8;">未配置应用权限</span>';
+      : '<span style="color:#94a3b8; font-size:12px;">未配置应用权限</span>';
 
     return `
       <tr>
@@ -457,7 +471,7 @@ async function loadRoles() {
         <td style="white-space:nowrap;">
           <button class="btn btn-primary btn-sm" onclick="openRolePermissionsModal(${r.id})">🔑 赋予应用权限</button>
           <button class="btn btn-outline btn-sm" onclick="openEditRoleModal(${r.id})">✏️ 编辑</button>
-          ${!['ROLE_SUPERADMIN', 'ROLE_OPERATOR'].includes(r.role_code) ? `<button class="btn btn-outline btn-sm" style="color:var(--danger)" onclick="deleteRole(${r.id})">🗑️ 删除</button>` : ''}
+          ${!['ROLE_SUPER_ADMIN', 'ROLE_SUPERADMIN', 'ROLE_OPERATOR'].includes(r.role_code) ? `<button class="btn btn-outline btn-sm" style="color:var(--danger)" onclick="deleteRole(${r.id})">🗑️ 删除</button>` : ''}
         </td>
       </tr>
     `;
@@ -512,7 +526,7 @@ async function saveRole(e) {
   }
 
   if (res && res.code === 200) {
-    showToast(roleId ? "角色修改成功" : "角色创建成功", "success");
+    showToast(roleId ? "平台角色修改成功" : "平台角色创建成功！", "success");
     closeModal('roleModal');
     loadRoles();
   } else {
@@ -538,10 +552,10 @@ async function openRolePermissionsModal(roleId) {
   document.getElementById('perm_role_id').value = role.id;
   document.getElementById('permRoleModalTitle').innerText = `为角色 [${role.role_name}] 赋予应用与菜单权限`;
 
-  // 获取所有可分配的扁平菜单和应用
+  // 获取所有可分配的扁平菜单和微服务应用
   const menusRes = await api('/system/menus/flat');
   const container = document.getElementById('permissionsCheckboxContainer');
-  if (!menusRes || menusRes.code !== 200) {
+  if (!menusRes || menusRes.code !== 200 || !menusRes.data) {
     showToast("获取权限列表失败", "danger");
     return;
   }
@@ -616,7 +630,8 @@ async function handleAdminPwdSubmit(e) {
 async function loadConfigs() {
   const res = await api('/system/configs');
   const tbody = document.getElementById('configListTable');
-  if (!res || res.code !== 200 || res.data.length === 0) {
+  if (!tbody) return;
+  if (!res || res.code !== 200 || !res.data || res.data.length === 0) {
     tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#94a3b8;">暂无全局参数</td></tr>';
     return;
   }
@@ -650,17 +665,21 @@ async function updateConfig(key, inputId) {
 // ---------------- 初始化 ----------------
 window.addEventListener('DOMContentLoaded', () => {
   const urlParams = new URLSearchParams(window.location.search);
-  const tokenFromUrl = urlParams.get('mcp_token');
-  const userFromUrl = urlParams.get('mcp_user');
+  const tokenFromUrl = urlParams.get('mcp_token') || urlParams.get('token');
+  const userFromUrl = urlParams.get('mcp_user') || urlParams.get('user');
   const tabFromUrl = urlParams.get('tab');
 
   if (tokenFromUrl) {
     localStorage.setItem('mcp_token', tokenFromUrl);
+    localStorage.setItem('dreamclip_token', tokenFromUrl);
     if (userFromUrl) {
       localStorage.setItem('mcp_user', decodeURIComponent(userFromUrl));
+      localStorage.setItem('dreamclip_user', decodeURIComponent(userFromUrl));
     }
     urlParams.delete('mcp_token');
+    urlParams.delete('token');
     urlParams.delete('mcp_user');
+    urlParams.delete('user');
     const newSearch = urlParams.toString();
     const newUrl = window.location.pathname + (newSearch ? '?' + newSearch : '') + window.location.hash;
     window.history.replaceState({}, document.title, newUrl);
@@ -678,7 +697,7 @@ window.addEventListener('DOMContentLoaded', () => {
     if (user.is_superadmin) {
       document.getElementById('userRoleTag').innerText = "超级管理员";
     } else {
-      document.getElementById('userRoleTag').innerText = user.role_name || "普通用户";
+      document.getElementById('userRoleTag').innerText = (user.roles && user.roles.length > 0) ? user.roles[0] : (user.role_name || "平台用户");
     }
   }
 

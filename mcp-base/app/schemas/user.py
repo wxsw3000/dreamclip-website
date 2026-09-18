@@ -1,6 +1,6 @@
 from typing import Optional, List
 from datetime import datetime
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 class UserBase(BaseModel):
     username: str
@@ -8,9 +8,6 @@ class UserBase(BaseModel):
     email: Optional[str] = None
     phone: Optional[str] = None
     avatar: Optional[str] = None
-    personality_color: Optional[str] = "BLUE"
-    zodiac: Optional[str] = None
-    unlocked_data: Optional[str] = None
     tenant_code: str = "SYSTEM"
     is_superadmin: int = 0
     status: str = "ACTIVE"
@@ -18,15 +15,13 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
+    role_ids: Optional[List[int]] = []
 
 class UserUpdate(BaseModel):
     real_name: Optional[str] = None
     email: Optional[str] = None
     phone: Optional[str] = None
     avatar: Optional[str] = None
-    personality_color: Optional[str] = None
-    zodiac: Optional[str] = None
-    unlocked_data: Optional[str] = None
     status: Optional[str] = None
     password: Optional[str] = None
     role_ids: Optional[List[int]] = None
@@ -37,13 +32,14 @@ class RoleSimple(BaseModel):
     role_code: str
     role_name: str
 
+    model_config = ConfigDict(from_attributes=True)
+
 class UserOut(UserBase):
     id: int
     created_at: datetime
     roles: List[RoleSimple] = []
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class MenuSimple(BaseModel):
     id: int
@@ -51,6 +47,8 @@ class MenuSimple(BaseModel):
     menu_type: str
     service_code: Optional[str] = None
     permission: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
 
 class RoleOut(BaseModel):
     id: int
@@ -62,8 +60,7 @@ class RoleOut(BaseModel):
     created_at: datetime
     menus: List[MenuSimple] = []
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class RoleCreate(BaseModel):
     role_code: str
@@ -97,7 +94,6 @@ class MenuOut(BaseModel):
     service_code: Optional[str] = None
     children: List["MenuOut"] = []
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 MenuOut.model_rebuild()
