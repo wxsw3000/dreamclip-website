@@ -114,19 +114,27 @@ async def host_virtual_routing_middleware(request: Request, call_next):
     host = raw_host.split(":")[0].strip().lower()
     path = request.url.path
 
-    # 1. 独立子域名：base.dreamclip.cn / admin.dreamclip.cn -> 直达 MagicStar MCP 模块化配置底座
-    if host in ["base.dreamclip.cn", "admin.dreamclip.cn"]:
+    # 1. 独立子域名：portal.dreamclip.cn / workbench.dreamclip.cn -> 直达 Apple 风格应用工作台 (PortalOS)
+    if host in ["portal.dreamclip.cn", "workbench.dreamclip.cn"]:
+        if path in ["/", "", "/portal", "/workbench"]:
+            return FileResponse(os.path.join(static_dir, "portal.html"))
+        file_path = os.path.join(static_dir, path.lstrip("/"))
+        if os.path.exists(file_path) and os.path.isfile(file_path):
+            return FileResponse(file_path)
+
+    # 2. 独立子域名：base.dreamclip.cn / admin.dreamclip.cn -> 直达 MagicStar MCP 模块化配置底座
+    elif host in ["base.dreamclip.cn", "admin.dreamclip.cn"]:
         target_url = f"{settings.BASE_SERVICE_URL.rstrip('/')}{path}"
         return await forward_request(request, target_url)
 
-    # 2. 独立子域名：universe.dreamclip.cn -> 直达 角色宇宙与内容独立微服务
+    # 3. 独立子域名：universe.dreamclip.cn -> 直达 角色宇宙与内容独立微服务
     elif host in ["universe.dreamclip.cn"]:
         if path in ["/", ""]:
             path = "/docs"
         target_url = f"{settings.UNIVERSE_SERVICE_URL.rstrip('/')}{path}"
         return await forward_request(request, target_url)
 
-    # 3. 独立子域名：game.dreamclip.cn / games.dreamclip.cn -> 直达 AVG 互动游戏中心
+    # 4. 独立子域名：game.dreamclip.cn / games.dreamclip.cn -> 直达 AVG 互动游戏中心
     elif host in ["game.dreamclip.cn", "games.dreamclip.cn"]:
         if path in ["/", ""]:
             file_path = os.path.join(static_dir, "games.html")
@@ -134,7 +142,7 @@ async def host_virtual_routing_middleware(request: Request, call_next):
                 return FileResponse(file_path)
         return await call_next(request)
 
-    # 4. 默认主站与统一网关
+    # 5. 默认主站与统一网关
     return await call_next(request)
 
 @app.get("/health", summary="健康检查端点 (供底座心跳探测)")
@@ -219,8 +227,9 @@ def index_page():
     return serve_static_page("universe.html")
 
 @app.get("/portal", include_in_schema=False)
+@app.get("/portal/{path:path}", include_in_schema=False)
 @app.get("/workbench", include_in_schema=False)
-def portal_desktop_page():
+def portal_desktop_page(path: str = None):
     return serve_static_page("portal.html")
 
 @app.get("/universe", include_in_schema=False)
