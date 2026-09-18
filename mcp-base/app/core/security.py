@@ -79,6 +79,23 @@ def get_current_user_payload(
         )
     return payload
 
+def get_optional_user_payload(
+    token: Optional[str] = Depends(oauth2_scheme),
+    authorization: Optional[str] = Header(None)
+) -> Optional[dict]:
+    """从 Header 或 OAuth2 中可选解析当前登录用户（若无凭证或凭证无效则返回 None）"""
+    raw_token = token
+    if not raw_token and authorization:
+        if authorization.startswith("Bearer "):
+            raw_token = authorization.split(" ")[1]
+        else:
+            raw_token = authorization
+
+    if not raw_token:
+        return None
+    
+    return decode_token(raw_token)
+
 def get_current_superadmin(
     payload: dict = Depends(get_current_user_payload)
 ) -> dict:

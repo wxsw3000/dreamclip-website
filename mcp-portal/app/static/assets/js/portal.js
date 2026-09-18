@@ -134,119 +134,94 @@ window.PortalOS = (function() {
     `).join('');
   }
 
-  function renderApps() {
-    const user = getUser();
-    const isSuper = Boolean(user && user.is_superadmin);
+  async function renderApps() {
     const appGrid = document.getElementById('springboardAppGrid');
     const adminGridSection = document.getElementById('adminAppsSection');
     const adminAppGrid = document.getElementById('adminAppGrid');
     if (!appGrid) return;
 
-    // 1. 公开与业务应用 (所有用户及访客可见)
-    const publicApps = [
-      {
-        id: 'app-universe',
-        name: '角色宇宙',
-        sub: 'DreamClip Universe',
-        icon: '🌌',
-        gradient: 'linear-gradient(135deg, #4f46e5, #06b6d4)',
-        url: '/universe',
-        badge: '主站'
-      },
-      {
-        id: 'app-capsules',
-        name: '情绪胶囊',
-        sub: 'Emotion Lab',
-        icon: '💊',
-        gradient: 'linear-gradient(135deg, #0ea5e9, #6366f1)',
-        url: '/universe#capsules-section',
-        badge: '文学'
-      },
-      {
-        id: 'app-theatre',
-        name: 'AVG 沉浸剧场',
-        sub: 'DreamClip Theatre',
-        icon: '🎮',
-        gradient: 'linear-gradient(135deg, #8b5cf6, #ec4899)',
-        url: '/games',
-        badge: '互动'
-      },
-      {
-        id: 'app-docs',
-        name: 'API 开放文档',
-        sub: 'OpenAPI Swagger',
-        icon: '📖',
-        gradient: 'linear-gradient(135deg, #10b981, #059669)',
-        url: '/base/docs',
-        badge: '接口'
+    // 动态从底座 IAM /auth/my-apps 获取当前登录用户被授权的全部微服务应用
+    let myApps = [];
+    try {
+      const res = await api('/auth/my-apps');
+      if (res && res.code === 200 && Array.isArray(res.data)) {
+        myApps = res.data;
       }
-    ];
-
-    if (user) {
-      publicApps.push({
-        id: 'app-vault',
-        name: '星际背包',
-        sub: 'Capsule Vault',
-        icon: '🎒',
-        gradient: 'linear-gradient(135deg, #f59e0b, #d97706)',
-        url: '/universe',
-        badge: '资产'
-      });
+    } catch (e) {
+      console.warn("Failed to fetch my-apps:", e);
     }
 
-    appGrid.innerHTML = publicApps.map(app => `
-      <div class="app-item" onclick="PortalOS.launchApp('${app.url}')">
-        <div class="squircle-icon" style="background:${app.gradient};">
-          ${app.icon}
-          <span class="app-status-badge"></span>
+    // 兜底默认应用
+    if (myApps.length === 0) {
+      myApps = [
+        {
+          id: 'app-universe',
+          name: '角色宇宙',
+          sub: 'DreamClip Universe',
+          icon: '🌌',
+          gradient: 'linear-gradient(135deg, #4f46e5, #06b6d4)',
+          url: '/universe',
+          is_admin: false,
+          health_status: 'HEALTHY'
+        },
+        {
+          id: 'app-capsules',
+          name: '情绪胶囊',
+          sub: 'Emotion Lab',
+          icon: '💊',
+          gradient: 'linear-gradient(135deg, #0ea5e9, #6366f1)',
+          url: '/universe#capsules-section',
+          is_admin: false,
+          health_status: 'HEALTHY'
+        },
+        {
+          id: 'app-theatre',
+          name: 'AVG 沉浸剧场',
+          sub: 'DreamClip Theatre',
+          icon: '🎮',
+          gradient: 'linear-gradient(135deg, #8b5cf6, #ec4899)',
+          url: '/games',
+          is_admin: false,
+          health_status: 'HEALTHY'
+        },
+        {
+          id: 'app-docs',
+          name: 'API 开放文档',
+          sub: 'OpenAPI Swagger',
+          icon: '📖',
+          gradient: 'linear-gradient(135deg, #10b981, #059669)',
+          url: '/base/docs',
+          is_admin: false,
+          health_status: 'HEALTHY'
+        }
+      ];
+    }
+
+    const businessApps = myApps.filter(a => !a.is_admin);
+    const adminApps = myApps.filter(a => a.is_admin);
+
+    appGrid.innerHTML = businessApps.map(app => `
+      <div class="app-item" onclick="PortalOS.launchApp('${app.url}')" title="${app.description || app.name}">
+        <div class="squircle-icon" style="background:${app.gradient || 'linear-gradient(135deg, #4f46e5, #06b6d4)'};">
+          ${app.icon || '📱'}
+          <span class="app-status-badge" style="background:${app.health_status === 'HEALTHY' ? '#10b981' : '#f59e0b'};"></span>
         </div>
         <div class="app-label">${app.name}</div>
-        <div class="app-sublabel">${app.sub}</div>
+        <div class="app-sublabel">${app.sub || ''}</div>
       </div>
     `).join('');
 
-    // 2. 超管专属技术应用 (RBAC 动态解锁)
     if (adminGridSection && adminAppGrid) {
-      if (isSuper) {
+      if (adminApps.length > 0) {
         adminGridSection.style.display = 'block';
-        const adminApps = [
-          {
-            id: 'app-base',
-            name: 'MCP Base 控制台',
-            sub: '底座运维与治理',
-            icon: '⭐',
-            gradient: 'linear-gradient(135deg, #6366f1, #3b82f6)',
-            url: 'https://base.dreamclip.cn/',
-            isBase: true
-          },
-          {
-            id: 'app-users',
-            name: '用户权限中心',
-            sub: '平台用户与角色',
-            icon: '👥',
-            gradient: 'linear-gradient(135deg, #8b5cf6, #a855f7)',
-            url: 'https://base.dreamclip.cn/?tab=tab-users',
-            isBase: true
-          },
-          {
-            id: 'app-configs',
-            name: '全局参数字典',
-            sub: '系统运行参数',
-            icon: '⚙️',
-            gradient: 'linear-gradient(135deg, #64748b, #475569)',
-            url: 'https://base.dreamclip.cn/?tab=tab-configs',
-            isBase: true
-          }
-        ];
-
         adminAppGrid.innerHTML = adminApps.map(app => `
-          <div class="app-item" onclick="PortalOS.launchAdminApp('${app.url}')">
-            <div class="squircle-icon" style="background:${app.gradient};">
-              ${app.icon}
+          <div class="app-item" onclick="PortalOS.launchAdminApp('${app.url}')" title="${app.description || app.name}">
+            <div class="squircle-icon" style="background:${app.gradient || 'linear-gradient(135deg, #6366f1, #3b82f6)'};">
+              ${app.icon || '⭐'}
               <span class="app-status-badge" style="background:#6366f1; box-shadow:0 0 6px #6366f1;"></span>
             </div>
             <div class="app-label">${app.name}</div>
-            <div class="app-sublabel">${app.sub}</div>
+            <div class="app-sublabel">${app.sub || ''}</div>
           </div>
         `).join('');
       } else {
@@ -256,7 +231,20 @@ window.PortalOS = (function() {
   }
 
   function launchApp(url) {
-    window.location.href = url;
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      const token = getToken();
+      const user = getUser();
+      const u = new URL(url, window.location.origin);
+      if (token) {
+        u.searchParams.set('mcp_token', token);
+        if (user) {
+          u.searchParams.set('mcp_user', encodeURIComponent(JSON.stringify(user)));
+        }
+      }
+      window.open(u.toString(), '_blank');
+    } else {
+      window.location.href = url;
+    }
   }
 
   function launchAdminApp(url) {
@@ -425,6 +413,26 @@ window.PortalOS = (function() {
   }
 
   function init() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tokenFromUrl = urlParams.get('mcp_token') || urlParams.get('token');
+    const userFromUrl = urlParams.get('mcp_user') || urlParams.get('user');
+
+    if (tokenFromUrl) {
+      localStorage.setItem('mcp_token', tokenFromUrl);
+      localStorage.setItem('dreamclip_token', tokenFromUrl);
+      if (userFromUrl) {
+        localStorage.setItem('mcp_user', decodeURIComponent(userFromUrl));
+        localStorage.setItem('dreamclip_user', decodeURIComponent(userFromUrl));
+      }
+      urlParams.delete('mcp_token');
+      urlParams.delete('token');
+      urlParams.delete('mcp_user');
+      urlParams.delete('user');
+      const newSearch = urlParams.toString();
+      const newUrl = window.location.pathname + (newSearch ? '?' + newSearch : '') + window.location.hash;
+      window.history.replaceState({}, document.title, newUrl);
+    }
+
     startClock();
     renderStatusBar();
     renderApps();

@@ -37,6 +37,21 @@ class TokenResponse(BaseModel):
     expires_in: int = Field(description="有效期(秒)")
     user_info: "UserInfoResponse"
 
+class MyAppItem(BaseModel):
+    """当前用户可访问的应用与微服务项"""
+    id: str
+    service_code: Optional[str] = None
+    name: str
+    sub: Optional[str] = None
+    icon: str = "📱"
+    gradient: str = "linear-gradient(135deg, #4f46e5, #06b6d4)"
+    url: str
+    category: str = "BIZ"
+    badge: Optional[str] = None
+    is_admin: bool = False
+    description: Optional[str] = None
+    health_status: str = "HEALTHY"
+
 class UserInfoResponse(BaseModel):
     """当前用户信息与画像载荷"""
     id: int
