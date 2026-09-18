@@ -116,8 +116,6 @@ async def host_virtual_routing_middleware(request: Request, call_next):
 
     # 1. 独立子域名：base.dreamclip.cn / admin.dreamclip.cn -> 直达 MagicStar MCP 模块化配置底座
     if host in ["base.dreamclip.cn", "admin.dreamclip.cn"]:
-        if path.startswith("/static/"):
-            return await call_next(request)
         target_url = f"{settings.BASE_SERVICE_URL.rstrip('/')}{path}"
         return await forward_request(request, target_url)
 
