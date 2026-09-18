@@ -184,7 +184,7 @@ async function loadMicroservices() {
       <td>${s.response_time_ms ? s.response_time_ms.toFixed(1) + 'ms' : '-'}</td>
       <td>${s.last_heartbeat ? s.last_heartbeat.replace('T', ' ').substring(0, 19) : '-'}</td>
       <td>
-        ${s.docs_url ? `<a href="${s.base_url.replace(/\\/$/, '') + s.docs_url}" target="_blank" class="btn btn-outline btn-sm">Swagger</a>` : '-'}
+        ${s.docs_url ? `<a href="${(s.base_url.endsWith('/') ? s.base_url.slice(0, -1) : s.base_url) + s.docs_url}" target="_blank" class="btn btn-outline btn-sm">Swagger</a>` : '-'}
       </td>
       <td style="white-space:nowrap;">
         <button class="btn btn-outline btn-sm" onclick="probeService(${s.id})">⚡ 探活</button>
