@@ -19,12 +19,13 @@ async def register_self_to_base():
         return
     
     register_url = f"{settings.BASE_SERVICE_URL.rstrip('/')}/api/v1/microservices/register"
+    portal_base = settings.PORTAL_BASE_URL.rstrip('/') if settings.PORTAL_BASE_URL else f"http://127.0.0.1:{settings.SERVER_PORT}"
     payload = {
         "service_code": "mcp-portal",
         "service_name": "MagicStar 统一应用门户与网关",
         "tech_stack": "PYTHON",
         "category": "BASE",
-        "base_url": f"http://127.0.0.1:{settings.SERVER_PORT}",
+        "base_url": portal_base,
         "health_url": "/health",
         "docs_url": "/docs",
         "description": "MagicStar 模块化配置平台的统一路由网关、SSO 认证与微服务应用门户"

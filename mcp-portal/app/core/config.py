@@ -6,8 +6,11 @@ class Settings(BaseSettings):
     VERSION: str = "1.0.0"
     
     # 门户服务端口
-    SERVER_HOST: str = "0.0.0.0"
-    SERVER_PORT: int = 3000
+    SERVER_HOST: str = os.getenv("SERVER_HOST", "0.0.0.0")
+    SERVER_PORT: int = int(os.getenv("SERVER_PORT", os.getenv("PORT", "3000")))
+    
+    # 门户自身的访问地址（供向底座自注册与心跳探测使用）
+    PORTAL_BASE_URL: str = os.getenv("PORTAL_BASE_URL", "")
     
     # 底座微服务 (mcp-base) 接入地址
     BASE_SERVICE_URL: str = os.getenv("BASE_SERVICE_URL", "http://127.0.0.1:8000")
