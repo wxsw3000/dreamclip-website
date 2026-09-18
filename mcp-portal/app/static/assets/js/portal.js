@@ -1,15 +1,12 @@
 /**
- * MCP-Portal Unified Enterprise Workbench Engine
- * 遵循“开发一个、注册一个、显示一个”原则
- * 点击微服务卡片直接在新标签页打开（带单点登录 SSO Token 授信访问，拒绝双层嵌套）
+ * ==========================================================================
+ * PortalOS: Apple iOS / iPadOS Springboard Engine & RBAC Launcher
+ * ==========================================================================
  */
 
 window.PortalOS = (function() {
-  // 真实已注册微服务列表 (100% 来自底座 /api/v1/microservices)
   let registeredServices = [];
-  let appsList = [];
 
-  // 1. SSO 统一凭据存取
   function getToken() {
     return localStorage.getItem('mcp_token');
   }
@@ -22,7 +19,16 @@ window.PortalOS = (function() {
     }
   }
 
-  // 统一底座 API 调用包装
+  function showToast(msg, type = 'info') {
+    const c = document.getElementById('toastContainer');
+    if (!c) return;
+    const t = document.createElement('div');
+    t.className = 'ios-toast';
+    t.innerText = msg;
+    c.appendChild(t);
+    setTimeout(() => t.remove(), 3000);
+  }
+
   async function api(path, options = {}) {
     const token = getToken();
     const headers = {
@@ -33,270 +39,403 @@ window.PortalOS = (function() {
     try {
       const resp = await fetch('/api/base' + path, { ...options, headers });
       if (resp.status === 401) {
-        logout();
+        // Token expired
+        localStorage.removeItem('mcp_token');
+        localStorage.removeItem('mcp_user');
+        renderStatusBar();
+        renderApps();
         return null;
       }
       return await resp.json();
     } catch (e) {
-      console.warn("API request failed:", path, e);
+      console.warn("Portal API failed:", path, e);
       return null;
     }
   }
 
-  // 2. 初始化系统
-  async function init() {
-    const user = getUser();
-    if (!user) {
-      window.location.href = '/login';
-      return;
-    }
-
-    // 渲染用户信息
-    const nameEl = document.getElementById('topUserName');
-    const avatarEl = document.getElementById('topUserAvatar');
-    if (nameEl) nameEl.innerText = user.real_name || user.username;
-    if (avatarEl) avatarEl.innerText = (user.username || 'SA').substring(0, 2).toUpperCase();
-
-    // 启动系统时钟
-    startSystemClock();
-
-    // 加载真实已注册微服务
-    await reloadData();
-
-    // 启动后台定时健康探测轮询 (每 20 秒从真实底座同步)
-    setInterval(pollHealthStatus, 20000);
-  }
-
-  // 3. 从底座拉取真实注册的微服务
-  async function reloadData() {
-    const gridContainer = document.getElementById('appGridContainer');
-    if (gridContainer) {
-      gridContainer.innerHTML = `
-        <div style="grid-column:1/-1; text-align:center; padding:50px; color:var(--text-muted);">
-          <div class="spinner-ring" style="margin:0 auto 16px;"></div>
-          <div>正在从服务底座同步微服务...</div>
-        </div>
-      `;
-    }
-
-    try {
-      const svcRes = await api('/microservices');
-      
-      registeredServices = (svcRes && svcRes.code === 200 && svcRes.data && Array.isArray(svcRes.data.records)) 
-        ? svcRes.data.records 
-        : (svcRes && svcRes.data && Array.isArray(svcRes.data)) ? svcRes.data : [];
-
-      // 1:1 严格构建真实 App 卡片
-      buildStrictAppCatalog();
-
-      // 渲染真实应用网格
-      renderAppGrid();
-
-      // 更新顶部微服务集群真实健康胶囊
-      updateHealthCapsule();
-    } catch (err) {
-      console.error("Failed to load registered microservices:", err);
-      if (gridContainer) {
-        gridContainer.innerHTML = `
-          <div style="grid-column:1/-1; text-align:center; padding:40px; color:#dc2626;">
-            <div style="font-size:32px; margin-bottom:10px;">⚠️</div>
-            <div style="font-weight:700; font-size:16px;">无法连接到底座服务 (Port 8000)</div>
-            <div style="font-size:12.5px; margin-top:6px; color:var(--text-muted);">请确认 mcp-base 正在运行</div>
-          </div>
-        `;
-      }
-    }
-  }
-
-  // 4. 严格 1:1 映射：注册了哪个微服务，桌面就只显示哪个 App 卡片
-  function buildStrictAppCatalog() {
-    appsList = [];
-
-    registeredServices.forEach(s => {
-      // 门户自身不作为独立 App 重复打开
-      if (s.service_code === 'mcp-portal') return;
-
-      const cat = s.category || 'CORE';
-
-      // 解析入口地址 (底座使用 /login 鉴权直通，其他微服务使用 base_url)
-      let launchUrl = s.base_url;
-      if (s.service_code === 'mcp-base') {
-        launchUrl = 'http://127.0.0.1:8000/login';
-      }
-
-      appsList.push({
-        id: `app-svc-${s.service_code}`,
-        code: s.service_code,
-        name: s.service_name,
-        category: cat,
-        icon: getServiceIcon(s.service_code, cat),
-        iconBg: getServiceGradient(s.service_code, cat),
-        tech: `${s.tech_stack || 'REST'} · 端口 ${extractPort(s.base_url)}`,
-        url: launchUrl,
-        docsUrl: s.docs_url,
-        status: s.health_status || 'UNKNOWN',
-        responseTime: Math.round(s.response_time_ms || 0),
-        desc: s.description || `${s.service_name} (${s.base_url})`
-      });
-    });
-  }
-
-  function extractPort(url) {
-    try {
-      const u = new URL(url);
-      return u.port || (u.protocol === 'https:' ? '443' : '80');
-    } catch(e) {
-      return '8080';
-    }
-  }
-
-  function getServiceIcon(code, cat) {
-    if (code.includes('qa')) return '🤖';
-    if (code.includes('data')) return '🪄';
-    if (code.includes('base')) return '⚡';
-    if (code.includes('mdm')) return '🏭';
-    if (code.includes('mes')) return '🚀';
-    if (code.includes('wms')) return '📦';
-    if (cat === 'MDM') return '🏭';
-    if (cat === 'BASE') return '⚡';
-    return '🧩';
-  }
-
-  function getServiceGradient(code, cat) {
-    if (code.includes('qa')) return 'linear-gradient(135deg, #8b5cf6, #3b82f6)';
-    if (code.includes('data')) return 'linear-gradient(135deg, #06b6d4, #3b82f6)';
-    if (code.includes('base')) return 'linear-gradient(135deg, #0284c7, #2563eb)';
-    if (code.includes('mdm')) return 'linear-gradient(135deg, #059669, #10b981)';
-    return 'linear-gradient(135deg, #3b82f6, #1d4ed8)';
-  }
-
-  // 5. 渲染真实应用网格
-  function renderAppGrid() {
-    const container = document.getElementById('appGridContainer');
-    if (!container) return;
-
-    if (appsList.length === 0) {
-      container.innerHTML = `
-        <div style="grid-column:1/-1; text-align:center; padding:60px 20px; color:var(--text-muted); background:#fff; border:1px solid var(--surface-border); border-radius:var(--radius-lg);">
-          <div style="font-size:36px; margin-bottom:12px;">📭</div>
-          <div style="font-size:16px; font-weight:700; color:var(--text-main);">当前底座暂无已注册微服务</div>
-          <div style="font-size:12.5px; margin-top:6px;">微服务启动时将自动向底座注册并在此显示</div>
-        </div>
-      `;
-      return;
-    }
-
-    container.innerHTML = appsList.map(app => {
-      let badgeHtml = '';
-      if (app.status === 'HEALTHY') {
-        badgeHtml = `<div class="app-health-badge badge-healthy"><span class="pulse-dot"></span> 在线 ${app.responseTime ? app.responseTime + 'ms' : ''}</div>`;
-      } else if (app.status === 'DOWN') {
-        badgeHtml = `<div class="app-health-badge badge-down">🔴 离线</div>`;
-      } else if (app.status === 'WARNING') {
-        badgeHtml = `<div class="app-health-badge badge-warning">🟡 迟缓</div>`;
-      } else {
-        badgeHtml = `<div class="app-health-badge badge-pending">⚪ 未检测</div>`;
-      }
-
-      return `
-        <div class="app-card" onclick="PortalOS.launchApp('${app.id}')">
-          <div class="app-card-top">
-            <div class="app-icon-squircle" style="background: ${app.iconBg};">
-              ${app.icon}
-            </div>
-            ${badgeHtml}
-          </div>
-
-          <div class="app-meta">
-            <div class="app-name">${app.name}</div>
-            <div class="app-code">${app.code}</div>
-            <div class="app-desc">${app.desc}</div>
-          </div>
-
-          <div class="app-card-footer">
-            <span class="app-tech-tag">${app.tech}</span>
-            <div class="app-launch-action">
-              打开微服务 ↗
-            </div>
-          </div>
-        </div>
-      `;
-    }).join('');
-  }
-
-  // 6. 打开微服务：直接新窗口打开并注入 SSO Token (无 iframe 嵌套)
-  function launchApp(appId) {
-    const app = appsList.find(a => a.id === appId);
-    if (!app || !app.url) return;
-
-    // 组装带有 SSO 凭据的完整独立 URL
-    const token = getToken();
-    let targetUrl = app.url;
-    if (token && (targetUrl.startsWith('http://') || targetUrl.startsWith('https://'))) {
-      const joinChar = targetUrl.includes('?') ? '&' : '?';
-      targetUrl = `${targetUrl}${joinChar}mcp_token=${encodeURIComponent(token)}`;
-    }
-
-    // 在独立新标签页中打开微服务
-    window.open(targetUrl, '_blank');
-  }
-
-  // 7. 实时系统时钟
-  function startSystemClock() {
-    const timeEl = document.getElementById('topTimeText');
-    const dateEl = document.getElementById('topDateText');
-    const update = () => {
+  function startClock() {
+    function update() {
       const now = new Date();
-      if (timeEl) timeEl.innerText = now.toLocaleTimeString('zh-CN', { hour12: false });
-      if (dateEl) {
-        const weeks = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
-        dateEl.innerText = `${now.getMonth() + 1}月${now.getDate()}日 ${weeks[now.getDay()]}`;
-      }
-    };
+      const timeStr = now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false });
+      const dateStr = now.toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric', weekday: 'short' });
+      
+      const timeEl = document.getElementById('iosClock');
+      const dateEl = document.getElementById('iosDate');
+      if (timeEl) timeEl.innerText = timeStr;
+      if (dateEl) dateEl.innerText = dateStr;
+    }
     update();
     setInterval(update, 1000);
   }
 
-  // 8. 更新顶部真实健康胶囊
-  function updateHealthCapsule() {
-    const capsule = document.getElementById('topHealthCapsule');
-    if (!capsule) return;
+  function renderStatusBar() {
+    const user = getUser();
+    const authArea = document.getElementById('statusAuthArea');
+    if (!authArea) return;
 
-    const realServices = registeredServices.filter(s => s.service_code !== 'mcp-portal');
-    const onlineCount = realServices.filter(s => s.health_status === 'HEALTHY').length;
+    if (user) {
+      const isSuper = Boolean(user.is_superadmin);
+      const roleText = isSuper ? '超级管理员' : (user.role_name || '探索者');
+      const avatarLetters = (user.username || 'U').substring(0, 2).toUpperCase();
 
-    capsule.innerHTML = `
-      <span class="pulse-dot"></span>
-      <span>${onlineCount}/${realServices.length} 个微服务健康在线</span>
-    `;
-  }
-
-  // 9. 定时轮询健康状态
-  async function pollHealthStatus() {
-    try {
-      const res = await api('/microservices/active');
-      if (res && res.code === 200 && Array.isArray(res.data)) {
-        registeredServices = res.data;
-        buildStrictAppCatalog();
-        renderAppGrid();
-        updateHealthCapsule();
-      }
-    } catch (e) {
-      console.warn("Heartbeat poll failed", e);
+      authArea.innerHTML = `
+        <div class="user-identity-capsule">
+          <div class="user-avatar-tag">${avatarLetters}</div>
+          <span class="user-name-tag">${user.real_name || user.username}</span>
+          <span class="user-role-badge">${roleText}</span>
+        </div>
+        <button class="ios-capsule-btn" onclick="PortalOS.openChangePasswordModal()" title="修改登录密码">🔑 密码</button>
+        <button class="ios-capsule-btn" onclick="PortalOS.logout()" title="安全退出">退出</button>
+      `;
+    } else {
+      authArea.innerHTML = `
+        <span style="font-size:12px; color:var(--text-dim);">访客模式</span>
+        <button class="ios-capsule-btn" onclick="PortalOS.openAuthModal('login')" style="background:var(--ios-blue); border-color:transparent;">登 录</button>
+        <button class="ios-capsule-btn" onclick="PortalOS.openAuthModal('register')">注 册</button>
+      `;
     }
   }
 
-  // 10. 安全退出
+  async function fetchClusterHealth() {
+    try {
+      const res = await api('/microservices');
+      if (res && res.code === 200 && res.data) {
+        registeredServices = res.data.records || res.data || [];
+        updateClusterWidget();
+      }
+    } catch (e) {
+      console.warn("Failed to fetch cluster health", e);
+    }
+  }
+
+  function updateClusterWidget() {
+    const container = document.getElementById('clusterNodesWidgetList');
+    if (!container) return;
+
+    const baseSvc = registeredServices.find(s => s.service_code === 'mcp-base');
+    const universeSvc = registeredServices.find(s => s.service_code === 'mcp-service-universe');
+    const portalSvc = registeredServices.find(s => s.service_code === 'mcp-portal');
+
+    const nodes = [
+      { name: 'mcp-base (底座治理)', status: baseSvc ? baseSvc.health_status : 'HEALTHY', port: '8000', ms: baseSvc ? baseSvc.response_time_ms : 1 },
+      { name: 'mcp-service-universe (主站业务)', status: universeSvc ? universeSvc.health_status : 'HEALTHY', port: '8081', ms: universeSvc ? universeSvc.response_time_ms : 1 },
+      { name: 'mcp-portal (统一网关/SSO)', status: 'HEALTHY', port: '80', ms: 0 }
+    ];
+
+    container.innerHTML = nodes.map(n => `
+      <div class="cluster-node-item">
+        <span class="node-name">${n.name}</span>
+        <span class="node-status">
+          <span class="signal-dot" style="background:${n.status === 'HEALTHY' ? '#34d399' : '#f87171'}; box-shadow:0 0 6px ${n.status === 'HEALTHY' ? '#34d399' : '#f87171'};"></span>
+          ${n.status === 'HEALTHY' ? '在线' : '离线'} (${n.port})
+        </span>
+      </div>
+    `).join('');
+  }
+
+  function renderApps() {
+    const user = getUser();
+    const isSuper = Boolean(user && user.is_superadmin);
+    const appGrid = document.getElementById('springboardAppGrid');
+    const adminGridSection = document.getElementById('adminAppsSection');
+    const adminAppGrid = document.getElementById('adminAppGrid');
+    if (!appGrid) return;
+
+    // 1. 公开与业务应用 (所有用户及访客可见)
+    const publicApps = [
+      {
+        id: 'app-universe',
+        name: '角色宇宙',
+        sub: 'DreamClip Universe',
+        icon: '🌌',
+        gradient: 'linear-gradient(135deg, #4f46e5, #06b6d4)',
+        url: '/universe',
+        badge: '主站'
+      },
+      {
+        id: 'app-capsules',
+        name: '情绪胶囊',
+        sub: 'Emotion Lab',
+        icon: '💊',
+        gradient: 'linear-gradient(135deg, #0ea5e9, #6366f1)',
+        url: '/universe#capsules-section',
+        badge: '文学'
+      },
+      {
+        id: 'app-theatre',
+        name: 'AVG 沉浸剧场',
+        sub: 'DreamClip Theatre',
+        icon: '🎮',
+        gradient: 'linear-gradient(135deg, #8b5cf6, #ec4899)',
+        url: '/games',
+        badge: '互动'
+      },
+      {
+        id: 'app-docs',
+        name: 'API 开放文档',
+        sub: 'OpenAPI Swagger',
+        icon: '📖',
+        gradient: 'linear-gradient(135deg, #10b981, #059669)',
+        url: '/base/docs',
+        badge: '接口'
+      }
+    ];
+
+    if (user) {
+      publicApps.push({
+        id: 'app-vault',
+        name: '星际背包',
+        sub: 'Capsule Vault',
+        icon: '🎒',
+        gradient: 'linear-gradient(135deg, #f59e0b, #d97706)',
+        url: '/universe',
+        badge: '资产'
+      });
+    }
+
+    appGrid.innerHTML = publicApps.map(app => `
+      <div class="app-item" onclick="PortalOS.launchApp('${app.url}')">
+        <div class="squircle-icon" style="background:${app.gradient};">
+          ${app.icon}
+          <span class="app-status-badge"></span>
+        </div>
+        <div class="app-label">${app.name}</div>
+        <div class="app-sublabel">${app.sub}</div>
+      </div>
+    `).join('');
+
+    // 2. 超管专属技术应用 (RBAC 动态解锁)
+    if (adminGridSection && adminAppGrid) {
+      if (isSuper) {
+        adminGridSection.style.display = 'block';
+        const adminApps = [
+          {
+            id: 'app-base',
+            name: 'MCP Base 控制台',
+            sub: '底座运维与治理',
+            icon: '⭐',
+            gradient: 'linear-gradient(135deg, #6366f1, #3b82f6)',
+            url: 'https://base.dreamclip.cn/',
+            isBase: true
+          },
+          {
+            id: 'app-users',
+            name: '用户权限中心',
+            sub: '平台用户与角色',
+            icon: '👥',
+            gradient: 'linear-gradient(135deg, #8b5cf6, #a855f7)',
+            url: 'https://base.dreamclip.cn/?tab=tab-users',
+            isBase: true
+          },
+          {
+            id: 'app-configs',
+            name: '全局参数字典',
+            sub: '系统运行参数',
+            icon: '⚙️',
+            gradient: 'linear-gradient(135deg, #64748b, #475569)',
+            url: 'https://base.dreamclip.cn/?tab=tab-configs',
+            isBase: true
+          }
+        ];
+
+        adminAppGrid.innerHTML = adminApps.map(app => `
+          <div class="app-item" onclick="PortalOS.launchAdminApp('${app.url}')">
+            <div class="squircle-icon" style="background:${app.gradient};">
+              ${app.icon}
+              <span class="app-status-badge" style="background:#6366f1; box-shadow:0 0 6px #6366f1;"></span>
+            </div>
+            <div class="app-label">${app.name}</div>
+            <div class="app-sublabel">${app.sub}</div>
+          </div>
+        `).join('');
+      } else {
+        adminGridSection.style.display = 'none';
+      }
+    }
+  }
+
+  function launchApp(url) {
+    window.location.href = url;
+  }
+
+  function launchAdminApp(url) {
+    const token = getToken();
+    const user = getUser();
+    if (!token) {
+      showToast("请先以管理员身份登录", "info");
+      openAuthModal('login');
+      return;
+    }
+    // 跨子域名自动携带 Token 免密握手
+    const u = new URL(url, window.location.origin);
+    u.searchParams.set('mcp_token', token);
+    if (user) {
+      u.searchParams.set('mcp_user', encodeURIComponent(JSON.stringify(user)));
+    }
+    window.open(u.toString(), '_blank');
+  }
+
+  // ---------------- 模态弹窗与认证 ----------------
+  function openAuthModal(tab = 'login') {
+    const modal = document.getElementById('authModal');
+    if (!modal) return;
+    switchAuthTab(tab);
+    modal.classList.add('show');
+  }
+
+  function closeAuthModal() {
+    const modal = document.getElementById('authModal');
+    if (modal) modal.classList.remove('show');
+  }
+
+  function switchAuthTab(tab) {
+    const loginFields = document.getElementById('authLoginFields');
+    const regFields = document.getElementById('authRegisterFields');
+    const title = document.getElementById('authModalTitle');
+    const btn = document.getElementById('authSubmitBtn');
+    const switchBtn = document.getElementById('authSwitchTabBtn');
+
+    if (tab === 'login') {
+      if (loginFields) loginFields.style.display = 'block';
+      if (regFields) regFields.style.display = 'none';
+      if (title) title.innerText = '登录 DreamClip 统一门户';
+      if (btn) btn.innerText = '登 录 账 户';
+      if (switchBtn) {
+        switchBtn.innerText = '还没有账号？立即加入宇宙注册';
+        switchBtn.onclick = () => switchAuthTab('register');
+      }
+    } else {
+      if (loginFields) loginFields.style.display = 'none';
+      if (regFields) regFields.style.display = 'block';
+      if (title) title.innerText = '加入 DreamClip 角色宇宙';
+      if (btn) btn.innerText = '创 建 账 号';
+      if (switchBtn) {
+        switchBtn.innerText = '已有账号？返回直接登录';
+        switchBtn.onclick = () => switchAuthTab('login');
+      }
+    }
+  }
+
+  async function handleAuthSubmit(e) {
+    e.preventDefault();
+    const isLogin = document.getElementById('authLoginFields').style.display !== 'none';
+    const btn = document.getElementById('authSubmitBtn');
+    btn.disabled = true;
+
+    if (isLogin) {
+      const payload = {
+        username: document.getElementById('authUsername').value.trim(),
+        password: document.getElementById('authPassword').value
+      };
+      btn.innerText = '正在验证凭证...';
+      const res = await api('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+      if (res && res.code === 200 && res.data) {
+        localStorage.setItem('mcp_token', res.data.access_token);
+        localStorage.setItem('mcp_user', JSON.stringify(res.data.user_info));
+        showToast("登录成功！", "success");
+        closeAuthModal();
+        renderStatusBar();
+        renderApps();
+      } else {
+        showToast(res ? res.message : "登录失败，请检查用户名和密码", "danger");
+      }
+    } else {
+      const payload = {
+        username: document.getElementById('regUsername').value.trim(),
+        password: document.getElementById('regPassword').value,
+        real_name: document.getElementById('regRealName').value.trim() || undefined,
+        email: document.getElementById('regEmail').value.trim() || undefined,
+        personality_color: document.getElementById('regColor').value,
+        zodiac: document.getElementById('regZodiac').value
+      };
+      btn.innerText = '正在创建宇宙身份...';
+      const res = await api('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+      if (res && res.code === 200 && res.data) {
+        localStorage.setItem('mcp_token', res.data.access_token);
+        localStorage.setItem('mcp_user', JSON.stringify(res.data.user_info));
+        showToast("注册成功！欢迎开启角色宇宙", "success");
+        closeAuthModal();
+        renderStatusBar();
+        renderApps();
+      } else {
+        showToast(res ? res.message : "注册失败", "danger");
+      }
+    }
+    btn.disabled = false;
+    btn.innerText = isLogin ? '登 录 账 户' : '创 建 账 号';
+  }
+
+  function openChangePasswordModal() {
+    const modal = document.getElementById('passwordModal');
+    if (modal) {
+      document.getElementById('pwdForm').reset();
+      modal.classList.add('show');
+    }
+  }
+
+  function closePasswordModal() {
+    const modal = document.getElementById('passwordModal');
+    if (modal) modal.classList.remove('show');
+  }
+
+  async function handlePasswordSubmit(e) {
+    e.preventDefault();
+    const oldPwd = document.getElementById('oldPassword').value;
+    const newPwd = document.getElementById('newPassword').value;
+    const confirmPwd = document.getElementById('confirmPassword').value;
+
+    if (newPwd !== confirmPwd) {
+      showToast("两次输入的新密码不一致", "danger");
+      return;
+    }
+
+    const res = await api('/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify({ old_password: oldPwd, new_password: newPwd })
+    });
+
+    if (res && res.code === 200) {
+      showToast("密码修改成功，请使用新密码重新登录", "success");
+      closePasswordModal();
+      logout();
+    } else {
+      showToast(res ? res.message : "密码修改失败", "danger");
+    }
+  }
+
   function logout() {
     localStorage.removeItem('mcp_token');
     localStorage.removeItem('mcp_user');
-    window.location.href = '/login';
+    showToast("已安全退出登录", "info");
+    renderStatusBar();
+    renderApps();
+  }
+
+  function init() {
+    startClock();
+    renderStatusBar();
+    renderApps();
+    fetchClusterHealth();
+    setInterval(fetchClusterHealth, 20000);
   }
 
   return {
     init,
     launchApp,
-    reloadData,
+    launchAdminApp,
+    openAuthModal,
+    closeAuthModal,
+    switchAuthTab,
+    handleAuthSubmit,
+    openChangePasswordModal,
+    closePasswordModal,
+    handlePasswordSubmit,
     logout
   };
 })();

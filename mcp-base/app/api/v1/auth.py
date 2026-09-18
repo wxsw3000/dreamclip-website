@@ -6,7 +6,7 @@ from app.core.security import verify_password, get_password_hash, create_access_
 from app.models.user import SysUser, SysRole
 from app.models.log import SysLoginLog
 from app.schemas.common import Result
-from app.schemas.auth import LoginRequest, RegisterRequest, UpdateProfileRequest, TokenResponse, UserInfoResponse
+from app.schemas.auth import LoginRequest, RegisterRequest, UpdateProfileRequest, ChangePasswordRequest, TokenResponse, UserInfoResponse
 
 router = APIRouter(prefix="/auth", tags=["01.认证与身份中心"])
 
@@ -200,3 +200,21 @@ def update_profile(req: UpdateProfileRequest, payload: dict = Depends(get_curren
         permissions=[]
     )
     return Result.ok(data=user_info, message="资料与画像更新成功")
+    
+@router.post("/change-password", response_model=Result[bool], summary="修改当前用户密码")
+def change_password(req: ChangePasswordRequest, payload: dict = Depends(get_current_user_payload), db: Session = Depends(get_db)):
+    username = payload.get("sub")
+    user = db.query(SysUser).filter(SysUser.username == username, SysUser.is_deleted == 0).first()
+    if not user:
+        return Result.fail("用户不存在", code=404)
+
+    if not verify_password(req.old_password, user.password_hash):
+        return Result.fail("原密码不正确，请重新输入", code=400)
+
+    if len(req.new_password) < 6:
+        return Result.fail("新密码长度不能少于 6 位", code=400)
+
+    user.password_hash = get_password_hash(req.new_password)
+    db.commit()
+    return Result.ok(data=True, message="密码修改成功，请使用新密码重新登录")
+

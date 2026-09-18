@@ -218,13 +218,17 @@ def serve_static_page(filename: str):
 def index_page():
     return serve_static_page("index.html")
 
-@app.get("/capsule/{identifier}", include_in_schema=False)
-def capsule_page(identifier: str):
-    return serve_static_page("capsule.html")
-
+@app.get("/universe", include_in_schema=False)
 @app.get("/universe/{identifier}", include_in_schema=False)
-def universe_page(identifier: str):
+def universe_page(identifier: str = None):
     return serve_static_page("universe.html")
+
+@app.get("/capsules", include_in_schema=False)
+@app.get("/capsule/{identifier}", include_in_schema=False)
+def capsule_page(identifier: str = None):
+    if not identifier:
+        return serve_static_page("universe.html")
+    return serve_static_page("capsule.html")
 
 @app.get("/character/{identifier}", include_in_schema=False)
 def character_page(identifier: str):

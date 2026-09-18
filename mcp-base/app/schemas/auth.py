@@ -25,6 +25,11 @@ class UpdateProfileRequest(BaseModel):
     avatar: Optional[str] = None
     unlocked_data: Optional[str] = None
 
+class ChangePasswordRequest(BaseModel):
+    """修改密码请求"""
+    old_password: str = Field(description="旧密码")
+    new_password: str = Field(description="新密码")
+
 class TokenResponse(BaseModel):
     """Token 响应数据"""
     access_token: str = Field(description="JWT Access Token")
