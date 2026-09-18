@@ -58,13 +58,22 @@ function switchTab(tabId, el) {
   if (el) el.classList.add('active');
 
   const titles = {
-    'tab-dashboard': '<span>📊</span> MagicStar MCP 模块化配置平台大盘',
-    'tab-services': '<span>🔌</span> 微服务接入与健康治理',
-    'tab-users': '<span>👥</span> 用户与权限中心',
-    'tab-configs': '<span>⚙️</span> 字典与全局参数设置'
+    'tab-dashboard': '控制台总览大盘',
+    'tab-services': '微服务接入与健康治理',
+    'tab-users': '用户与权限中心',
+    'tab-configs': '字典与全局参数设置'
+  };
+  const titleIcons = {
+    'tab-dashboard': '📊',
+    'tab-services': '🔌',
+    'tab-users': '👥',
+    'tab-configs': '⚙️'
   };
   if (titles[tabId]) {
-    document.getElementById('pageTitle').innerHTML = titles[tabId];
+    const titleEl = document.getElementById('pageTitle');
+    const iconEl = document.getElementById('pageTitleIcon');
+    if (titleEl) titleEl.innerText = titles[tabId];
+    if (iconEl && titleIcons[tabId]) iconEl.innerText = titleIcons[tabId];
   }
 
   if (tabId === 'tab-dashboard') loadDashboard();

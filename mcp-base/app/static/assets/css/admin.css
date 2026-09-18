@@ -164,52 +164,78 @@ body {
   position: relative;
 }
 
-/* Cyber Header */
+/* ==================== 统一高质感 Top UI (Cyber Top Bar) ==================== */
 .top-header {
-  height: 62px;
-  background: rgba(11, 15, 25, 0.8);
+  height: 64px;
+  background: rgba(11, 15, 25, 0.85);
   backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 28px;
-  z-index: 5;
+  z-index: 20;
 }
 
-.header-title {
-  font-size: 15px;
-  font-weight: 700;
-  color: #f8fafc;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  letter-spacing: -0.2px;
-}
-
-.header-actions {
+/* 左侧页面标题与图标徽章 */
+.header-left {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-/* 探活状态标签 */
-.status-indicator-badge {
+.header-page-tag {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.page-icon-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.2);
+}
+
+.page-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #f8fafc;
+  letter-spacing: -0.2px;
+  margin: 0;
+}
+
+/* 右侧统一控制工具栏 */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* 1. 心跳探活状态徽章 (与按钮完全同高、同圆角、同质感) */
+.header-status-badge {
+  height: 34px;
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  font-size: 11.5px;
+  padding: 0 12px;
+  font-size: 12px;
   font-weight: 600;
   color: #34d399;
-  background: rgba(16, 185, 129, 0.12);
-  border: 1px solid rgba(52, 211, 153, 0.3);
-  padding: 5px 12px;
-  border-radius: 20px;
-  box-shadow: 0 0 12px rgba(16, 185, 129, 0.15);
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(52, 211, 153, 0.25);
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.1);
   user-select: none;
 }
 
-.status-pulse-dot {
+.pulse-dot-glow {
   width: 7px;
   height: 7px;
   border-radius: 50%;
@@ -224,56 +250,69 @@ body {
   100% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
 }
 
-/* 顶部操作按钮 */
-.header-action-btn {
-  height: 32px;
+/* 2. 统一刷新按钮 (完全同高、同质感) */
+.header-btn {
+  height: 34px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 0 12px;
+  padding: 0 13px;
   font-size: 12px;
   font-weight: 600;
   color: #cbd5e1;
-  background: rgba(30, 41, 59, 0.6);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.15s ease;
   user-select: none;
 }
 
-.header-action-btn:hover {
-  background: rgba(51, 65, 85, 0.8);
+.header-btn svg {
+  stroke: #cbd5e1;
+  transition: transform 0.2s ease, stroke 0.15s ease;
+}
+
+.header-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
   color: #38bdf8;
   border-color: rgba(56, 189, 248, 0.4);
   box-shadow: 0 0 12px rgba(56, 189, 248, 0.2);
 }
 
-/* 分割线 */
-.header-divider {
-  width: 1px;
-  height: 20px;
-  background-color: rgba(255, 255, 255, 0.1);
-  margin: 0 4px;
+.header-btn:hover svg {
+  stroke: #38bdf8;
+  transform: rotate(45deg);
 }
 
-/* 用户身份卡片 (Cyber Profile Chip) */
-.user-profile-chip {
+.header-btn:active {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* 3. 一体化用户身份与退出集成胶囊 (彻底消灭视觉零碎感) */
+.header-user-capsule {
+  height: 34px;
   display: inline-flex;
   align-items: center;
-  gap: 9px;
-  padding: 4px 12px 4px 5px;
-  background: rgba(15, 23, 42, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 20px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 0 4px 0 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   user-select: none;
 }
 
-.user-avatar-circle {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
+.user-capsule-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px 0 0;
+}
+
+.user-capsule-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
   background: linear-gradient(135deg, #6366f1, #06b6d4);
   color: #ffffff;
   display: flex;
@@ -281,62 +320,64 @@ body {
   justify-content: center;
   font-weight: 800;
   font-size: 11px;
-  box-shadow: 0 0 10px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.4);
 }
 
-.user-info-text {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.user-name {
+.user-capsule-name {
   font-size: 12.5px;
   font-weight: 700;
-  color: #f8fafc;
+  color: #f1f5f9;
   line-height: 1;
 }
 
-.user-role-badge {
+.user-capsule-badge {
   font-size: 10.5px;
   font-weight: 600;
-  color: #a5b4fc;
-  background: rgba(99, 102, 241, 0.2);
-  border: 1px solid rgba(99, 102, 241, 0.35);
-  padding: 2px 7px;
+  color: #38bdf8;
+  background: rgba(6, 182, 212, 0.15);
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  padding: 1px 6px;
   border-radius: 4px;
   line-height: 1;
   white-space: nowrap;
 }
 
-/* 退出登录按钮 */
-.btn-logout-enterprise {
-  height: 32px;
+.user-capsule-separator {
+  width: 1px;
+  height: 16px;
+  background: rgba(255, 255, 255, 0.12);
+  margin: 0 4px;
+}
+
+.user-capsule-logout {
+  height: 26px;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 0 12px;
-  font-size: 12px;
+  gap: 4px;
+  padding: 0 8px;
+  font-size: 11.5px;
   font-weight: 600;
-  color: #f87171;
-  background: rgba(239, 68, 68, 0.08);
-  border: 1px solid rgba(239, 68, 68, 0.25);
-  border-radius: var(--radius-sm);
+  color: #94a3b8;
+  background: transparent;
+  border: none;
+  border-radius: 5px;
   cursor: pointer;
   transition: all 0.15s ease;
-  user-select: none;
 }
 
-.btn-logout-enterprise svg { stroke: #f87171; transition: stroke 0.15s ease; }
-
-.btn-logout-enterprise:hover {
-  background: #ef4444;
-  color: #ffffff;
-  border-color: #ef4444;
-  box-shadow: 0 0 16px rgba(239, 68, 68, 0.4);
+.user-capsule-logout svg {
+  stroke: #94a3b8;
+  transition: stroke 0.15s ease;
 }
 
-.btn-logout-enterprise:hover svg { stroke: #ffffff; }
+.user-capsule-logout:hover {
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.18);
+}
+
+.user-capsule-logout:hover svg {
+  stroke: #f87171;
+}
 
 /* Main Content Body */
 .content-body {
