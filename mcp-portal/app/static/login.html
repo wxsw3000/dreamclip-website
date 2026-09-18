@@ -169,23 +169,17 @@
     <form onsubmit="handleLogin(event)">
       <div class="form-group">
         <label class="form-label">统一身份账号</label>
-        <input type="text" id="username" class="form-control" value="superadmin" placeholder="输入超管账号或用户账号" required autocomplete="username">
+        <input type="text" id="username" class="form-control" placeholder="请输入用户名" required autocomplete="username">
       </div>
 
       <div class="form-group">
         <label class="form-label">安全登录密码</label>
-        <input type="password" id="password" class="form-control" value="123456" placeholder="输入密码" required autocomplete="current-password">
+        <input type="password" id="password" class="form-control" placeholder="请输入密码" required autocomplete="current-password">
       </div>
 
       <button type="submit" id="submitBtn" class="btn-login">
         登 录 统 一 门 户
       </button>
-
-      <div class="quick-info">
-        <strong>💡 统一单点登录 (SSO) 说明：</strong><br>
-        登录后即可无缝访问 MagicStar 模块化配置平台管理大盘与各业务子系统。<br>
-        系统预置超管账号：<code>superadmin</code> / 密码：<code>123456</code>
-      </div>
 
       <div class="links-row">
         <a href="/">← 返回应用门户</a>
