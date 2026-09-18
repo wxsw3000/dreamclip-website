@@ -97,102 +97,176 @@ body {
 .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 .top-header {
   height: 60px;
-  background-color: #fff;
+  background-color: #ffffff;
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 24px;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
 }
-.header-title { font-size: 17px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
-.header-actions { display: flex; align-items: center; gap: 10px; }
-.live-indicator { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--success); background: var(--success-bg); padding: 5px 10px; border-radius: 20px; }
-.live-dot { width: 8px; height: 8px; border-radius: 50%; background-color: var(--success); animation: pulse 1.8s infinite; }
 
+.header-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: -0.2px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* 探活状态标签 */
+.status-indicator-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #15803d;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  padding: 4px 10px;
+  border-radius: 20px;
+  user-select: none;
+}
+
+.status-pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: #16a34a;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+  animation: pulse 2s infinite;
+}
+
+/* 顶部通用操作按钮 (如刷新) */
+.header-action-btn {
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 11px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #475569;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.header-action-btn:hover {
+  background: #f8fafc;
+  color: #0f172a;
+  border-color: #cbd5e1;
+}
+
+.header-action-btn:active {
+  background: #f1f5f9;
+}
+
+/* 垂直极简分割线 */
 .header-divider {
   width: 1px;
-  height: 24px;
-  background-color: var(--border);
+  height: 18px;
+  background-color: #e2e8f0;
   margin: 0 4px;
 }
 
-.user-profile-box {
-  display: flex;
+/* 用户身份卡片 (SaaS 级 Profile Chip) */
+.user-profile-chip {
+  display: inline-flex;
   align-items: center;
-  gap: 9px;
-  padding: 4px 12px 4px 5px;
+  gap: 8px;
+  padding: 3px 10px 3px 4px;
   background: #f8fafc;
-  border: 1px solid var(--border);
-  border-radius: 30px;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  user-select: none;
 }
 
-.user-profile-box .user-avatar {
-  width: 28px;
-  height: 28px;
+.user-avatar-circle {
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #3b82f6, #6366f1);
-  color: #fff;
+  background: linear-gradient(135deg, #4f46e5, #3b82f6);
+  color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
   font-size: 11px;
-  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.25);
+  letter-spacing: 0.5px;
 }
 
-.user-profile-box .user-meta {
-  display: flex;
+.user-info-text {
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
-.user-profile-box .user-name {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text-primary);
+.user-name {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #1e293b;
   line-height: 1;
 }
 
-.user-profile-box .user-role-pill {
-  font-size: 11px;
-  color: #2563eb;
-  background: #eff6ff;
-  border: 1px solid #dbeafe;
-  padding: 2px 7px;
-  border-radius: 12px;
-  font-weight: 600;
+.user-role-badge {
+  font-size: 10.5px;
+  font-weight: 500;
+  color: #4338ca;
+  background: #e0e7ff;
+  padding: 2px 6px;
+  border-radius: 4px;
   line-height: 1;
   white-space: nowrap;
 }
 
-.btn-logout-clean {
+/* 专业级退出登录操作按钮 */
+.btn-logout-enterprise {
   height: 32px;
   display: inline-flex;
   align-items: center;
   gap: 5px;
   padding: 0 12px;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: #ef4444;
-  background: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  color: #dc2626;
+  background: #ffffff;
   border: 1px solid #fecaca;
-  border-radius: var(--radius-sm);
+  border-radius: 6px;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  margin-left: 2px;
+  transition: all 0.15s ease;
+  user-select: none;
 }
 
-.btn-logout-clean:hover {
-  background: #ef4444;
-  color: #fff;
-  border-color: #ef4444;
-  box-shadow: 0 3px 8px rgba(239, 68, 68, 0.25);
-  transform: translateY(-1px);
+.btn-logout-enterprise svg {
+  stroke: #dc2626;
+  transition: stroke 0.15s ease;
 }
 
-.btn-logout-clean:active {
-  transform: translateY(0);
+.btn-logout-enterprise:hover {
+  background: #fef2f2;
+  border-color: #f87171;
+  color: #b91c1c;
+}
+
+.btn-logout-enterprise:hover svg {
+  stroke: #b91c1c;
+}
+
+.btn-logout-enterprise:active {
+  background: #fee2e2;
 }
 
 @keyframes pulse {

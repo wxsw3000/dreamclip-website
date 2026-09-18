@@ -49,25 +49,40 @@
       <div class="header-title" id="pageTitle">
         <span>📊</span> MagicStar MCP 模块化配置平台大盘
       </div>
+      
       <div class="header-actions">
-        <div class="live-indicator">
-          <span class="live-dot"></span>
-          <span>心跳探活 (20s)</span>
+        <!-- 系统健康状态 -->
+        <div class="status-indicator-badge" title="微服务探活引擎每20秒自动巡检">
+          <span class="status-pulse-dot"></span>
+          <span>探活运行中 (20s)</span>
         </div>
-        <button class="btn btn-outline btn-sm" onclick="refreshCurrentTab()">🔄 刷新</button>
+
+        <!-- 刷新动作 -->
+        <button class="header-action-btn" onclick="refreshCurrentTab()" title="刷新当前大盘数据">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+          </svg>
+          <span>刷新</span>
+        </button>
         
         <div class="header-divider"></div>
 
-        <div class="user-profile-box">
-          <div class="user-avatar" id="avatarText">SA</div>
-          <div class="user-meta">
+        <!-- 用户身份信息 -->
+        <div class="user-profile-chip">
+          <div class="user-avatar-circle" id="avatarText">SA</div>
+          <div class="user-info-text">
             <span class="user-name" id="userName">superadmin</span>
-            <span class="user-role-pill" id="userRoleTag">平台超级管理员</span>
+            <span class="user-role-badge" id="userRoleTag">超级管理员</span>
           </div>
         </div>
 
-        <button class="btn-logout-clean" onclick="handleLogout()" title="安全退出当前账号">
-          <span class="icon">🚪</span>
+        <!-- 退出登录按钮 -->
+        <button class="btn-logout-enterprise" onclick="handleLogout()" title="安全退出登录会话">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
           <span>退出登录</span>
         </button>
       </div>
