@@ -4,7 +4,7 @@
 const DreamClipAPI = {
   // 基础请求封装
   async request(endpoint, options = {}) {
-    const token = localStorage.getItem("dreamclip_token");
+    const token = localStorage.getItem("dreamclip_token") || localStorage.getItem("mcp_token");
     const headers = {
       "Content-Type": "application/json",
       ...(options.headers || {})
@@ -55,6 +55,8 @@ const DreamClipAPI = {
     logout() {
       localStorage.removeItem("dreamclip_token");
       localStorage.removeItem("dreamclip_user");
+      localStorage.removeItem("mcp_token");
+      localStorage.removeItem("mcp_user");
       window.location.reload();
     }
   },
@@ -96,7 +98,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function initUserSessionUI() {
-  const userJson = localStorage.getItem("dreamclip_user");
+  const userJson = localStorage.getItem("dreamclip_user") || localStorage.getItem("mcp_user");
   const authContainer = document.getElementById("header-auth-area");
   if (!authContainer) return;
 
@@ -104,34 +106,101 @@ function initUserSessionUI() {
     try {
       const user = JSON.parse(userJson);
       const colorMap = {
-        RED: { label: "烈焰开拓", color: "var(--accent-red)" },
-        BLUE: { label: "静谧理性", color: "var(--accent-blue)" },
-        YELLOW: { label: "璀璨治愈", color: "var(--accent-yellow)" },
-        GREEN: { label: "深林共情", color: "var(--accent-green)" }
+        RED: { label: "烈焰开拓", color: "#ef4444" },
+        BLUE: { label: "静谧理性", color: "#3b82f6" },
+        YELLOW: { label: "璀璨治愈", color: "#eab308" },
+        GREEN: { label: "深林共情", color: "#22c55e" }
       };
       const colorInfo = colorMap[user.personality_color] || colorMap.BLUE;
 
       authContainer.innerHTML = `
-        <div class="user-badge" onclick="toggleUserDropdown()">
-          <img class="user-avatar-mini" src="${user.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + user.username}" alt="avatar">
-          <span style="font-size:0.85rem; font-weight:600;">${user.real_name || user.username}</span>
+        <a href="/portal" class="btn btn-outline" style="padding:0.35rem 0.75rem; font-size:0.82rem; margin-right:6px;" title="进入 Apple 风格应用工作台">📱 平台桌面</a>
+        <div class="user-badge" style="display:inline-flex; align-items:center; gap:0.4rem; background:rgba(255,255,255,0.06); padding:0.25rem 0.6rem; border-radius:20px; border:1px solid rgba(255,255,255,0.12);">
+          <img class="user-avatar-mini" style="width:22px; height:22px; border-radius:50%;" src="${user.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + user.username}" alt="avatar">
+          <span style="font-size:0.85rem; font-weight:600; color:#fff;">${user.real_name || user.username}</span>
           <span style="font-size:0.7rem; color:${colorInfo.color}; background:rgba(255,255,255,0.08); padding:0.1rem 0.4rem; border-radius:6px;">${user.zodiac || colorInfo.label}</span>
         </div>
-        <button class="btn btn-outline" style="padding:0.35rem 0.65rem; font-size:0.8rem;" onclick="DreamClipAPI.auth.logout()">退出</button>
+        <button class="btn btn-outline" style="padding:0.35rem 0.65rem; font-size:0.8rem; margin-left:6px;" onclick="DreamClipAPI.auth.logout()">退出</button>
       `;
     } catch (e) {
       localStorage.removeItem("dreamclip_user");
+      localStorage.removeItem("mcp_user");
     }
   } else {
     authContainer.innerHTML = `
-      <button class="btn btn-outline" onclick="openAuthModal('login')">登录</button>
-      <button class="btn btn-primary" onclick="openAuthModal('register')">加入宇宙</button>
+      <a href="/portal" class="btn btn-outline" style="padding:0.35rem 0.75rem; font-size:0.82rem; margin-right:6px;">📱 平台桌面</a>
+      <button class="btn btn-outline" style="padding:0.35rem 0.75rem; font-size:0.82rem; margin-right:6px;" onclick="openAuthModal('login')">登录</button>
+      <button class="btn btn-primary" style="padding:0.35rem 0.75rem; font-size:0.82rem;" onclick="openAuthModal('register')">加入宇宙</button>
     `;
   }
 }
 
+function ensureAuthModalDOM() {
+  if (document.getElementById("auth-modal")) return;
+  const modalHTML = `
+    <div id="auth-modal" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.65); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; z-index:9999;">
+      <div style="background:#111827; border:1px solid rgba(255,255,255,0.15); border-radius:18px; width:90%; max-width:420px; padding:28px 24px; box-shadow:0 25px 50px rgba(0,0,0,0.6); color:#fff; position:relative; box-sizing:border-box;">
+        <button onclick="closeAuthModal()" style="position:absolute; top:14px; right:16px; background:none; border:none; color:#94a3b8; font-size:20px; cursor:pointer;">✕</button>
+        <h3 id="modal-title" style="margin-bottom:16px; font-size:1.2rem; font-weight:700;">登录 DreamClip 宇宙</h3>
+        <div id="auth-error-msg" style="display:none; padding:8px 12px; background:rgba(239,68,68,0.2); border:1px solid rgba(239,68,68,0.4); color:#fca5a5; border-radius:8px; font-size:0.82rem; margin-bottom:14px;"></div>
+        <form id="auth-form" onsubmit="handleAuthSubmit(event)">
+          <div id="login-fields">
+            <div style="margin-bottom:14px;">
+              <label style="display:block; font-size:0.82rem; color:#cbd5e1; margin-bottom:5px;">账号 / 用户名</label>
+              <input type="text" id="login-username" style="width:100%; height:40px; border-radius:8px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.06); color:#fff; padding:0 12px; font-size:0.9rem; box-sizing:border-box;" placeholder="输入用户名">
+            </div>
+            <div style="margin-bottom:18px;">
+              <label style="display:block; font-size:0.82rem; color:#cbd5e1; margin-bottom:5px;">密码</label>
+              <input type="password" id="login-password" style="width:100%; height:40px; border-radius:8px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.06); color:#fff; padding:0 12px; font-size:0.9rem; box-sizing:border-box;" placeholder="输入登录密码">
+            </div>
+          </div>
+          <div id="register-fields" style="display:none;">
+            <div style="margin-bottom:12px;">
+              <label style="display:block; font-size:0.82rem; color:#cbd5e1; margin-bottom:4px;">设置用户名 *</label>
+              <input type="text" id="reg-username" style="width:100%; height:38px; border-radius:8px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.06); color:#fff; padding:0 10px; font-size:0.88rem; box-sizing:border-box;" placeholder="如 dreamer_01">
+            </div>
+            <div style="margin-bottom:12px;">
+              <label style="display:block; font-size:0.82rem; color:#cbd5e1; margin-bottom:4px;">设置密码 *</label>
+              <input type="password" id="reg-password" style="width:100%; height:38px; border-radius:8px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.06); color:#fff; padding:0 10px; font-size:0.88rem; box-sizing:border-box;" placeholder="至少 6 位密码">
+            </div>
+            <div style="margin-bottom:12px;">
+              <label style="display:block; font-size:0.82rem; color:#cbd5e1; margin-bottom:4px;">真实称谓 / 昵称</label>
+              <input type="text" id="reg-nickname" style="width:100%; height:38px; border-radius:8px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.06); color:#fff; padding:0 10px; font-size:0.88rem; box-sizing:border-box;" placeholder="星穹旅人">
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;">
+              <div>
+                <label style="display:block; font-size:0.8rem; color:#cbd5e1; margin-bottom:4px;">性格色彩</label>
+                <select id="reg-color" style="width:100%; height:36px; border-radius:8px; border:1px solid rgba(255,255,255,0.15); background:#1e293b; color:#fff; padding:0 8px; font-size:0.82rem; box-sizing:border-box;">
+                  <option value="BLUE">🔵 静谧理性</option>
+                  <option value="YELLOW">🟡 璀璨治愈</option>
+                  <option value="RED">🔴 烈焰开拓</option>
+                  <option value="GREEN">🟢 深林共情</option>
+                </select>
+              </div>
+              <div>
+                <label style="display:block; font-size:0.8rem; color:#cbd5e1; margin-bottom:4px;">星象星座</label>
+                <select id="reg-zodiac" style="width:100%; height:36px; border-radius:8px; border:1px solid rgba(255,255,255,0.15); background:#1e293b; color:#fff; padding:0 8px; font-size:0.82rem; box-sizing:border-box;">
+                  <option value="天秤座" selected>天秤座</option>
+                  <option value="白羊座">白羊座</option>
+                  <option value="双子座">双子座</option>
+                  <option value="天蝎座">天蝎座</option>
+                  <option value="水瓶座">水瓶座</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <button type="submit" id="auth-submit-btn" style="width:100%; height:40px; border-radius:8px; border:none; background:#4f46e5; color:#fff; font-weight:600; font-size:0.92rem; cursor:pointer;">立即登录</button>
+          <div id="auth-switch-text" style="text-align:center; margin-top:14px; font-size:0.82rem; color:#94a3b8;"></div>
+        </form>
+      </div>
+    </div>
+  `;
+  document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
 // 登录/注册弹窗控制
 function openAuthModal(mode = 'login') {
+  ensureAuthModalDOM();
   const modal = document.getElementById("auth-modal");
   if (!modal) return;
   modal.style.display = "flex";
@@ -150,8 +219,8 @@ function switchAuthTab(mode) {
   document.getElementById("register-fields").style.display = isLogin ? "none" : "block";
   document.getElementById("auth-submit-btn").innerText = isLogin ? "立即登录" : "创建专属身份";
   document.getElementById("auth-switch-text").innerHTML = isLogin 
-    ? `还没有角色身份？<a href="javascript:void(0)" onclick="switchAuthTab('register')" style="color:var(--accent-indigo);">立即加入宇宙</a>`
-    : `已有账号？<a href="javascript:void(0)" onclick="switchAuthTab('login')" style="color:var(--accent-indigo);">直接登录</a>`;
+    ? `还没有角色身份？<a href="javascript:void(0)" onclick="switchAuthTab('register')" style="color:#818cf8; text-decoration:none; font-weight:600;">立即加入宇宙</a>`
+    : `已有账号？<a href="javascript:void(0)" onclick="switchAuthTab('login')" style="color:#818cf8; text-decoration:none; font-weight:600;">直接登录</a>`;
   document.getElementById("auth-form").dataset.mode = mode;
 }
 
@@ -168,13 +237,15 @@ async function handleAuthSubmit(event) {
     if (!u || !p) return showAuthError("请输入账号和密码");
 
     const res = await DreamClipAPI.auth.login(u, p);
-    if (res.code === 200) {
+    if (res.code === 200 && res.data) {
       localStorage.setItem("dreamclip_token", res.data.access_token);
       localStorage.setItem("dreamclip_user", JSON.stringify(res.data.user_info));
+      localStorage.setItem("mcp_token", res.data.access_token);
+      localStorage.setItem("mcp_user", JSON.stringify(res.data.user_info));
       closeAuthModal();
       window.location.reload();
     } else {
-      showAuthError(res.message);
+      showAuthError(res.message || "登录失败，请检查账号密码");
     }
   } else {
     const u = document.getElementById("reg-username").value.trim();
@@ -186,13 +257,15 @@ async function handleAuthSubmit(event) {
     if (!u || !p) return showAuthError("请填写用户名和密码");
 
     const res = await DreamClipAPI.auth.register(u, p, n, color, zodiac);
-    if (res.code === 200) {
+    if (res.code === 200 && res.data) {
       localStorage.setItem("dreamclip_token", res.data.access_token);
       localStorage.setItem("dreamclip_user", JSON.stringify(res.data.user_info));
+      localStorage.setItem("mcp_token", res.data.access_token);
+      localStorage.setItem("mcp_user", JSON.stringify(res.data.user_info));
       closeAuthModal();
       window.location.reload();
     } else {
-      showAuthError(res.message);
+      showAuthError(res.message || "注册失败");
     }
   }
 }

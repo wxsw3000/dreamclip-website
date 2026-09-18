@@ -4,3 +4,23 @@
 2、关于门户portal：一方面它是一个提供给用户的，能让大家看到本平台所有应用的一个界面。另一方面它还负责sso（统一身份认证）。界面会更具用户对应角色的不同权限来显示不同的应用。它和base共同组成了平台的基本结构。它们可以使用同一套数据库；
 3、至于universe，则是当前独立于base和portal开发的服务节点；
 请你看看当前这个思路是否合适。
+
+
+二、
+你实现得很好，不过其中有些小误会：
+1、当前的应用，只有dreamclip universe、MCP base 以及 当前portal自身；但是 universe中的角色宇宙、情绪胶囊和avg沉浸剧场都单独放出来了，我感觉真的很库酷稍后让我想想我该怎么处理这些内容；
+2、我在base控制台中并不能对用户的密码进行修改，另外，我在mcpbase中也无法创建角色，无法给角色赋予应用权限；
+3、我建议dreamclip.cn打开的应该是我们的universe这个主站，而不是直接打开门户，门户应该是注册了的用户才能看到的界面；
+
+三、架构落实与落地实施清单 (2026-09-18)
+1. 网站入口与路由结构：
+   - https://dreamclip.cn/ (以及 /universe)：直接打开 DreamClip Universe 业务主站 (universe.html)，汇聚世界观、角色星芒、情绪胶囊图文与 AVG 互动剧场，承载 C 端流量与 Google AdSense 合规广告。
+   - https://dreamclip.cn/portal (以及 /workbench)：挂载 Apple iOS 18 风格应用工作台 (PortalOS / portal.html)，支持登录/未登录态切换、5G 探活状态、动态组件、Squircle 应用矩阵与毛玻璃悬浮 Dock。
+   - https://base.dreamclip.cn/ (以及 /admin)：独立运行 MagicStar MCP 模块化配置底座 (清新浅色管理后台)。
+2. Base 底座 IAM / RBAC 权限与账户治理全面增强：
+   - 角色全生命周期管理：新增 POST /api/v1/system/roles、PUT /api/v1/system/roles/{id}、DELETE /api/v1/system/roles/{id}，支持在控制台直接创建自定义角色 (如 ROLE_CREATOR、ROLE_AUDITOR) 并设置级别。
+   - 角色微服务应用赋权：新增 PUT /api/v1/system/roles/{id}/permissions 与 GET /api/v1/system/menus/flat，支持在 Base 控制台为角色多选勾选赋予微服务节点与菜单功能。
+   - 用户密码修改与重置：管理员可在用户列表点击 [✏️ 编辑/改密] 重置任意用户密码，支持分配所属角色；管理员也可通过顶部导航 [🔑 密码] 按钮修改当前管理员密码；登录用户可通过 POST /api/v1/auth/change-password 自助修改密码。
+3. 跨域 SSO 统一身份凭证同步：
+   - PortalOS 与 Universe 主站登录时双向同步 mcp_token、mcp_user、dreamclip_token、dreamclip_user，实现全平台统一身份无缝切换。
+   - 从 PortalOS 启动 Base 底座时自动携带 SSO Token 免密直通。

@@ -8,12 +8,13 @@ window.PortalOS = (function() {
   let registeredServices = [];
 
   function getToken() {
-    return localStorage.getItem('mcp_token');
+    return localStorage.getItem('mcp_token') || localStorage.getItem('dreamclip_token');
   }
 
   function getUser() {
     try {
-      return JSON.parse(localStorage.getItem('mcp_user'));
+      const raw = localStorage.getItem('mcp_user') || localStorage.getItem('dreamclip_user');
+      return raw ? JSON.parse(raw) : null;
     } catch (e) {
       return null;
     }
@@ -335,6 +336,8 @@ window.PortalOS = (function() {
       if (res && res.code === 200 && res.data) {
         localStorage.setItem('mcp_token', res.data.access_token);
         localStorage.setItem('mcp_user', JSON.stringify(res.data.user_info));
+        localStorage.setItem('dreamclip_token', res.data.access_token);
+        localStorage.setItem('dreamclip_user', JSON.stringify(res.data.user_info));
         showToast("登录成功！", "success");
         closeAuthModal();
         renderStatusBar();
@@ -359,6 +362,8 @@ window.PortalOS = (function() {
       if (res && res.code === 200 && res.data) {
         localStorage.setItem('mcp_token', res.data.access_token);
         localStorage.setItem('mcp_user', JSON.stringify(res.data.user_info));
+        localStorage.setItem('dreamclip_token', res.data.access_token);
+        localStorage.setItem('dreamclip_user', JSON.stringify(res.data.user_info));
         showToast("注册成功！欢迎开启角色宇宙", "success");
         closeAuthModal();
         renderStatusBar();
@@ -412,6 +417,8 @@ window.PortalOS = (function() {
   function logout() {
     localStorage.removeItem('mcp_token');
     localStorage.removeItem('mcp_user');
+    localStorage.removeItem('dreamclip_token');
+    localStorage.removeItem('dreamclip_user');
     showToast("已安全退出登录", "info");
     renderStatusBar();
     renderApps();

@@ -212,11 +212,16 @@ def serve_static_page(filename: str):
     file_path = os.path.join(static_dir, filename)
     if os.path.exists(file_path):
         return FileResponse(file_path)
-    return FileResponse(os.path.join(static_dir, "index.html"))
+    return FileResponse(os.path.join(static_dir, "universe.html"))
 
 @app.get("/", include_in_schema=False)
 def index_page():
-    return serve_static_page("index.html")
+    return serve_static_page("universe.html")
+
+@app.get("/portal", include_in_schema=False)
+@app.get("/workbench", include_in_schema=False)
+def portal_desktop_page():
+    return serve_static_page("portal.html")
 
 @app.get("/universe", include_in_schema=False)
 @app.get("/universe/{identifier}", include_in_schema=False)

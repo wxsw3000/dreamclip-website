@@ -45,6 +45,13 @@ class UserOut(UserBase):
     class Config:
         from_attributes = True
 
+class MenuSimple(BaseModel):
+    id: int
+    menu_name: str
+    menu_type: str
+    service_code: Optional[str] = None
+    permission: Optional[str] = None
+
 class RoleOut(BaseModel):
     id: int
     role_code: str
@@ -53,6 +60,7 @@ class RoleOut(BaseModel):
     status: str
     remark: Optional[str] = None
     created_at: datetime
+    menus: List[MenuSimple] = []
 
     class Config:
         from_attributes = True
@@ -64,6 +72,16 @@ class RoleCreate(BaseModel):
     status: str = "ACTIVE"
     remark: Optional[str] = None
     menu_ids: Optional[List[int]] = []
+
+class RoleUpdate(BaseModel):
+    role_name: Optional[str] = None
+    role_level: Optional[int] = None
+    status: Optional[str] = None
+    remark: Optional[str] = None
+    menu_ids: Optional[List[int]] = None
+
+class RoleAssignPermissions(BaseModel):
+    menu_ids: List[int]
 
 class MenuOut(BaseModel):
     id: int
