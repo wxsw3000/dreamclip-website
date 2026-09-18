@@ -35,3 +35,16 @@
    - 自定义平台角色 (`roleModal`)：修复按钮点击与弹窗加载事件，支持完整创建、修改、删除平台角色。
    - 角色应用权限分配 (`rolePermissionModal`)：支持获取全量微服务节点与菜单并持久化赋权。
    - Pydantic 模型全量补充 `ConfigDict(from_attributes=True)`，保证多对多关联与嵌套 DTO 序列化 100% 畅通。
+
+五、统一 SSO 认证中心与 Portal 动态应用赋权联动 (2026-09-18)
+1. 统一单点登录入口 (login.dreamclip.cn)：
+   - 独立虚拟主机分流：`login.dreamclip.cn` / `sso.dreamclip.cn` 统一直达 Portal 模块中的单点登录中心 (`login.html`)。
+   - 全域无权限/凭证过期拦截：Base 控制台 (`base.dreamclip.cn`) 及各微服务在未登录、Token 过期 (401) 或用户登出时，自动拦截跳转至 `https://login.dreamclip.cn/?redirect=...`。
+   - 跨域免密回跳：登录成功后自动将 Token 附带在目标 URL 中回跳；若无 redirect 参数则默认直达 Portal 门户桌面 (`https://portal.dreamclip.cn/`)。
+2. Base 角色权限与 Portal 应用桌面实时联动：
+   - 新增 `GET /api/v1/auth/my-apps` 接口，根据登录用户的实际角色与微服务分配清单动态返回应用列表。
+   - Portal 桌面 (`portal.js`) 完全重构为动态渲染：超级管理员展现全量业务+Base底座治理工具；普通角色仅展现被授权的业务应用；底座治理区域按权限动态显示/隐藏。
+3. 待下次继续关注的潜在细节：
+   - 跨子域 Cookie / Token 共享机制进一步打磨与边缘情况处理；
+   - 实际线上多子域名 DNS / Nginx 反向代理配置与 HTTPS 证书生效验证；
+   - 进一步精细化微服务权限粒度。
