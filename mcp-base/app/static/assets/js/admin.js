@@ -402,7 +402,9 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('userName').innerText = user.username || 'superadmin';
     document.getElementById('avatarText').innerText = (user.username || 'SA').substring(0, 2).toUpperCase();
     if (user.is_superadmin) {
-      document.getElementById('userRoleTag').innerText = "平台超级管理员";
+      document.getElementById('userRoleTag').innerText = "超级管理员";
+    } else {
+      document.getElementById('userRoleTag').innerText = user.role_name || "普通用户";
     }
   }
   loadDashboard();
