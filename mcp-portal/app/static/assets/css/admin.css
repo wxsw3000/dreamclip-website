@@ -106,9 +106,64 @@ body {
   box-shadow: var(--shadow-sm);
 }
 .header-title { font-size: 17px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
-.header-actions { display: flex; align-items: center; gap: 14px; }
+.header-actions { display: flex; align-items: center; gap: 12px; }
 .live-indicator { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--success); background: var(--success-bg); padding: 4px 10px; border-radius: 20px; }
 .live-dot { width: 8px; height: 8px; border-radius: 50%; background-color: var(--success); animation: pulse 1.8s infinite; }
+
+.user-badge-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-left: 14px;
+  border-left: 1px solid var(--border);
+}
+.user-badge-header .user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 12px;
+}
+.user-badge-header .user-info {
+  display: flex;
+  flex-direction: column;
+}
+.user-badge-header .name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+.user-badge-header .role-tag {
+  font-size: 10.5px;
+  color: #2563eb;
+  font-weight: 600;
+}
+.btn-logout-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #ef4444;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-left: 6px;
+}
+.btn-logout-header:hover {
+  background: #ef4444;
+  color: #fff;
+  border-color: #ef4444;
+}
 
 @keyframes pulse {
   0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.7); }
