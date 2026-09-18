@@ -1153,23 +1153,31 @@
   </div>
 </div>
 
-<!-- 模态窗：赋予应用与菜单权限 -->
+<!-- 模态窗：赋予应用与微服务权限 -->
 <div id="rolePermissionModal" class="modal-overlay">
-  <div class="modal-dialog">
+  <div class="modal-dialog" style="max-width: 660px;">
     <div class="modal-header">
-      <span id="permRoleModalTitle">赋予应用与菜单权限</span>
+      <span id="permRoleModalTitle">🔑 为角色赋予微服务应用权限</span>
       <button class="btn-outline btn-sm" onclick="closeModal('rolePermissionModal')">✕</button>
     </div>
     <div class="modal-body">
       <form id="rolePermissionForm" onsubmit="saveRolePermissions(event)">
         <input type="hidden" id="perm_role_id">
-        <p style="font-size:12.5px; color:#64748b; margin-bottom:14px;">
-          勾选该角色可访问的微服务节点与系统功能。登录后 Portal 应用桌面与 Base 控制台将根据权限动态展现。
-        </p>
-        <div id="permissionsCheckboxContainer" style="max-height:280px; overflow-y:auto;"></div>
-        <div class="modal-footer" style="margin: 0 -22px -22px; padding: 12px 22px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; background:#f8fafc; padding:10px 14px; border-radius:8px; border:1px solid #e2e8f0;">
+          <span style="font-size:12.5px; color:#475569;">
+            💡 请在下方<strong>平台应用清单</strong>中勾选该角色可访问的微服务节点与业务系统：
+          </span>
+          <div style="display:flex; gap:6px;">
+            <button type="button" class="btn btn-outline btn-sm" style="font-size:11.5px; padding:3px 8px;" onclick="selectAllApps(true)">全选</button>
+            <button type="button" class="btn btn-outline btn-sm" style="font-size:11.5px; padding:3px 8px;" onclick="selectAllApps(false)">清空</button>
+          </div>
+        </div>
+        <div id="permissionsAppsContainer" style="max-height:360px; overflow-y:auto; display:flex; flex-direction:column; gap:10px;">
+          <!-- 动态加载应用清单卡片 -->
+        </div>
+        <div class="modal-footer" style="margin: 16px -22px -22px; padding: 12px 22px;">
           <button type="button" class="btn btn-outline" onclick="closeModal('rolePermissionModal')">取消</button>
-          <button type="submit" class="btn btn-primary">确 认 赋 权</button>
+          <button type="submit" id="savePermBtn" class="btn btn-primary">确 认 保 存 赋 权</button>
         </div>
       </form>
     </div>
@@ -1208,6 +1216,6 @@
 
 <div id="toastContainer" class="toast-container"></div>
 
-<script src="/static/assets/js/admin.js?v=20260918_v110"></script>
+<script src="/static/assets/js/admin.js?v=20260918_v115"></script>
 </body>
 </html>

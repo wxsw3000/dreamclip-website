@@ -34,11 +34,42 @@ async function api(path, options = {}) {
       window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname);
       return null;
     }
-    return await resp.json();
+
+    let data;
+    try {
+      data = await resp.json();
+    } catch (parseErr) {
+      data = null;
+    }
+
+    if (!resp.ok) {
+      let errMsg = "请求失败";
+      if (data) {
+        if (typeof data.message === 'string' && data.message) {
+          errMsg = data.message;
+        } else if (typeof data.detail === 'string' && data.detail) {
+          errMsg = data.detail;
+        } else if (Array.isArray(data.detail) && data.detail.length > 0) {
+          errMsg = data.detail.map(d => (d.loc ? d.loc.join('.') + ': ' : '') + (d.msg || JSON.stringify(d))).join('; ');
+        } else if (typeof data === 'object') {
+          errMsg = JSON.stringify(data);
+        }
+      } else {
+        errMsg = `网络响应错误 (${resp.status})`;
+      }
+      return { code: resp.status, message: errMsg, data: null };
+    }
+
+    if (data && typeof data === 'object') {
+      if (data.code === undefined) data.code = resp.status;
+      if (data.message === undefined) data.message = "success";
+    }
+
+    return data;
   } catch (e) {
     console.error("API Request error:", e);
     showToast("接口请求失败: " + e.message, "danger");
-    return null;
+    return { code: 500, message: e.message, data: null };
   }
 }
 
@@ -457,16 +488,21 @@ async function loadRoles() {
   cachedRolesList = res.data;
 
   tbody.innerHTML = res.data.map(r => {
-    const menusStr = (r.menus && r.menus.length > 0)
-      ? r.menus.map(m => `<span class="badge badge-tenant">${m.menu_name}</span>`).join(' ')
-      : '<span style="color:#94a3b8; font-size:12px;">未配置应用权限</span>';
+    let appBadges = '';
+    if (r.assigned_apps && r.assigned_apps.length > 0) {
+      appBadges = r.assigned_apps.map(app => `<span class="badge badge-tenant" style="margin:2px 3px 2px 0; font-size:11.5px; display:inline-block;">📱 ${app}</span>`).join(' ');
+    } else if (r.menus && r.menus.length > 0) {
+      appBadges = r.menus.map(m => `<span class="badge badge-tenant" style="margin:2px 3px 2px 0; font-size:11.5px; display:inline-block;">${m.icon || '📱'} ${m.menu_name}</span>`).join(' ');
+    } else {
+      appBadges = '<span style="color:#94a3b8; font-size:12px;">未配置应用权限</span>';
+    }
 
     return `
       <tr>
         <td><code>${r.role_code}</code></td>
         <td><strong>${r.role_name}</strong></td>
         <td>${r.remark || '-'}</td>
-        <td>${menusStr}</td>
+        <td style="max-width:320px;">${appBadges}</td>
         <td><span class="badge ${r.status === 'ACTIVE' ? 'badge-success' : 'badge-danger'}">${r.status}</span></td>
         <td style="white-space:nowrap;">
           <button class="btn btn-primary btn-sm" onclick="openRolePermissionsModal(${r.id})">🔑 赋予应用权限</button>
@@ -545,53 +581,130 @@ async function deleteRole(roleId) {
   }
 }
 
+function toggleAppCardHighlight(checkbox) {
+  const card = checkbox.closest('.app-perm-card');
+  if (!card) return;
+  if (checkbox.checked) {
+    card.style.background = '#f0fdf4';
+    card.style.borderColor = '#86efac';
+  } else {
+    card.style.background = '#ffffff';
+    card.style.borderColor = '#e2e8f0';
+  }
+}
+
+function selectAllApps(checked) {
+  const checkboxes = document.querySelectorAll('input[name="roleAppCheckbox"]');
+  checkboxes.forEach(cb => {
+    cb.checked = checked;
+    toggleAppCardHighlight(cb);
+  });
+}
+
 async function openRolePermissionsModal(roleId) {
   const role = cachedRolesList.find(r => r.id === roleId);
-  if (!role) return;
+  const roleName = role ? role.role_name : `ID: ${roleId}`;
 
-  document.getElementById('perm_role_id').value = role.id;
-  document.getElementById('permRoleModalTitle').innerText = `为角色 [${role.role_name}] 赋予应用与菜单权限`;
+  document.getElementById('perm_role_id').value = roleId;
+  document.getElementById('permRoleModalTitle').innerText = `🔑 为角色 [${roleName}] 赋予微服务应用权限`;
 
-  // 获取所有可分配的扁平菜单和微服务应用
-  const menusRes = await api('/system/menus/flat');
-  const container = document.getElementById('permissionsCheckboxContainer');
-  if (!menusRes || menusRes.code !== 200 || !menusRes.data) {
-    showToast("获取权限列表失败", "danger");
+  const container = document.getElementById('permissionsAppsContainer');
+  if (container) {
+    container.innerHTML = '<div style="text-align:center; padding:24px; color:#94a3b8;">正在加载平台微服务应用清单...</div>';
+  }
+  openModal('rolePermissionModal');
+
+  // 获取该角色已绑定的权限以及全量可分配应用清单
+  const permRes = await api(`/system/roles/${roleId}/permissions`);
+  if (!permRes || permRes.code !== 200 || !permRes.data) {
+    showToast(permRes ? permRes.message : "获取角色应用权限失败", "danger");
+    if (container) {
+      container.innerHTML = '<div style="text-align:center; padding:24px; color:#ef4444;">加载应用清单失败，请重试</div>';
+    }
     return;
   }
 
-  const assignedMenuIds = (role.menus || []).map(m => m.id);
+  const { assigned_service_codes = [], assigned_menu_ids = [], all_apps = [] } = permRes.data;
 
-  container.innerHTML = menusRes.data.map(m => `
-    <div style="display:flex; align-items:center; justify-content:space-between; padding:8px 12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; margin-bottom:6px;">
-      <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:600; font-size:13px; color:#0f172a;">
-        <input type="checkbox" name="rolePermissionCheckbox" value="${m.id}" ${assignedMenuIds.includes(m.id) ? 'checked' : ''}>
-        <span>${m.icon || '📱'} ${m.menu_name}</span>
-      </label>
-      <span class="badge badge-tech" style="font-size:11px;">${m.service_code || 'MCP-BASE'}</span>
-    </div>
-  `).join('');
+  if (all_apps.length === 0) {
+    container.innerHTML = '<div style="text-align:center; padding:24px; color:#94a3b8;">暂无可分配的微服务应用</div>';
+    return;
+  }
 
-  openModal('rolePermissionModal');
+  container.innerHTML = all_apps.map(app => {
+    const isChecked = (assigned_service_codes && assigned_service_codes.includes(app.service_code)) ||
+                      (assigned_menu_ids && assigned_menu_ids.includes(app.id));
+    const bgStyle = isChecked ? 'background:#f0fdf4; border-color:#86efac;' : 'background:#ffffff; border-color:#e2e8f0;';
+    const statusBadge = app.health_status === 'HEALTHY' 
+      ? '<span class="badge badge-success" style="font-size:11px;">🟢 正常</span>'
+      : '<span class="badge badge-warning" style="font-size:11px;">🟡 ' + (app.health_status || 'UNKNOWN') + '</span>';
+
+    return `
+      <div class="app-perm-card" id="app_perm_card_${app.service_code}" style="display:flex; align-items:flex-start; gap:12px; padding:12px 14px; border:1.5px solid #e2e8f0; border-radius:10px; transition:all 0.2s ease; ${bgStyle}">
+        <input type="checkbox" name="roleAppCheckbox" id="chk_app_${app.id}" value="${app.service_code}" data-menuid="${app.id}" ${isChecked ? 'checked' : ''} onchange="toggleAppCardHighlight(this)" style="margin-top:4px; width:18px; height:18px; cursor:pointer; accent-color:var(--primary);">
+        <label for="chk_app_${app.id}" style="flex:1; cursor:pointer; margin-bottom:0;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="font-size:18px;">${app.icon || '📱'}</span>
+              <strong style="font-size:14px; color:#0f172a;">${app.service_name}</strong>
+              <code style="font-size:11.5px; background:#f1f5f9; padding:2px 6px; border-radius:4px; color:#475569;">${app.service_code}</code>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span class="badge badge-tech" style="font-size:11px;">${app.tech_stack || 'PYTHON'}</span>
+              ${statusBadge}
+            </div>
+          </div>
+          <div style="font-size:12.5px; color:#64748b; line-height:1.4;">
+            ${app.description || '平台微服务节点'}
+          </div>
+          <div style="font-size:11px; color:#94a3b8; font-family:monospace; margin-top:4px;">
+            🔗 访问路由/端点: <strong>${app.gateway_prefix || app.base_url}</strong>
+          </div>
+        </label>
+      </div>
+    `;
+  }).join('');
 }
 
 async function saveRolePermissions(e) {
   e.preventDefault();
   const roleId = document.getElementById('perm_role_id').value;
-  const selectedMenuIds = Array.from(document.querySelectorAll('input[name="rolePermissionCheckbox"]:checked'))
-    .map(cb => parseInt(cb.value));
+  if (!roleId) return;
 
-  const res = await api(`/system/roles/${roleId}/permissions`, {
-    method: 'PUT',
-    body: JSON.stringify({ menu_ids: selectedMenuIds })
-  });
+  const btn = document.getElementById('savePermBtn');
+  const originalBtnText = btn ? btn.innerText : '确 认 保 存 赋 权';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerText = '正在保存应用权限...';
+  }
 
-  if (res && res.code === 200) {
-    showToast("角色应用权限配置成功！", "success");
-    closeModal('rolePermissionModal');
-    loadRoles();
-  } else {
-    showToast(res ? res.message : "配置失败", "danger");
+  try {
+    const checkedBoxes = Array.from(document.querySelectorAll('input[name="roleAppCheckbox"]:checked'));
+    const selectedServiceCodes = checkedBoxes.map(cb => cb.value);
+    const selectedMenuIds = checkedBoxes.map(cb => parseInt(cb.dataset.menuid)).filter(Boolean);
+
+    const res = await api(`/system/roles/${roleId}/permissions`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        service_codes: selectedServiceCodes,
+        menu_ids: selectedMenuIds
+      })
+    });
+
+    if (res && res.code === 200) {
+      showToast("角色微服务应用权限配置成功！", "success");
+      closeModal('rolePermissionModal');
+      await loadRoles();
+    } else {
+      showToast(res ? res.message : "配置失败", "danger");
+    }
+  } catch (err) {
+    showToast("保存失败: " + err.message, "danger");
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerText = originalBtnText;
+    }
   }
 }
 
