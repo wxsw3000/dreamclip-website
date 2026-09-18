@@ -367,6 +367,22 @@ async function updateConfig(key, inputId) {
 
 // ---------------- 初始化 ----------------
 window.addEventListener('DOMContentLoaded', () => {
+  // 支持跨子域名重定向时携带 Token 自动存入当前域 localStorage
+  const urlParams = new URLSearchParams(window.location.search);
+  const tokenFromUrl = urlParams.get('mcp_token');
+  const userFromUrl = urlParams.get('mcp_user');
+  if (tokenFromUrl) {
+    localStorage.setItem('mcp_token', tokenFromUrl);
+    if (userFromUrl) {
+      localStorage.setItem('mcp_user', decodeURIComponent(userFromUrl));
+    }
+    urlParams.delete('mcp_token');
+    urlParams.delete('mcp_user');
+    const newSearch = urlParams.toString();
+    const newUrl = window.location.pathname + (newSearch ? '?' + newSearch : '') + window.location.hash;
+    window.history.replaceState({}, document.title, newUrl);
+  }
+
   const token = getToken();
   if (!token) {
     window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname);
@@ -374,8 +390,8 @@ window.addEventListener('DOMContentLoaded', () => {
   }
   const user = getUser();
   if (user) {
-    document.getElementById('userName').innerText = user.username;
-    document.getElementById('avatarText').innerText = user.username.substring(0, 2).toUpperCase();
+    document.getElementById('userName').innerText = user.username || 'superadmin';
+    document.getElementById('avatarText').innerText = (user.username || 'SA').substring(0, 2).toUpperCase();
     if (user.is_superadmin) {
       document.getElementById('userRoleTag').innerText = "平台超级管理员";
     }

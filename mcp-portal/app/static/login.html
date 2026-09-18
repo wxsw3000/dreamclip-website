@@ -244,7 +244,12 @@
             const urlParams = new URLSearchParams(window.location.search);
             const redirectUrl = urlParams.get('redirect');
             if (redirectUrl) {
-              window.location.href = redirectUrl;
+              let target = redirectUrl;
+              if (target.startsWith('http://') || target.startsWith('https://')) {
+                const joinChar = target.includes('?') ? '&' : '?';
+                target = `${target}${joinChar}mcp_token=${encodeURIComponent(res.data.access_token)}&mcp_user=${encodeURIComponent(JSON.stringify(res.data.user_info))}`;
+              }
+              window.location.href = target;
             } else if (res.data.user_info && res.data.user_info.is_superadmin) {
               window.location.href = "/admin";
             } else {

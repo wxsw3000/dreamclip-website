@@ -226,5 +226,8 @@ def root():
 @app.get("/login", include_in_schema=False)
 @app.get("/admin/login", include_in_schema=False)
 def login_page():
-    """统一重定向至 Portal 单点登录中心 (SSO)"""
-    return RedirectResponse(url="/login?redirect=/admin")
+    """提供 MagicStar MCP 控制台独立登录界面"""
+    login_file = os.path.join(static_dir, "login.html")
+    if os.path.exists(login_file):
+        return FileResponse(login_file)
+    return RedirectResponse(url="/")

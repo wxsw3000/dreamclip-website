@@ -144,8 +144,10 @@
           localStorage.setItem('mcp_user', JSON.stringify(res.data.user_info));
           showToast("登录成功，正在进入控制台...", "success");
           setTimeout(() => {
-            window.location.href = "/admin";
-          }, 500);
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirectUrl = urlParams.get('redirect');
+            window.location.href = redirectUrl || "/";
+          }, 400);
         } else {
           showToast(res.message || "登录失败，请检查账号密码", "danger");
           btn.innerText = "登 录 控 制 台";
