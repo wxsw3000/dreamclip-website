@@ -52,20 +52,24 @@
       <div class="header-actions">
         <div class="live-indicator">
           <span class="live-dot"></span>
-          <span>健康心跳轮询中 (20s)</span>
+          <span>心跳探活 (20s)</span>
         </div>
-        <button class="btn btn-outline btn-sm" onclick="refreshCurrentTab()">🔄 刷新数据</button>
+        <button class="btn btn-outline btn-sm" onclick="refreshCurrentTab()">🔄 刷新</button>
         
-        <div class="user-badge-header">
+        <div class="header-divider"></div>
+
+        <div class="user-profile-box">
           <div class="user-avatar" id="avatarText">SA</div>
-          <div class="user-info">
-            <span class="name" id="userName">superadmin</span>
-            <span class="role-tag" id="userRoleTag">平台超级管理员</span>
+          <div class="user-meta">
+            <span class="user-name" id="userName">superadmin</span>
+            <span class="user-role-pill" id="userRoleTag">平台超级管理员</span>
           </div>
-          <button class="btn-logout-header" title="退出登录" onclick="handleLogout()">
-            🚪 退出登录
-          </button>
         </div>
+
+        <button class="btn-logout-clean" onclick="handleLogout()" title="安全退出当前账号">
+          <span class="icon">🚪</span>
+          <span>退出登录</span>
+        </button>
       </div>
     </header>
 
