@@ -16,6 +16,22 @@ function getUser() {
   }
 }
 
+function getLoginUrl(redirectUrl) {
+  const targetRedirect = redirectUrl || window.location.href;
+  const isOnline = window.location.hostname.endsWith('dreamclip.cn');
+  const loginBase = isOnline ? 'https://login.dreamclip.cn/' : '/login';
+  const joinChar = loginBase.includes('?') ? '&' : '?';
+  return `${loginBase}${joinChar}redirect=` + encodeURIComponent(targetRedirect);
+}
+
+function redirectToLogin(redirectUrl) {
+  localStorage.removeItem('mcp_token');
+  localStorage.removeItem('mcp_user');
+  localStorage.removeItem('dreamclip_token');
+  localStorage.removeItem('dreamclip_user');
+  window.location.href = getLoginUrl(redirectUrl);
+}
+
 async function api(path, options = {}) {
   const token = getToken();
   const headers = {
@@ -27,11 +43,7 @@ async function api(path, options = {}) {
   try {
     const resp = await fetch(API_BASE + path, { ...options, headers });
     if (resp.status === 401) {
-      localStorage.removeItem('mcp_token');
-      localStorage.removeItem('mcp_user');
-      localStorage.removeItem('dreamclip_token');
-      localStorage.removeItem('dreamclip_user');
-      window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname);
+      redirectToLogin();
       return null;
     }
 
@@ -126,11 +138,7 @@ function refreshCurrentTab() {
 }
 
 function handleLogout() {
-  localStorage.removeItem('mcp_token');
-  localStorage.removeItem('mcp_user');
-  localStorage.removeItem('dreamclip_token');
-  localStorage.removeItem('dreamclip_user');
-  window.location.href = '/login';
+  redirectToLogin();
 }
 
 function openModal(id) {
@@ -800,7 +808,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   const token = getToken();
   if (!token) {
-    window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname);
+    redirectToLogin();
     return;
   }
   const user = getUser();

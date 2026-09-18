@@ -225,8 +225,11 @@ def root():
 
 @app.get("/login", include_in_schema=False)
 @app.get("/admin/login", include_in_schema=False)
-def login_page():
-    """提供 MagicStar MCP 控制台独立登录界面"""
+def login_page(request: Request):
+    """提供 MagicStar MCP 控制台独立登录界面或重定向至统一单点登录中心"""
+    raw_host = request.headers.get("host", "").lower()
+    if "dreamclip.cn" in raw_host:
+        return RedirectResponse(url="https://login.dreamclip.cn/?redirect=https://base.dreamclip.cn/")
     login_file = os.path.join(static_dir, "login.html")
     if os.path.exists(login_file):
         return FileResponse(login_file)

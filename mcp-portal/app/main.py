@@ -114,8 +114,17 @@ async def host_virtual_routing_middleware(request: Request, call_next):
     host = raw_host.split(":")[0].strip().lower()
     path = request.url.path
 
+    # 0. 独立统一单点登录入口：login.dreamclip.cn / sso.dreamclip.cn / auth.dreamclip.cn -> 直达统一单点登录中心 (SSO)
+    if host in ["login.dreamclip.cn", "sso.dreamclip.cn", "auth.dreamclip.cn"]:
+        if path in ["/", "", "/login", "/sso", "/auth"]:
+            return FileResponse(os.path.join(static_dir, "login.html"))
+        file_path = os.path.join(static_dir, path.lstrip("/"))
+        if os.path.exists(file_path) and os.path.isfile(file_path):
+            return FileResponse(file_path)
+        return FileResponse(os.path.join(static_dir, "login.html"))
+
     # 1. 独立子域名：portal.dreamclip.cn / workbench.dreamclip.cn -> 直达 Apple 风格应用工作台 (PortalOS)
-    if host in ["portal.dreamclip.cn", "workbench.dreamclip.cn"]:
+    elif host in ["portal.dreamclip.cn", "workbench.dreamclip.cn"]:
         if path in ["/", "", "/portal", "/workbench"]:
             return FileResponse(os.path.join(static_dir, "portal.html"))
         file_path = os.path.join(static_dir, path.lstrip("/"))

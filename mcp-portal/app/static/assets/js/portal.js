@@ -30,6 +30,18 @@ window.PortalOS = (function() {
     setTimeout(() => t.remove(), 3000);
   }
 
+  function getLoginUrl(redirectUrl) {
+    const targetRedirect = redirectUrl || window.location.href;
+    const isOnline = window.location.hostname.endsWith('dreamclip.cn');
+    const loginBase = isOnline ? 'https://login.dreamclip.cn/' : '/login';
+    const joinChar = loginBase.includes('?') ? '&' : '?';
+    return `${loginBase}${joinChar}redirect=` + encodeURIComponent(targetRedirect);
+  }
+
+  function goToLogin(redirectUrl) {
+    window.location.href = getLoginUrl(redirectUrl);
+  }
+
   async function api(path, options = {}) {
     const token = getToken();
     const headers = {
@@ -38,11 +50,16 @@ window.PortalOS = (function() {
       ...(options.headers || {})
     };
     try {
-      const resp = await fetch('/api/base' + path, { ...options, headers });
+      let resp = await fetch('/api/v1' + path, { ...options, headers });
+      if (!resp.ok && resp.status === 404) {
+        resp = await fetch('/api/base' + path, { ...options, headers });
+      }
       if (resp.status === 401) {
         // Token expired
         localStorage.removeItem('mcp_token');
         localStorage.removeItem('mcp_user');
+        localStorage.removeItem('dreamclip_token');
+        localStorage.removeItem('dreamclip_user');
         renderStatusBar();
         renderApps();
         return null;
@@ -76,7 +93,7 @@ window.PortalOS = (function() {
 
     if (user) {
       const isSuper = Boolean(user.is_superadmin);
-      const roleText = isSuper ? '超级管理员' : (user.role_name || '探索者');
+      const roleText = isSuper ? '超级管理员' : (user.role_name || (user.roles && user.roles[0]) || '探索者');
       const avatarLetters = (user.username || 'U').substring(0, 2).toUpperCase();
 
       authArea.innerHTML = `
@@ -89,9 +106,10 @@ window.PortalOS = (function() {
         <button class="ios-capsule-btn" onclick="PortalOS.logout()" title="安全退出">退出</button>
       `;
     } else {
+      const isOnline = window.location.hostname.endsWith('dreamclip.cn');
       authArea.innerHTML = `
         <span style="font-size:12px; color:var(--text-dim);">访客模式</span>
-        <button class="ios-capsule-btn" onclick="PortalOS.openAuthModal('login')" style="background:var(--ios-blue); border-color:transparent;">登 录</button>
+        <button class="ios-capsule-btn" onclick="${isOnline ? 'PortalOS.goToLogin()' : "PortalOS.openAuthModal('login')"}" style="background:var(--ios-blue); border-color:transparent;">登 录</button>
         <button class="ios-capsule-btn" onclick="PortalOS.openAuthModal('register')">注 册</button>
       `;
     }
@@ -410,6 +428,12 @@ window.PortalOS = (function() {
     showToast("已安全退出登录", "info");
     renderStatusBar();
     renderApps();
+    const isOnline = window.location.hostname.endsWith('dreamclip.cn');
+    if (isOnline) {
+      setTimeout(() => {
+        goToLogin(window.location.origin + '/portal');
+      }, 500);
+    }
   }
 
   function init() {
@@ -444,6 +468,8 @@ window.PortalOS = (function() {
     init,
     launchApp,
     launchAdminApp,
+    goToLogin,
+    getLoginUrl,
     openAuthModal,
     closeAuthModal,
     switchAuthTab,

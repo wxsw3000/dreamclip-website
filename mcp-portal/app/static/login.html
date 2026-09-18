@@ -162,14 +162,19 @@
   <div class="login-container">
     <div class="brand-header">
       <div class="logo-badge">⭐</div>
-      <h2>MagicStar 统一单点登录</h2>
-      <p>Modular Configuration Platform · 单点登录中心 (SSO)</p>
+      <h2>DreamClip & MagicStar</h2>
+      <p>统一身份与单点登录中心 · login.dreamclip.cn (SSO)</p>
+    </div>
+
+    <div id="targetServiceHint" style="display:none; margin-bottom:18px; padding:10px 14px; background:rgba(99,102,241,0.15); border:1px solid rgba(165,180,252,0.3); border-radius:10px; font-size:12px; color:#c7d2fe; display:flex; align-items:center; gap:8px;">
+      <span>💡</span>
+      <span>登录成功后将自动返回您所访问的业务系统</span>
     </div>
 
     <form onsubmit="handleLogin(event)">
       <div class="form-group">
-        <label class="form-label">统一身份账号</label>
-        <input type="text" id="username" class="form-control" placeholder="请输入用户名" required autocomplete="username">
+        <label class="form-label">统一身份账号 (用户名)</label>
+        <input type="text" id="username" class="form-control" placeholder="请输入平台账号 / 用户名" required autocomplete="username">
       </div>
 
       <div class="form-group">
@@ -178,23 +183,39 @@
       </div>
 
       <button type="submit" id="submitBtn" class="btn-login">
-        登 录 统 一 门 户
+        登 录 统 一 身 份
       </button>
 
       <div class="links-row">
-        <a href="/">← 返回应用门户</a>
-        <a href="/admin">底座控制台 →</a>
+        <a href="https://portal.dreamclip.cn/">← 统一应用门户</a>
+        <a href="https://universe.dreamclip.cn/">角色宇宙主站</a>
+        <a href="https://base.dreamclip.cn/">底座控制台 →</a>
       </div>
     </form>
   </div>
 
   <div class="footer-note">
-    MagicStar MCP · Modular Configuration Platform v1.0
+    MagicStar MCP & DreamClip SSO · 统一身份认证与单点登录中枢
   </div>
 
   <div id="toastBox" style="display:none; position:fixed; top:24px; right:24px; padding:12px 20px; background:#dc2626; color:#fff; border-radius:8px; font-size:13px; font-weight:600; z-index:9999; box-shadow:0 10px 25px rgba(0,0,0,0.3);"></div>
 
   <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const redirectUrl = urlParams.get('redirect');
+      if (redirectUrl) {
+        const hintEl = document.getElementById('targetServiceHint');
+        if (hintEl) {
+          hintEl.style.display = 'flex';
+          try {
+            const u = new URL(redirectUrl, window.location.origin);
+            hintEl.innerHTML = `<span>💡</span><span>您正在登录并前往: <strong>${u.host || u.pathname}</strong></span>`;
+          } catch(e) {}
+        }
+      }
+    });
+
     function showToast(msg, bg = '#dc2626') {
       const box = document.getElementById('toastBox');
       box.innerText = msg;
@@ -206,7 +227,7 @@
     async function handleLogin(e) {
       e.preventDefault();
       const btn = document.getElementById('submitBtn');
-      btn.innerText = "正在验证...";
+      btn.innerText = "正在验证身份...";
       btn.disabled = true;
 
       const payload = {
@@ -215,7 +236,6 @@
       };
 
       try {
-        // 优先尝试 /api/v1/auth/login，兼容 /api/base/auth/login
         let resp = await fetch('/api/v1/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -233,6 +253,8 @@
         if (res.code === 200 && res.data) {
           localStorage.setItem('mcp_token', res.data.access_token);
           localStorage.setItem('mcp_user', JSON.stringify(res.data.user_info));
+          localStorage.setItem('dreamclip_token', res.data.access_token);
+          localStorage.setItem('dreamclip_user', JSON.stringify(res.data.user_info));
           showToast("单点登录成功，正在进入...", "#16a34a");
           setTimeout(() => {
             const urlParams = new URLSearchParams(window.location.search);
@@ -242,20 +264,28 @@
               if (target.startsWith('http://') || target.startsWith('https://')) {
                 const joinChar = target.includes('?') ? '&' : '?';
                 target = `${target}${joinChar}mcp_token=${encodeURIComponent(res.data.access_token)}&mcp_user=${encodeURIComponent(JSON.stringify(res.data.user_info))}`;
+              } else {
+                const isOnline = window.location.hostname.endsWith('dreamclip.cn');
+                if (target.startsWith('/admin') || target.startsWith('/base')) {
+                  target = isOnline ? `https://base.dreamclip.cn/?mcp_token=${encodeURIComponent(res.data.access_token)}&mcp_user=${encodeURIComponent(JSON.stringify(res.data.user_info))}` : target;
+                } else if (target.startsWith('/portal') || target.startsWith('/workbench')) {
+                  target = isOnline ? `https://portal.dreamclip.cn/?mcp_token=${encodeURIComponent(res.data.access_token)}&mcp_user=${encodeURIComponent(JSON.stringify(res.data.user_info))}` : target;
+                }
               }
               window.location.href = target;
             } else {
-              window.location.href = "/portal";
+              const isOnline = window.location.hostname.endsWith('dreamclip.cn');
+              window.location.href = isOnline ? "https://portal.dreamclip.cn/" : "/portal";
             }
           }, 400);
         } else {
           showToast(res.message || "登录失败，请检查账号密码", "#dc2626");
-          btn.innerText = "登 录 统 一 门 户";
+          btn.innerText = "登 录 统 一 身 份";
           btn.disabled = false;
         }
       } catch (err) {
         showToast("服务连接异常: " + err.message, "#dc2626");
-        btn.innerText = "登 录 统 一 门 户";
+        btn.innerText = "登 录 统 一 身 份";
         btn.disabled = false;
       }
     }
