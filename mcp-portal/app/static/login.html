@@ -972,8 +972,16 @@
         showToast("用户名至少需要 3 位字符", "error");
         return;
       }
+      if (!/^[a-zA-Z0-9_\u4e00-\u9fa5]{3,32}$/.test(username)) {
+        showToast("用户名需为 3~32 位字母、数字、下划线或中文", "error");
+        return;
+      }
       if (!realName) {
         showToast("请输入用户昵称 / 姓名", "error");
+        return;
+      }
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        showToast("请输入有效的电子邮箱地址 (如 user@example.com)", "error");
         return;
       }
       if (!password || password.length < 6) {

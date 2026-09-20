@@ -25,8 +25,21 @@ router = APIRouter(prefix="/auth", tags=["01.认证与身份中心"])
 @router.post("/register", response_model=Result[TokenResponse], summary="用户注册")
 def register(req: RegisterRequest, db: Session = Depends(get_db)):
     try:
+        clean_username = req.username.strip()
+        if len(clean_username) < 3 or len(clean_username) > 32:
+            return Result.fail("用户名长度需在 3 到 32 个字符之间", code=400)
+
         # 1. 检查用户名是否存在（全量检索）
-        existing = db.query(SysUser).filter(SysUser.username == req.username).first()
+        existing = db.query(SysUser).filter(SysUser.username == clean_username).first()
+
+        # 2. 检查电子邮箱唯一性 (若填写了邮箱)
+        if req.email and req.email.strip():
+            clean_email = req.email.strip()
+            existing_email = db.query(SysUser).filter(SysUser.email == clean_email, SysUser.is_deleted == 0).first()
+            if existing_email and (not existing or existing_email.id != existing.id):
+                return Result.fail(f"电子邮箱 '{clean_email}' 已被其他账号使用，请更换邮箱", code=400)
+        else:
+            clean_email = None
 
         # 默认分配平台标准注册会员角色 (ROLE_MEMBER)
         default_role = db.query(SysRole).filter(SysRole.role_code == "ROLE_MEMBER", SysRole.is_deleted == 0).first()
@@ -35,14 +48,14 @@ def register(req: RegisterRequest, db: Session = Depends(get_db)):
 
         if existing:
             if existing.is_deleted == 0:
-                return Result.fail(f"用户名 '{req.username}' 已被注册占用，请直接登录或更换用户名", code=400)
+                return Result.fail(f"用户名 '{clean_username}' 已被注册占用，请直接登录或更换用户名", code=400)
             else:
                 # 若此前处于已删除状态，重置激活该账号并更新资料
                 existing.is_deleted = 0
                 existing.password_hash = get_password_hash(req.password)
-                existing.real_name = req.real_name or req.username
-                existing.email = req.email
-                existing.avatar = req.avatar or f"https://api.dicebear.com/7.x/bottts/svg?seed={req.username}"
+                existing.real_name = req.real_name or clean_username
+                existing.email = clean_email
+                existing.avatar = req.avatar or f"https://api.dicebear.com/7.x/bottts/svg?seed={clean_username}"
                 existing.status = "ACTIVE"
                 existing.remark = "自主重新注册激活"
                 if default_role and default_role not in existing.roles:
@@ -52,11 +65,11 @@ def register(req: RegisterRequest, db: Session = Depends(get_db)):
                 new_user = existing
         else:
             new_user = SysUser(
-                username=req.username,
+                username=clean_username,
                 password_hash=get_password_hash(req.password),
-                real_name=req.real_name or req.username,
-                email=req.email,
-                avatar=req.avatar or f"https://api.dicebear.com/7.x/bottts/svg?seed={req.username}",
+                real_name=req.real_name or clean_username,
+                email=clean_email,
+                avatar=req.avatar or f"https://api.dicebear.com/7.x/bottts/svg?seed={clean_username}",
                 is_superadmin=0,
                 tenant_code="SYSTEM",
                 status="ACTIVE",

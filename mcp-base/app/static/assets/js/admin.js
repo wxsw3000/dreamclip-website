@@ -320,32 +320,124 @@ async function deleteService(id) {
 
 // ---------------- 3. Users & Roles Management ----------------
 let cachedRolesList = [];
+let currentUserFilterRole = '';
+let currentUserFilterStatus = '';
+let currentUserSearchKeyword = '';
+
+function filterUsersByRole(roleCode, btnEl) {
+  currentUserFilterRole = roleCode;
+  
+  const buttons = document.querySelectorAll('#userRoleFilterBar button');
+  buttons.forEach(b => {
+    b.classList.remove('btn-primary');
+    b.classList.add('btn-outline');
+  });
+  if (btnEl) {
+    btnEl.classList.remove('btn-outline');
+    btnEl.classList.add('btn-primary');
+  }
+  loadUsers();
+}
+
+function applyUserSearch() {
+  const kwInput = document.getElementById('userSearchKeyword');
+  const statusSelect = document.getElementById('userSearchStatus');
+  currentUserSearchKeyword = kwInput ? kwInput.value.trim() : '';
+  currentUserFilterStatus = statusSelect ? statusSelect.value : '';
+  loadUsers();
+}
+
+async function toggleUserStatus(userId, currentStatus) {
+  const newStatus = currentStatus === 'ACTIVE' ? 'DISABLED' : 'ACTIVE';
+  const actionName = newStatus === 'ACTIVE' ? '启用/解封' : '停用/封禁';
+  if (!confirm(`确定要${actionName}该用户账号吗？`)) return;
+
+  const res = await api(`/system/users/${userId}`, {
+    method: 'PUT',
+    body: JSON.stringify({ status: newStatus })
+  });
+
+  if (res && res.code === 200) {
+    showToast(`账号已成功${actionName}`, 'success');
+    loadUsers();
+  } else {
+    showToast(res ? res.message : `${actionName}失败`, 'danger');
+  }
+}
 
 async function loadUsers() {
-  const res = await api('/system/users?size=50');
+  const params = new URLSearchParams({ size: '50' });
+  if (currentUserFilterRole) params.append('role_code', currentUserFilterRole);
+  if (currentUserFilterStatus) params.append('status', currentUserFilterStatus);
+  if (currentUserSearchKeyword) params.append('keyword', currentUserSearchKeyword);
+
+  const res = await api(`/system/users?${params.toString()}`);
   const tbody = document.getElementById('userListTable');
+  const countBadge = document.getElementById('userCountBadge');
   if (!tbody) return;
-  if (!res || res.code !== 200 || !res.data || !res.data.records || res.data.records.length === 0) {
+
+  if (!res || res.code !== 200 || !res.data || !res.data.records) {
     tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#94a3b8;">暂无用户数据</td></tr>';
+    if (countBadge) countBadge.innerText = '共 0 位用户';
+    return;
+  }
+
+  const total = res.data.total || res.data.records.length;
+  if (countBadge) {
+    const roleNameMap = {
+      '': '全平台',
+      'ROLE_MEMBER': '注册会员',
+      'ROLE_OPERATOR': '系统运维',
+      'ROLE_SUPER_ADMIN': '平台超管'
+    };
+    const prefix = roleNameMap[currentUserFilterRole] || currentUserFilterRole;
+    countBadge.innerText = `${prefix}共 ${total} 位用户`;
+  }
+
+  if (res.data.records.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:#94a3b8;">🔍 未找到符合条件的用户</td></tr>';
     return;
   }
 
   tbody.innerHTML = res.data.records.map(u => {
     const rolesStr = (u.roles && u.roles.length > 0)
-      ? u.roles.map(r => `<span class="badge badge-tech" title="${r.role_code}">${r.role_name}</span>`).join(' ')
+      ? u.roles.map(r => {
+          let badgeClass = 'badge-tech';
+          if (r.role_code === 'ROLE_MEMBER') badgeClass = 'badge-tenant';
+          if (r.role_code === 'ROLE_SUPER_ADMIN') badgeClass = 'badge-danger';
+          if (r.role_code === 'ROLE_OPERATOR') badgeClass = 'badge-success';
+          return `<span class="badge ${badgeClass}" title="${r.role_code}">${r.role_name}</span>`;
+        }).join(' ')
       : '<span class="badge badge-outline">未分配角色</span>';
+
+    const avatarUrl = u.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${u.username}`;
+    const isSuperAdmin = Boolean(u.is_superadmin || u.username === 'superadmin');
 
     return `
       <tr>
-        <td><code>${u.username}</code></td>
+        <td>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <img src="${avatarUrl}" style="width:26px; height:26px; border-radius:50%; background:#f1f5f9; border:1px solid #cbd5e1;" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👤</text></svg>'">
+            <code>${u.username}</code>
+          </div>
+        </td>
         <td><strong>${u.real_name || u.username}</strong></td>
+        <td>${u.email ? `<span style="font-size:12px; color:#475569;">${u.email}</span>` : '<span style="color:#94a3b8; font-size:12px;">-</span>'}</td>
         <td>${rolesStr}</td>
-        <td>${u.is_superadmin ? '<span class="badge badge-danger">👑 超级管理员</span>' : '<span class="badge badge-outline">常规用户</span>'}</td>
-        <td><span class="badge ${u.status === 'ACTIVE' ? 'badge-success' : 'badge-danger'}">${u.status}</span></td>
+        <td>
+          <span class="badge ${u.status === 'ACTIVE' ? 'badge-success' : 'badge-danger'}">
+            ${u.status === 'ACTIVE' ? '🟢 正常' : '🔴 已禁用'}
+          </span>
+        </td>
         <td>${u.created_at ? u.created_at.replace('T', ' ').substring(0, 19) : '-'}</td>
         <td style="white-space:nowrap;">
           <button class="btn btn-outline btn-sm" onclick="openEditUserModal(${u.id})">✏️ 编辑/改密</button>
-          ${u.username !== 'superadmin' ? `<button class="btn btn-outline btn-sm" style="color:var(--danger)" onclick="deleteUser(${u.id})">🗑️ 删除</button>` : ''}
+          ${!isSuperAdmin ? `
+            <button class="btn btn-outline btn-sm" style="color:${u.status === 'ACTIVE' ? 'var(--warning-text)' : 'var(--success-text)'}" onclick="toggleUserStatus(${u.id}, '${u.status}')">
+              ${u.status === 'ACTIVE' ? '🚫 封禁' : '🔓 解封'}
+            </button>
+            <button class="btn btn-outline btn-sm" style="color:var(--danger)" onclick="deleteUser(${u.id})">🗑️ 删除</button>
+          ` : ''}
         </td>
       </tr>
     `;
