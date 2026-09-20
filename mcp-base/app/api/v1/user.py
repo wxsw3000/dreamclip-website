@@ -23,6 +23,8 @@ def list_users(
     current: int = Query(1, ge=1),
     size: int = Query(50, ge=1, le=100),
     keyword: Optional[str] = None,
+    role_code: Optional[str] = Query(None, description="按角色编码筛选 (如 ROLE_MEMBER, ROLE_OPERATOR, ROLE_SUPER_ADMIN)"),
+    status: Optional[str] = Query(None, description="按用户状态筛选 (ACTIVE, DISABLED)"),
     tenant_code: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
@@ -30,8 +32,13 @@ def list_users(
     if keyword:
         query = query.filter(
             (SysUser.username.ilike(f"%{keyword}%")) |
-            (SysUser.real_name.ilike(f"%{keyword}%"))
+            (SysUser.real_name.ilike(f"%{keyword}%")) |
+            (SysUser.email.ilike(f"%{keyword}%"))
         )
+    if role_code:
+        query = query.join(SysUser.roles).filter(SysRole.role_code == role_code, SysRole.is_deleted == 0)
+    if status:
+        query = query.filter(SysUser.status == status)
     if tenant_code:
         query = query.filter(SysUser.tenant_code == tenant_code)
 
