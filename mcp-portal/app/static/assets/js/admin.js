@@ -947,16 +947,19 @@ window.addEventListener('DOMContentLoaded', () => {
   const tabFromUrl = urlParams.get('tab');
 
   if (tokenFromUrl) {
-    setAuthCookie('mcp_token', tokenFromUrl, 7);
-    setAuthCookie('dreamclip_token', tokenFromUrl, 7);
-    localStorage.setItem('mcp_token', tokenFromUrl);
-    localStorage.setItem('dreamclip_token', tokenFromUrl);
-    if (userFromUrl) {
-      const decodedUser = decodeURIComponent(userFromUrl);
-      setAuthCookie('mcp_user', decodedUser, 7);
-      setAuthCookie('dreamclip_user', decodedUser, 7);
-      localStorage.setItem('mcp_user', decodedUser);
-      localStorage.setItem('dreamclip_user', decodedUser);
+    const isOnline = window.location.hostname.endsWith('dreamclip.cn');
+    if (!isOnline) {
+      setAuthCookie('mcp_token', tokenFromUrl, 7);
+      setAuthCookie('dreamclip_token', tokenFromUrl, 7);
+      localStorage.setItem('mcp_token', tokenFromUrl);
+      localStorage.setItem('dreamclip_token', tokenFromUrl);
+      if (userFromUrl) {
+        const decodedUser = decodeURIComponent(userFromUrl);
+        setAuthCookie('mcp_user', decodedUser, 7);
+        setAuthCookie('dreamclip_user', decodedUser, 7);
+        localStorage.setItem('mcp_user', decodedUser);
+        localStorage.setItem('dreamclip_user', decodedUser);
+      }
     }
     urlParams.delete('mcp_token');
     urlParams.delete('token');
@@ -980,10 +983,13 @@ window.addEventListener('DOMContentLoaded', () => {
       return;
     }
     const freshUser = res.data;
-    setAuthCookie('mcp_user', JSON.stringify(freshUser), 7);
-    setAuthCookie('dreamclip_user', JSON.stringify(freshUser), 7);
-    localStorage.setItem('mcp_user', JSON.stringify(freshUser));
-    localStorage.setItem('dreamclip_user', JSON.stringify(freshUser));
+    const isOnline = window.location.hostname.endsWith('dreamclip.cn');
+    if (!isOnline) {
+      setAuthCookie('mcp_user', JSON.stringify(freshUser), 7);
+      setAuthCookie('dreamclip_user', JSON.stringify(freshUser), 7);
+      localStorage.setItem('mcp_user', JSON.stringify(freshUser));
+      localStorage.setItem('dreamclip_user', JSON.stringify(freshUser));
+    }
 
     document.getElementById('userName').innerText = freshUser.username || 'superadmin';
     document.getElementById('avatarText').innerText = (freshUser.username || 'SA').substring(0, 2).toUpperCase();

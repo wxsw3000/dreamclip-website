@@ -1076,8 +1076,14 @@
           targetBase = isOnline ? 'https://portal.dreamclip.cn/' : '/portal';
         }
 
-        const joinChar = targetBase.includes('?') ? '&' : '?';
-        const targetUrl = `${targetBase}${joinChar}mcp_token=${encodeURIComponent(accessToken)}&mcp_user=${encodeURIComponent(JSON.stringify(userInfo))}`;
+        let targetUrl;
+        // 如果是在线 dreamclip.cn 内部体系，主域 Cookie 已经共享生效，不追加 URL 参数，保持地址栏干净且防止被二次覆写；外部第三方系统才通过 URL 票据携带凭证
+        if (isOnline && (targetBase.includes('dreamclip.cn') || targetBase.startsWith('/'))) {
+          targetUrl = targetBase;
+        } else {
+          const joinChar = targetBase.includes('?') ? '&' : '?';
+          targetUrl = `${targetBase}${joinChar}mcp_token=${encodeURIComponent(accessToken)}&mcp_user=${encodeURIComponent(JSON.stringify(userInfo))}`;
+        }
         window.location.href = targetUrl;
       }, 380);
     }

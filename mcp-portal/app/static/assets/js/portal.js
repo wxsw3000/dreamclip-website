@@ -278,13 +278,14 @@ window.PortalOS = (function() {
   }
 
   function launchApp(url) {
+    const isOnline = window.location.hostname.endsWith('dreamclip.cn');
     const targetUrl = resolveAppLaunchUrl(url);
     const token = getToken();
     const user = getUser();
 
     if (targetUrl.startsWith('http://') || targetUrl.startsWith('https://')) {
       const u = new URL(targetUrl, window.location.origin);
-      if (token) {
+      if (token && !u.hostname.endsWith('dreamclip.cn')) {
         u.searchParams.set('mcp_token', token);
         if (user) {
           u.searchParams.set('mcp_user', encodeURIComponent(JSON.stringify(user)));
@@ -293,7 +294,7 @@ window.PortalOS = (function() {
       window.open(u.toString(), '_blank');
     } else {
       let jump = targetUrl;
-      if (token) {
+      if (token && !isOnline) {
         const join = jump.includes('?') ? '&' : '?';
         jump = `${jump}${join}mcp_token=${encodeURIComponent(token)}`;
       }
@@ -302,6 +303,7 @@ window.PortalOS = (function() {
   }
 
   function launchAdminApp(url) {
+    const isOnline = window.location.hostname.endsWith('dreamclip.cn');
     const token = getToken();
     const user = getUser();
     if (!token) {
@@ -312,15 +314,19 @@ window.PortalOS = (function() {
     const targetUrl = resolveAppLaunchUrl(url);
     if (targetUrl.startsWith('http://') || targetUrl.startsWith('https://')) {
       const u = new URL(targetUrl, window.location.origin);
-      u.searchParams.set('mcp_token', token);
-      if (user) {
-        u.searchParams.set('mcp_user', encodeURIComponent(JSON.stringify(user)));
+      if (token && !u.hostname.endsWith('dreamclip.cn')) {
+        u.searchParams.set('mcp_token', token);
+        if (user) {
+          u.searchParams.set('mcp_user', encodeURIComponent(JSON.stringify(user)));
+        }
       }
       window.open(u.toString(), '_blank');
     } else {
       let jump = targetUrl;
-      const join = jump.includes('?') ? '&' : '?';
-      jump = `${jump}${join}mcp_token=${encodeURIComponent(token)}`;
+      if (token && !isOnline) {
+        const join = jump.includes('?') ? '&' : '?';
+        jump = `${jump}${join}mcp_token=${encodeURIComponent(token)}`;
+      }
       window.location.href = jump;
     }
   }
