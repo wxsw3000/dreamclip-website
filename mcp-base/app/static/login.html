@@ -126,9 +126,14 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-        const res = await resp.json();
+        let res;
+        try {
+          res = await resp.json();
+        } catch (jsonErr) {
+          throw new Error(`服务端异常 (HTTP ${resp.status})，未返回有效 JSON 数据`);
+        }
 
-        if (res.code === 200 && res.data) {
+        if (res && res.code === 200 && res.data) {
           localStorage.setItem('mcp_token', res.data.access_token);
           localStorage.setItem('mcp_user', JSON.stringify(res.data.user_info));
           showToast("登录成功，正在进入控制台...", "success");

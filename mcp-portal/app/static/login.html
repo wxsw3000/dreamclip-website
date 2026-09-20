@@ -241,16 +241,22 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-        if (!resp.ok) {
+        if (!resp.ok && resp.status === 404) {
           resp = await fetch('/api/base/auth/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
           });
         }
-        const res = await resp.json();
+        
+        let res;
+        try {
+          res = await resp.json();
+        } catch (jsonErr) {
+          throw new Error(`服务端异常 (HTTP ${resp.status})，未返回有效 JSON 数据`);
+        }
 
-        if (res.code === 200 && res.data) {
+        if (res && res.code === 200 && res.data) {
           localStorage.setItem('mcp_token', res.data.access_token);
           localStorage.setItem('mcp_user', JSON.stringify(res.data.user_info));
           localStorage.setItem('dreamclip_token', res.data.access_token);
@@ -267,9 +273,9 @@
               } else {
                 const isOnline = window.location.hostname.endsWith('dreamclip.cn');
                 if (target.startsWith('/admin') || target.startsWith('/base')) {
-                  target = isOnline ? `https://base.dreamclip.cn/?mcp_token=${encodeURIComponent(res.data.access_token)}&mcp_user=${encodeURIComponent(JSON.stringify(res.data.user_info))}` : target;
+                  target = isOnline ? `https://base.dreamclip.cn/?mcp_token=${encodeURIComponent(res.data.access_token)}&mcp_user=${encodeURIComponent(JSON.stringify(res.data.user_info))}` : `/admin?mcp_token=${encodeURIComponent(res.data.access_token)}`;
                 } else if (target.startsWith('/portal') || target.startsWith('/workbench')) {
-                  target = isOnline ? `https://portal.dreamclip.cn/?mcp_token=${encodeURIComponent(res.data.access_token)}&mcp_user=${encodeURIComponent(JSON.stringify(res.data.user_info))}` : target;
+                  target = isOnline ? `https://portal.dreamclip.cn/?mcp_token=${encodeURIComponent(res.data.access_token)}&mcp_user=${encodeURIComponent(JSON.stringify(res.data.user_info))}` : `/portal?mcp_token=${encodeURIComponent(res.data.access_token)}`;
                 }
               }
               window.location.href = target;
