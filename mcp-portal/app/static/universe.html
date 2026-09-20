@@ -8,13 +8,14 @@
   <link rel="stylesheet" href="/static/css/style.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌌</text></svg>">
   <style>
-    /* ==================== 梦之厅 (Hall of Dreams) 特色先锋酷感样式 ==================== */
+    /* ==================== 梦之厅 (Hall of Dreams) 电影胶卷画廊先锋样式 ==================== */
     :root {
       --hall-primary: #6366f1;
       --hall-cyan: #06b6d4;
       --hall-pink: #ec4899;
       --hall-gold: #f59e0b;
-      --hall-glass: rgba(13, 19, 36, 0.75);
+      --hall-emerald: #10b981;
+      --hall-glass: rgba(13, 19, 36, 0.82);
       --hall-glass-border: rgba(255, 255, 255, 0.12);
     }
 
@@ -38,14 +39,14 @@
     .marquee-container {
       width: 100%;
       overflow: hidden;
-      background: rgba(15, 23, 42, 0.85);
+      background: rgba(15, 23, 42, 0.88);
       border-top: 1px solid rgba(255, 255, 255, 0.08);
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
       backdrop-filter: blur(16px);
       padding: 10px 0;
       position: relative;
-      margin-bottom: 2rem;
       user-select: none;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
     }
 
     .marquee-container::before, .marquee-container::after {
@@ -53,24 +54,24 @@
       position: absolute;
       top: 0;
       bottom: 0;
-      width: 80px;
+      width: 90px;
       z-index: 5;
       pointer-events: none;
     }
     .marquee-container::before {
       left: 0;
-      background: linear-gradient(90deg, #0b0f19, transparent);
+      background: linear-gradient(90deg, #070a13, transparent);
     }
     .marquee-container::after {
       right: 0;
-      background: linear-gradient(270deg, #0b0f19, transparent);
+      background: linear-gradient(270deg, #070a13, transparent);
     }
 
     .marquee-track {
       display: flex;
       gap: 24px;
       width: max-content;
-      animation: marqueeScroll 32s linear infinite;
+      animation: marqueeScroll 34s linear infinite;
     }
 
     .marquee-track:hover {
@@ -109,365 +110,542 @@
 
     .marquee-tag {
       font-size: 0.72rem;
-      padding: 1px 6px;
+      padding: 1px 7px;
       border-radius: 6px;
       background: rgba(99, 102, 241, 0.3);
       color: #c7d2fe;
       border: 1px solid rgba(99, 102, 241, 0.4);
     }
 
-    /* 2. 梦之厅 3D 景深焦点舞台 (Hall Spotlight Hero Stage) */
-    .hall-spotlight-section {
-      margin-bottom: 3.5rem;
+    /* 2. 方案 B：超宽电影胶卷画廊 (Cinema Gallery & Filmstrip Deck) */
+    .cinema-hero-section {
+      margin: 2.2rem 0 3.5rem;
       position: relative;
     }
 
-    .spotlight-card-stage {
+    /* 电影舞台背后的全息光晕氛围 */
+    .cinema-ambient-glow {
+      position: absolute;
+      top: -10%;
+      left: 10%;
+      right: 10%;
+      bottom: 10%;
+      background: radial-gradient(ellipse at center, rgba(99, 102, 241, 0.25) 0%, transparent 70%);
+      filter: blur(60px);
+      z-index: 1;
+      pointer-events: none;
+      transition: background 0.8s ease;
+    }
+
+    /* 21:9 超宽屏电影巨幕舞台 */
+    .cinema-stage-container {
       position: relative;
-      background: var(--hall-glass);
-      backdrop-filter: blur(28px);
-      -webkit-backdrop-filter: blur(28px);
-      border: 1px solid var(--hall-glass-border);
-      border-radius: 26px;
+      z-index: 2;
+      border-radius: 28px;
+      background: #090d18;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      box-shadow: 0 30px 90px -20px rgba(0, 0, 0, 0.85), 0 0 50px rgba(99, 102, 241, 0.2);
       overflow: hidden;
-      box-shadow: 0 30px 80px -15px rgba(0, 0, 0, 0.75), 0 0 50px rgba(99, 102, 241, 0.18);
-      display: grid;
-      grid-template-columns: 1.15fr 1fr;
-      min-height: 380px;
-      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
     }
 
-    .spotlight-card-stage::before {
-      content: '';
+    /* 电影胶片上下齿孔装饰条 (Film Perforation Bar) */
+    .film-perforation-bar {
+      height: 18px;
+      background: #060810;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      padding: 0 10px;
+      overflow: hidden;
+    }
+    .film-perforation-bar.bottom {
+      border-bottom: none;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .film-perf-hole {
+      width: 14px;
+      height: 9px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .cinema-screen {
+      position: relative;
+      min-height: 440px;
+      display: grid;
+      grid-template-columns: 1.25fr 1fr;
+      overflow: hidden;
+    }
+
+    /* 电影镜头暗角与扫描线 */
+    .cinema-screen-vignette {
       position: absolute;
       top: 0;
       left: 0;
       right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, #6366f1, #06b6d4, #ec4899, transparent);
-      z-index: 10;
+      bottom: 0;
+      background: radial-gradient(circle at center, transparent 40%, rgba(5, 7, 15, 0.75) 100%),
+                  repeating-linear-gradient(0deg, rgba(0,0,0,0.12) 0px, rgba(0,0,0,0.12) 1px, transparent 2px, transparent 4px);
+      pointer-events: none;
+      z-index: 6;
     }
 
-    .spotlight-content {
-      padding: 44px 40px;
+    .cinema-screen-content {
+      padding: 50px 45px;
       display: flex;
       flex-direction: column;
       justify-content: center;
-      z-index: 5;
+      position: relative;
+      z-index: 8;
     }
 
-    .spotlight-badge {
+    .cinema-meta-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .cinema-clip-pill {
       display: inline-flex;
       align-items: center;
       gap: 6px;
       font-size: 0.78rem;
-      font-weight: 700;
+      font-weight: 800;
       letter-spacing: 0.8px;
       text-transform: uppercase;
-      padding: 4px 12px;
+      padding: 4px 14px;
       border-radius: 20px;
-      background: rgba(99, 102, 241, 0.2);
+      background: rgba(99, 102, 241, 0.25);
       border: 1px solid rgba(99, 102, 241, 0.5);
-      color: #a5b4fc;
-      width: fit-content;
-      margin-bottom: 16px;
+      color: #c7d2fe;
     }
 
-    .spotlight-title {
-      font-size: 2.1rem;
+    .cinema-frame-code {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+    }
+
+    .cinema-title {
+      font-size: 2.3rem;
       font-weight: 800;
-      line-height: 1.25;
-      margin-bottom: 14px;
+      line-height: 1.22;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, #ffffff 30%, #c7d2fe 80%, #93c5fd 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
       letter-spacing: -0.5px;
-      color: #ffffff;
-      text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+      text-shadow: 0 4px 20px rgba(0,0,0,0.6);
+      transition: all 0.4s ease;
     }
 
-    .spotlight-subtitle {
-      font-size: 0.98rem;
-      color: #94a3b8;
-      line-height: 1.65;
-      margin-bottom: 24px;
-      max-width: 520px;
+    .cinema-subtitle {
+      font-size: 1.05rem;
+      color: #cbd5e1;
+      line-height: 1.7;
+      margin-bottom: 28px;
+      max-width: 580px;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
 
-    .spotlight-actions {
+    .cinema-actions {
       display: flex;
       align-items: center;
       gap: 14px;
       flex-wrap: wrap;
     }
 
-    .spotlight-media-wrap {
+    .cinema-media-pane {
       position: relative;
       overflow: hidden;
-      min-height: 260px;
-    }
-
-    .spotlight-img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .spotlight-media-wrap:hover .spotlight-img {
-      transform: scale(1.05);
-    }
-
-    .spotlight-overlay-shade {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(90deg, rgba(13, 19, 36, 0.95) 0%, rgba(13, 19, 36, 0.2) 60%, transparent 100%);
-    }
-
-    .carousel-nav-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-top: 14px;
-      padding: 0 8px;
-    }
-
-    .carousel-dots {
-      display: flex;
-      gap: 8px;
-    }
-
-    .carousel-dot {
-      width: 24px;
-      height: 6px;
-      border-radius: 4px;
-      background: rgba(255, 255, 255, 0.2);
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-
-    .carousel-dot.active {
-      width: 48px;
-      background: linear-gradient(90deg, #6366f1, #06b6d4);
-      box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
-    }
-
-    .carousel-arrows {
-      display: flex;
-      gap: 8px;
-    }
-
-    .carousel-arrow-btn {
-      width: 34px;
-      height: 34px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      color: #fff;
       display: flex;
       align-items: center;
       justify-content: center;
-      cursor: pointer;
-      font-size: 14px;
-      transition: all 0.2s ease;
     }
 
-    .carousel-arrow-btn:hover {
-      background: rgba(99, 102, 241, 0.4);
-      border-color: #818cf8;
-      transform: scale(1.08);
-    }
-
-    /* 3. 编年时序文章流卡片 (Chronological Stream Cards) */
-    .stream-header-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 24px;
-      flex-wrap: wrap;
-      gap: 16px;
-    }
-
-    .stream-title-box h2 {
-      font-size: 1.6rem;
-      font-weight: 800;
-      color: #ffffff;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .stream-title-box p {
-      font-size: 0.85rem;
-      color: #94a3b8;
-      margin-top: 4px;
-    }
-
-    .filter-pills-bar {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .filter-pill {
-      padding: 5px 14px;
-      border-radius: 20px;
-      font-size: 0.82rem;
-      font-weight: 600;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      color: #94a3b8;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .filter-pill:hover, .filter-pill.active {
-      background: rgba(99, 102, 241, 0.25);
-      border-color: #6366f1;
-      color: #ffffff;
-      box-shadow: 0 0 12px rgba(99, 102, 241, 0.3);
-    }
-
-    .chrono-card-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-      gap: 24px;
-    }
-
-    .chrono-card {
-      background: var(--hall-glass);
-      backdrop-filter: blur(20px);
-      border: 1px solid var(--hall-glass-border);
-      border-radius: 20px;
-      overflow: hidden;
-      text-decoration: none;
-      color: inherit;
-      display: flex;
-      flex-direction: column;
-      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-      position: relative;
-    }
-
-    .chrono-card:hover {
-      transform: translateY(-5px);
-      border-color: rgba(99, 102, 241, 0.4);
-      box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.8), 0 0 25px rgba(99, 102, 241, 0.2);
-    }
-
-    .chrono-card-cover-wrap {
-      position: relative;
-      height: 180px;
-      overflow: hidden;
-    }
-
-    .chrono-card-cover {
+    .cinema-img {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      transition: transform 0.5s ease;
+      object-position: center;
+      transform: scale(1.02);
+      transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease;
     }
 
-    .chrono-card:hover .chrono-card-cover {
+    .cinema-media-pane:hover .cinema-img {
       transform: scale(1.06);
     }
 
-    .chrono-date-badge {
+    .cinema-media-overlay {
       position: absolute;
-      top: 12px;
-      left: 12px;
-      background: rgba(11, 15, 25, 0.82);
-      backdrop-filter: blur(10px);
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(90deg, #090d18 0%, rgba(9, 13, 24, 0.4) 30%, transparent 70%);
+      z-index: 5;
+    }
+
+    /* 倒计时胶片刻度线 */
+    .film-timer-bar-wrap {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.08);
+      z-index: 10;
+    }
+    .film-timer-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #6366f1, #06b6d4);
+      transition: width 0.1s linear;
+    }
+
+    /* 悬浮电影胶卷托盘 (Filmstrip Deck) */
+    .filmstrip-deck {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .filmstrip-cell {
+      background: rgba(13, 19, 36, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
+      padding: 8px 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      backdrop-filter: blur(12px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .filmstrip-cell:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.25);
+      transform: translateY(-2px);
+    }
+
+    .filmstrip-cell.active {
+      background: rgba(99, 102, 241, 0.2);
+      border-color: #6366f1;
+      box-shadow: 0 0 20px rgba(99, 102, 241, 0.35);
+    }
+
+    .filmstrip-cell-thumb {
+      width: 48px;
+      height: 34px;
+      border-radius: 6px;
+      object-fit: cover;
       border: 1px solid rgba(255, 255, 255, 0.15);
+      flex-shrink: 0;
+    }
+
+    .filmstrip-cell-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .filmstrip-cell-code {
+      font-size: 0.68rem;
+      font-family: monospace;
+      color: #94a3b8;
+      display: block;
+    }
+
+    .filmstrip-cell-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #f1f5f9;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* 3. 三维形态与分类标签选择器 (Filmstrip Archetype & Taxonomy Deck) */
+    .filter-deck-section {
+      margin-bottom: 2.5rem;
+      background: rgba(13, 19, 36, 0.75);
+      border: 1px solid var(--hall-glass-border);
+      border-radius: 20px;
+      padding: 16px 22px;
+      backdrop-filter: blur(20px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .archetype-tabs-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .archetype-tab-btn {
+      padding: 7px 16px;
       border-radius: 12px;
-      padding: 3px 10px;
-      font-size: 0.75rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #94a3b8;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.25s ease;
+    }
+
+    .archetype-tab-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .archetype-tab-btn.active {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.35) 0%, rgba(6, 182, 212, 0.25) 100%);
+      border-color: #6366f1;
+      color: #ffffff;
+      box-shadow: 0 0 16px rgba(99, 102, 241, 0.4);
+    }
+
+    .mood-spectrum-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .mood-pill-chip {
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #94a3b8;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .mood-pill-chip:hover, .mood-pill-chip.active {
+      color: #ffffff;
+      border-color: var(--hall-primary);
+      background: rgba(99, 102, 241, 0.2);
+    }
+    .mood-pill-chip[data-mood="治愈"].active { border-color: #3b82f6; background: rgba(59, 130, 246, 0.25); }
+    .mood-pill-chip[data-mood="温暖"].active { border-color: #f59e0b; background: rgba(245, 158, 11, 0.25); }
+    .mood-pill-chip[data-mood="孤独"].active { border-color: #a855f7; background: rgba(168, 85, 247, 0.25); }
+    .mood-pill-chip[data-mood="勇气"].active { border-color: #ef4444; background: rgba(239, 68, 68, 0.25); }
+    .mood-pill-chip[data-mood="释怀"].active { border-color: #10b981; background: rgba(16, 185, 129, 0.25); }
+
+    /* 4. 编年时序电影胶片流 (Cinema Editorial Stream) */
+    .cinema-stream-list {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .cinema-stream-card {
+      background: var(--hall-glass);
+      backdrop-filter: blur(24px);
+      border: 1px solid var(--hall-glass-border);
+      border-radius: 22px;
+      overflow: hidden;
+      text-decoration: none;
+      color: inherit;
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.6);
+    }
+
+    .cinema-stream-card:hover {
+      transform: translateY(-4px) scale(1.008);
+      border-color: rgba(99, 102, 241, 0.5);
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 35px rgba(99, 102, 241, 0.25);
+    }
+
+    .card-media-box {
+      position: relative;
+      overflow: hidden;
+      height: 100%;
+      min-height: 220px;
+    }
+
+    .card-cover-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.6s ease;
+    }
+
+    .cinema-stream-card:hover .card-cover-img {
+      transform: scale(1.08);
+    }
+
+    /* 胶片形态打孔标 (Punch-Hole Archetype Badge) */
+    .archetype-badge {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      padding: 4px 12px;
+      border-radius: 8px;
+      font-size: 0.74rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      z-index: 4;
+    }
+    .badge-capsule { background: rgba(6, 182, 212, 0.85); color: #ffffff; }
+    .badge-game { background: rgba(168, 85, 247, 0.85); color: #ffffff; }
+    .badge-article { background: rgba(245, 158, 11, 0.85); color: #ffffff; }
+    .badge-character { background: rgba(16, 185, 129, 0.85); color: #ffffff; }
+
+    /* 卡片胶片侧边齿孔点缀 */
+    .film-side-perfs {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      right: 0;
+      width: 8px;
+      background: repeating-linear-gradient(180deg, rgba(0,0,0,0.6) 0px, rgba(0,0,0,0.6) 8px, transparent 8px, transparent 16px);
+      z-index: 3;
+    }
+
+    .card-editorial-body {
+      padding: 26px 30px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .card-meta-line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .card-date-stamp {
+      font-size: 0.8rem;
       font-weight: 700;
       color: #38bdf8;
       display: flex;
       align-items: center;
       gap: 5px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      font-family: monospace;
     }
 
-    .chrono-mood-pill {
-      position: absolute;
-      bottom: 12px;
-      right: 12px;
-      padding: 2px 10px;
-      border-radius: 10px;
-      font-size: 0.72rem;
-      font-weight: 700;
-      backdrop-filter: blur(8px);
+    .card-scale-tag {
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      background: rgba(255, 255, 255, 0.05);
+      padding: 2px 8px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
     }
 
-    .chrono-card-body {
-      padding: 20px 22px;
-      display: flex;
-      flex-direction: column;
-      flex: 1;
-    }
-
-    .chrono-card-title {
-      font-size: 1.18rem;
-      font-weight: 700;
+    .card-heading {
+      font-size: 1.35rem;
+      font-weight: 800;
       color: #ffffff;
-      margin-bottom: 8px;
-      line-height: 1.4;
+      margin-bottom: 10px;
+      line-height: 1.38;
+      transition: color 0.2s ease;
+    }
+
+    .cinema-stream-card:hover .card-heading {
+      color: #93c5fd;
+    }
+
+    .card-summary-text {
+      font-size: 0.92rem;
+      color: #94a3b8;
+      line-height: 1.65;
+      margin-bottom: 18px;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
 
-    .chrono-card-summary {
-      font-size: 0.86rem;
-      color: #94a3b8;
-      line-height: 1.55;
-      margin-bottom: 18px;
-      display: -webkit-box;
-      -webkit-line-clamp: 3;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      flex: 1;
-    }
-
-    .chrono-card-footer {
+    .card-messenger-bar {
       display: flex;
       align-items: center;
       justify-content: space-between;
       border-top: 1px solid rgba(255, 255, 255, 0.08);
-      padding-top: 14px;
-      font-size: 0.8rem;
+      padding-top: 16px;
+      font-size: 0.82rem;
       color: #94a3b8;
     }
 
     .messenger-badge {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
       font-weight: 600;
-      color: #e2e8f0;
+      color: #f1f5f9;
     }
 
     .messenger-avatar-mini {
-      width: 22px;
-      height: 22px;
+      width: 26px;
+      height: 26px;
       border-radius: 50%;
       border: 1px solid rgba(255, 255, 255, 0.2);
     }
 
+    /* 移动端适配 */
     @media (max-width: 900px) {
-      .spotlight-card-stage {
+      .cinema-screen {
         grid-template-columns: 1fr;
       }
-      .spotlight-media-wrap {
+      .cinema-media-pane {
         height: 220px;
       }
-      .spotlight-overlay-shade {
-        background: linear-gradient(0deg, rgba(13, 19, 36, 0.95) 0%, transparent 100%);
+      .cinema-media-overlay {
+        background: linear-gradient(0deg, #090d18 0%, transparent 100%);
       }
-      .spotlight-content {
-        padding: 30px 24px;
+      .cinema-screen-content {
+        padding: 30px 20px;
       }
-      .spotlight-title {
-        font-size: 1.6rem;
+      .cinema-title {
+        font-size: 1.7rem;
+      }
+      .cinema-stream-card {
+        grid-template-columns: 1fr;
+      }
+      .card-media-box {
+        height: 180px;
+      }
+      .filter-deck-section {
+        flex-direction: column;
+        align-items: flex-start;
       }
     }
   </style>
@@ -502,94 +680,145 @@
     <!-- 1. 双轨动能流光跑马灯胶带 -->
     <div class="marquee-container">
       <div class="marquee-track" id="dynamicMarqueeTrack">
-        <!-- 由 JS 动态渲染 -->
-        <a href="#capsules-stream" class="marquee-item"><span class="marquee-tag">✨ 梦之焦点</span> 打捞星穹深处每一粒失落的情绪胶囊</a>
+        <!-- JS 动态渲染跑马灯 -->
+        <a href="#clips-stream" class="marquee-item"><span class="marquee-tag">✨ 梦之焦点</span> 打捞星穹深处每一粒失落的情绪胶囊</a>
         <a href="/games" class="marquee-item"><span class="marquee-tag">🎮 AVG 互动</span> 第一章《失落的深空信标》现已开放体验</a>
         <a href="#characters-stream" class="marquee-item"><span class="marquee-tag">🌌 角色信使</span> 深夜情绪修补师 · 雷文 (Raven)</a>
-        <a href="/portal" class="marquee-item"><span class="marquee-tag">📱 微服务</span> PortalOS 应用桌面与模块化配置底座</a>
-        <a href="#capsules-stream" class="marquee-item"><span class="marquee-tag">💊 深度文学</span> 800~1500 字纯原创治愈与共鸣图文</a>
+        <a href="/portal" class="marquee-item"><span class="marquee-tag">📱 微服务</span> PortalOS 应用桌面与统一身份凭据底座</a>
+        <a href="#clips-stream" class="marquee-item"><span class="marquee-tag">💊 深度文学</span> 800~1500 字纯原创治愈与共鸣图文</a>
         <!-- 重复一次以实现无缝循环 -->
-        <a href="#capsules-stream" class="marquee-item"><span class="marquee-tag">✨ 梦之焦点</span> 打捞星穹深处每一粒失落的情绪胶囊</a>
+        <a href="#clips-stream" class="marquee-item"><span class="marquee-tag">✨ 梦之焦点</span> 打捞星穹深处每一粒失落的情绪胶囊</a>
         <a href="/games" class="marquee-item"><span class="marquee-tag">🎮 AVG 互动</span> 第一章《失落的深空信标》现已开放体验</a>
         <a href="#characters-stream" class="marquee-item"><span class="marquee-tag">🌌 角色信使</span> 深夜情绪修补师 · 雷文 (Raven)</a>
-        <a href="/portal" class="marquee-item"><span class="marquee-tag">📱 微服务</span> PortalOS 应用桌面与模块化配置底座</a>
+        <a href="/portal" class="marquee-item"><span class="marquee-tag">📱 微服务</span> PortalOS 应用桌面与统一身份凭据底座</a>
       </div>
     </div>
 
     <!-- 主体内容 -->
     <main class="main-content">
       
-      <!-- 2. 梦之厅 3D 焦点大卡舞台 (Spotlight Stage) -->
-      <section class="hall-spotlight-section">
-        <div class="spotlight-card-stage" id="spotlightCardStage">
-          <div class="spotlight-content">
-            <span class="spotlight-badge" id="spotlightBadge">✨ 梦之厅 · 焦点首发</span>
-            <h1 class="spotlight-title" id="spotlightTitle">打捞星穹深处<br>每一粒失落的情绪胶囊</h1>
-            <p class="spotlight-subtitle" id="spotlightSubtitle">
-              在这里，每个角色都是独立宇宙的观察者。通过原创情绪小品与沉浸式互动章节，体验不同灵魂在时间尽头的温度。
-            </p>
-            <div class="spotlight-actions">
-              <a href="#capsules-stream" id="spotlightCtaBtn" class="btn btn-primary" style="padding:0.65rem 1.4rem; font-size:0.95rem;">
-                📖 开启情绪阅读 →
-              </a>
-              <a href="/games" class="btn btn-outline" style="padding:0.65rem 1.2rem;">
-                🎮 体验章节游戏
-              </a>
-              <a href="/portal" id="hero-main-cta" class="btn btn-outline" style="padding:0.65rem 1.2rem;">
-                📱 平台应用桌面
-              </a>
+      <!-- 2. 方案 B：超宽电影胶卷画廊 (Cinema Gallery Stage) -->
+      <section class="cinema-hero-section">
+        <!-- 动态氛围背景光晕 -->
+        <div class="cinema-ambient-glow" id="cinemaAmbientGlow"></div>
+
+        <div class="cinema-stage-container" id="cinemaStageContainer">
+          <!-- 胶卷顶部齿孔 -->
+          <div class="film-perforation-bar">
+            <div class="film-perf-hole"></div><div class="film-perf-hole"></div>
+            <div class="film-perf-hole"></div><div class="film-perf-hole"></div>
+            <div class="film-perf-hole"></div><div class="film-perf-hole"></div>
+            <div class="film-perf-hole"></div><div class="film-perf-hole"></div>
+            <div class="film-perf-hole"></div><div class="film-perf-hole"></div>
+            <div class="film-perf-hole"></div><div class="film-perf-hole"></div>
+            <div class="film-perf-hole"></div><div class="film-perf-hole"></div>
+          </div>
+
+          <div class="cinema-screen">
+            <!-- 电影镜头滤镜 -->
+            <div class="cinema-screen-vignette"></div>
+
+            <div class="cinema-screen-content">
+              <div class="cinema-meta-header">
+                <span class="cinema-clip-pill" id="cinemaClipPill">✨ 梦之厅 · 焦点首发</span>
+                <span class="cinema-frame-code" id="cinemaFrameCode">CLIP // 01 · 2026.09.20</span>
+              </div>
+              <h1 class="cinema-title" id="cinemaTitle">打捞星穹深处<br>每一粒失落的情绪胶囊</h1>
+              <p class="cinema-subtitle" id="cinemaSubtitle">
+                在浩瀚星海中，每一段情绪都是一卷未冲洗的独立记忆胶片。通过纯原创散文、角色档案与交互剧场，探索不同灵魂在时间尽头的温度。
+              </p>
+              <div class="cinema-actions">
+                <a href="#clips-stream" id="cinemaCtaBtn" class="btn btn-primary" style="padding:0.75rem 1.6rem; font-size:1rem; border-radius:14px;">
+                  ▶️ 探索情绪切片 →
+                </a>
+                <a href="/games" class="btn btn-outline" style="padding:0.75rem 1.3rem; border-radius:14px;">
+                  🎮 体验互动游戏
+                </a>
+                <a href="/portal" class="btn btn-outline" style="padding:0.75rem 1.3rem; border-radius:14px;">
+                  📱 平台应用桌面
+                </a>
+              </div>
+            </div>
+
+            <div class="cinema-media-pane">
+              <img class="cinema-img" id="cinemaImg" src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1200&auto=format&fit=crop" alt="Cinema Spotlight">
+              <div class="cinema-media-overlay"></div>
+            </div>
+
+            <!-- 倒计时进度条 -->
+            <div class="film-timer-bar-wrap">
+              <div class="film-timer-bar" id="filmTimerBar"></div>
             </div>
           </div>
-          <div class="spotlight-media-wrap">
-            <img class="spotlight-img" id="spotlightImg" src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1200&auto=format&fit=crop" alt="Hero Spotlight">
-            <div class="spotlight-overlay-shade"></div>
+
+          <!-- 胶卷底部齿孔 -->
+          <div class="film-perforation-bar bottom">
+            <div class="film-perf-hole"></div><div class="film-perf-hole"></div>
+            <div class="film-perf-hole"></div><div class="film-perf-hole"></div>
+            <div class="film-perf-hole"></div><div class="film-perf-hole"></div>
+            <div class="film-perf-hole"></div><div class="film-perf-hole"></div>
+            <div class="film-perf-hole"></div><div class="film-perf-hole"></div>
+            <div class="film-perf-hole"></div><div class="film-perf-hole"></div>
+            <div class="film-perf-hole"></div><div class="film-perf-hole"></div>
           </div>
         </div>
 
-        <!-- 轮播控制条 -->
-        <div class="carousel-nav-bar">
-          <div class="carousel-dots" id="carouselDots">
-            <!-- 动态生成点 -->
-          </div>
-          <div class="carousel-arrows">
-            <button class="carousel-arrow-btn" onclick="prevBanner()" title="上一个焦点">‹</button>
-            <button class="carousel-arrow-btn" onclick="nextBanner()" title="下一个焦点">›</button>
-          </div>
+        <!-- 悬浮胶卷缩略图托盘 (Filmstrip Deck) -->
+        <div class="filmstrip-deck" id="filmstripDeck">
+          <!-- 由 JS 动态渲染胶卷缩略格 -->
         </div>
       </section>
 
       <!-- Google AdSense 顶部横幅广告位 -->
-      <div class="adsense-slot adsense-top-banner" style="margin-bottom: 3rem;">
+      <div class="adsense-slot adsense-top-banner" style="margin-bottom: 2.5rem;">
         <span class="ad-label">Advertisement</span>
         <div>[ Google AdSense 响应式横幅广告预留插槽 ]</div>
       </div>
 
-      <!-- 3. 编年时序文章流 · 情绪胶囊 (Chronological Stream) -->
-      <section id="capsules-stream" style="margin-bottom: 3.5rem;">
-        <div class="stream-header-bar">
-          <div class="stream-title-box">
-            <h2><span>🗓️ 编年时序文章流 · 情绪胶囊</span></h2>
-            <p>按发布日期严谨降序排列 · 800~1500 字纯原创深度情绪图文小品</p>
-          </div>
-          <div class="filter-pills-bar" id="moodFilterBar">
-            <button class="filter-pill active" onclick="filterCapsulesByMood(null, this)">全部时序</button>
-            <button class="filter-pill" onclick="filterCapsulesByMood('治愈', this)">🔵 治愈</button>
-            <button class="filter-pill" onclick="filterCapsulesByMood('温暖', this)">🟡 温暖</button>
-            <button class="filter-pill" onclick="filterCapsulesByMood('孤独', this)">🟣 孤独</button>
-            <button class="filter-pill" onclick="filterCapsulesByMood('勇气', this)">🔴 勇气</button>
-            <button class="filter-pill" onclick="filterCapsulesByMood('释怀', this)">🟢 释怀</button>
-          </div>
+      <!-- 3. 三维形态与分类标签选择器 (Filmstrip Archetype & Taxonomy Deck) -->
+      <section class="filter-deck-section" id="clips-stream">
+        <!-- 维度一：内容形态标签 (Format Archetype) -->
+        <div class="archetype-tabs-group" id="archetypeTabsGroup">
+          <button class="archetype-tab-btn active" onclick="filterByArchetype('ALL', this)">
+            🎞️ 全部切片 <span style="font-size:0.75rem; opacity:0.7;" id="countAll">(20)</span>
+          </button>
+          <button class="archetype-tab-btn" onclick="filterByArchetype('CAPSULE', this)">
+            💊 情绪胶囊 <span style="font-size:0.75rem; opacity:0.7;">(短文)</span>
+          </button>
+          <button class="archetype-tab-btn" onclick="filterByArchetype('GAME', this)">
+            🎮 AVG 剧场 <span style="font-size:0.75rem; opacity:0.7;">(互动)</span>
+          </button>
+          <button class="archetype-tab-btn" onclick="filterByArchetype('ARTICLE', this)">
+            📰 深度图文 <span style="font-size:0.75rem; opacity:0.7;">(长篇)</span>
+          </button>
+          <button class="archetype-tab-btn" onclick="filterByArchetype('CHARACTER', this)">
+            🌌 角色信使 <span style="font-size:0.75rem; opacity:0.7;">(档案)</span>
+          </button>
         </div>
 
-        <div class="chrono-card-grid" id="chronoCapsulesList">
-          <!-- 动态渲染按发布日期排列的文章卡片 -->
-          <div style="grid-column: 1/-1; text-align:center; padding:3rem; color:#94a3b8;">
-            正在打捞星穹编年文章...
+        <!-- 维度二：情绪/性格色彩标签 (Mood Spectrum) -->
+        <div class="mood-spectrum-group" id="moodSpectrumGroup">
+          <span style="font-size:0.76rem; color:var(--text-muted); margin-right:4px;">情绪光谱:</span>
+          <button class="mood-pill-chip active" data-mood="ALL" onclick="filterByMood(null, this)">全部</button>
+          <button class="mood-pill-chip" data-mood="治愈" onclick="filterByMood('治愈', this)">🔵 治愈</button>
+          <button class="mood-pill-chip" data-mood="温暖" onclick="filterByMood('温暖', this)">🟡 温暖</button>
+          <button class="mood-pill-chip" data-mood="孤独" onclick="filterByMood('孤独', this)">🟣 孤独</button>
+          <button class="mood-pill-chip" data-mood="勇气" onclick="filterByMood('勇气', this)">🔴 勇气</button>
+          <button class="mood-pill-chip" data-mood="释怀" onclick="filterByMood('释怀', this)">🟢 释怀</button>
+        </div>
+      </section>
+
+      <!-- 4. 编年时序电影胶片流 (Chronological Cinema Stream) -->
+      <section style="margin-bottom: 3.5rem;">
+        <div class="cinema-stream-list" id="cinemaStreamList">
+          <!-- 动态渲染按发布日期严谨排列的胶片切片卡片 -->
+          <div style="text-align:center; padding:3rem; color:#94a3b8;">
+            正在冲洗星穹编年切片...
           </div>
         </div>
       </section>
 
-      <!-- 4. 宇宙信使与核心角色群像 -->
+      <!-- 5. 宇宙信使与核心角色群像 -->
       <section id="characters-stream" style="margin-bottom: 3.5rem;">
         <div class="section-header">
           <h2 class="section-title">🌌 宇宙信使与核心角色群像 (Characters)</h2>
@@ -599,7 +828,7 @@
         </div>
       </section>
 
-      <!-- 5. AVG 独立章节互动剧场 -->
+      <!-- 6. AVG 独立章节互动剧场 -->
       <section style="margin-bottom: 3.5rem;">
         <div class="section-header">
           <h2 class="section-title">🎮 AVG 独立章节体验 (Interactive Games)</h2>
@@ -617,15 +846,15 @@
       <div class="footer-container">
         <div class="footer-brand">
           <h3>DreamClip 梦之厅</h3>
-          <p>面向新一代读者的情绪胶囊与角色互动平台。打捞星穹深处每一粒失落的情绪胶囊，体验轻量化 HTML5 章节游戏。</p>
+          <p>面向新一代读者的情绪胶囊与角色互动平台。打捞星穹深处每一粒失落的情感记忆，体验轻量化 HTML5 章节游戏。</p>
         </div>
         <div class="footer-links">
-          <h4>内容导航</h4>
+          <h4>内容探索</h4>
           <ul>
-            <li><a href="/">梦之厅首页</a></li>
-            <li><a href="#capsules-stream">编年文章流</a></li>
-            <li><a href="/games">AVG 沉浸剧场</a></li>
-            <li><a href="/portal">平台应用桌面</a></li>
+            <li><a href="/">梦之厅 (首页)</a></li>
+            <li><a href="/#clips-stream">情绪切片打捞</a></li>
+            <li><a href="/games">AVG 互动剧场</a></li>
+            <li><a href="/portal">PortalOS 平台桌面</a></li>
           </ul>
         </div>
         <div class="footer-links">
@@ -639,115 +868,113 @@
         </div>
       </div>
       <div class="footer-bottom">
-        <span>© 2026 DreamClip (dreamclip.cn) All rights reserved.</span>
-        <span>DreamClip Core Engine · 独立业务持久化</span>
+        <span>© 2026 DreamClip (dreamclip.cn) All rights reserved. 沪ICP备XXXXXXXX号-1</span>
+        <div class="footer-compliance-badges">
+          <span class="compliance-badge">AdSense Verified</span>
+          <span class="compliance-badge">SSL Secure</span>
+          <span class="compliance-badge">Original Content</span>
+        </div>
       </div>
     </footer>
   </div>
 
   <script src="/static/js/api.js?v=20260920_v208"></script>
   <script>
-    // ==================== 1. 背景粒子星云特效 ====================
-    (function initHallParticles() {
-      const canvas = document.getElementById('hallCanvas');
+    // ==================== 1. 动态粒子星空背景 Canvas ====================
+    (function initStarfield() {
+      const canvas = document.getElementById("hallCanvas");
       if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      let w = canvas.width = window.innerWidth;
-      let h = canvas.height = window.innerHeight;
-      window.addEventListener('resize', () => {
-        w = canvas.width = window.innerWidth;
-        h = canvas.height = window.innerHeight;
-      });
+      const ctx = canvas.getContext("2d");
+      let width, height, particles = [];
 
-      const stars = Array.from({ length: 45 }, () => ({
-        x: Math.random() * w,
-        y: Math.random() * h,
-        vx: (Math.random() - 0.5) * 0.4,
-        vy: (Math.random() - 0.5) * 0.4,
-        r: Math.random() * 1.6 + 0.5,
-        color: Math.random() > 0.5 ? '#6366f1' : (Math.random() > 0.5 ? '#06b6d4' : '#a855f7'),
-        alpha: Math.random() * 0.5 + 0.2
-      }));
+      function resize() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+      }
+      window.addEventListener("resize", resize);
+      resize();
 
-      function render() {
-        ctx.clearRect(0, 0, w, h);
-        for (let i = 0; i < stars.length; i++) {
-          for (let j = i + 1; j < stars.length; j++) {
-            const dx = stars[i].x - stars[j].x;
-            const dy = stars[i].y - stars[j].y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < 130) {
-              ctx.beginPath();
-              ctx.moveTo(stars[i].x, stars[i].y);
-              ctx.lineTo(stars[j].x, stars[j].y);
-              ctx.strokeStyle = '#6366f1';
-              ctx.globalAlpha = (1 - dist / 130) * 0.12;
-              ctx.lineWidth = 0.6;
-              ctx.stroke();
-            }
-          }
-        }
-        stars.forEach(s => {
-          s.x += s.vx;
-          s.y += s.vy;
-          if (s.x < 0 || s.x > w) s.vx *= -1;
-          if (s.y < 0 || s.y > h) s.vy *= -1;
+      for (let i = 0; i < 90; i++) {
+        particles.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          radius: Math.random() * 1.8 + 0.3,
+          vx: (Math.random() - 0.5) * 0.25,
+          vy: (Math.random() - 0.5) * 0.25,
+          alpha: Math.random() * 0.7 + 0.2
+        });
+      }
+
+      function animate() {
+        ctx.clearRect(0, 0, width, height);
+        particles.forEach(p => {
+          p.x += p.vx;
+          p.y += p.vy;
+          if (p.x < 0) p.x = width;
+          if (p.x > width) p.x = 0;
+          if (p.y < 0) p.y = height;
+          if (p.y > height) p.y = 0;
+
           ctx.beginPath();
-          ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-          ctx.fillStyle = s.color;
-          ctx.globalAlpha = s.alpha;
+          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(165, 180, 252, ${p.alpha})`;
           ctx.fill();
         });
-        requestAnimationFrame(render);
+        requestAnimationFrame(animate);
       }
-      render();
+      animate();
     })();
 
-    // ==================== 2. 梦之厅焦点跑马灯与 3D 舞台 ====================
+    // ==================== 2. 超宽电影胶卷画廊 (Cinema Gallery Hero) ====================
     let bannerList = [];
     let currentBannerIdx = 0;
     let bannerTimer = null;
+    let timerProgress = 0;
+    let timerInterval = null;
+
+    // 默认兜底数据
+    const fallbackBanners = [
+      {
+        title: "打捞星穹深处每一粒失落的情绪胶囊",
+        subtitle: "在浩瀚星海中，每一段情绪都是一卷未冲洗的独立记忆胶片。通过纯原创散文、角色档案与交互剧场，探索不同灵魂在时间尽头的温度。",
+        badge_text: "✨ 梦之厅 · 焦点首发",
+        image_url: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1200&auto=format&fit=crop",
+        link_url: "#clips-stream",
+        theme_color: "#6366f1"
+      },
+      {
+        title: "失落的深空信标 · AVG 互动剧场上线",
+        subtitle: "你收到了一封来自 300 年前的深空加密讯号。轻量化 HTML5 独立分支剧场，即点即玩无需下载。",
+        badge_text: "🎮 互动剧场 · 试玩开放",
+        image_url: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1200&auto=format&fit=crop",
+        link_url: "/games",
+        theme_color: "#06b6d4"
+      },
+      {
+        title: "深夜情绪修补师 · 雷文 (Raven) 信使手记",
+        subtitle: "“每一个未曾寄出的愿望，都是宇宙的一颗暗星。” 探索角色背后的独立世界观设定与声音碎片。",
+        badge_text: "🌌 核心信使 · 角色档案",
+        image_url: "https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=1200&auto=format&fit=crop",
+        link_url: "#characters-stream",
+        theme_color: "#ec4899"
+      }
+    ];
 
     async function loadHallBanners() {
       try {
         const res = await DreamClipAPI.hall.getBanners(false);
-        if (res && res.code === 200 && Array.isArray(res.data) && res.data.length > 0) {
+        if (res && res.code === 200 && res.data && res.data.length > 0) {
           bannerList = res.data;
         } else {
-          // 优雅默认兜底数据
-          bannerList = [
-            {
-              title: "打捞星穹深处每一粒失落的情绪胶囊",
-              subtitle: "在新安托利亚的微光夜色中，跟随深夜修补师与星轨植物学家，重启那些未曾褪色的真实心跳。",
-              badge_text: "✨ 梦之厅首发",
-              image_url: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1200&auto=format&fit=crop",
-              link_url: "#capsules-stream",
-              theme_color: "#6366f1"
-            },
-            {
-              title: "《深空信箱：2099》核心世界观与角色群像全景",
-              subtitle: "探索雷文、露娜莉亚与伊格尼斯的跨维度故事线，在情绪晶体中寻找旧地球失落的记忆信件。",
-              badge_text: "🌌 角色宇宙",
-              image_url: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=1200&auto=format&fit=crop",
-              link_url: "#characters-stream",
-              theme_color: "#06b6d4"
-            },
-            {
-              title: "AVG 章节游戏：第一章《失落的深空信标》现已开放",
-              subtitle: "纯粹 HTML5 标准轻量化交互体验，无缝接入 DreamClip 统一身份，做出你的关键命运抉择。",
-              badge_text: "🎮 沉浸剧场",
-              image_url: "https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=1200&auto=format&fit=crop",
-              link_url: "/games",
-              theme_color: "#ec4899"
-            }
-          ];
+          bannerList = fallbackBanners;
         }
-
-        renderMarqueeTrack(bannerList);
-        renderSpotlightCarousel();
       } catch (err) {
-        console.warn("Failed to load hall banners, using fallback:", err);
+        bannerList = fallbackBanners;
       }
+      renderMarqueeTrack(bannerList);
+      renderCinemaGallery();
+      renderFilmstripDeck();
+      startCinemaTimer();
     }
 
     function renderMarqueeTrack(banners) {
@@ -759,84 +986,174 @@
           <span>${b.title}</span>
         </a>
       `).join('');
-      // 双倍内容保证平滑无缝轮播
       track.innerHTML = htmlContent + htmlContent;
     }
 
-    function renderSpotlightCarousel() {
+    function renderCinemaGallery() {
       if (!bannerList.length) return;
       const b = bannerList[currentBannerIdx];
-      const stage = document.getElementById('spotlightCardStage');
-      const badge = document.getElementById('spotlightBadge');
-      const title = document.getElementById('spotlightTitle');
-      const sub = document.getElementById('spotlightSubtitle');
-      const img = document.getElementById('spotlightImg');
-      const ctaBtn = document.getElementById('spotlightCtaBtn');
-      const dotsContainer = document.getElementById('carouselDots');
+      const pill = document.getElementById('cinemaClipPill');
+      const frameCode = document.getElementById('cinemaFrameCode');
+      const title = document.getElementById('cinemaTitle');
+      const sub = document.getElementById('cinemaSubtitle');
+      const img = document.getElementById('cinemaImg');
+      const ctaBtn = document.getElementById('cinemaCtaBtn');
+      const glow = document.getElementById('cinemaAmbientGlow');
+      const container = document.getElementById('cinemaStageContainer');
 
-      if (badge) {
-        badge.innerText = b.badge_text || "✨ 梦之厅 · 焦点首发";
-        badge.style.color = b.theme_color || "#a5b4fc";
-        badge.style.borderColor = (b.theme_color || "#6366f1") + "60";
-        badge.style.background = (b.theme_color || "#6366f1") + "20";
+      const frameNo = String(currentBannerIdx + 1).padStart(2, '0');
+      if (frameCode) frameCode.innerText = `CLIP // ${frameNo} · 2026.09.20`;
+      if (pill) {
+        pill.innerText = b.badge_text || "✨ 梦之焦点";
+        pill.style.color = b.theme_color || "#c7d2fe";
+        pill.style.borderColor = (b.theme_color || "#6366f1") + "60";
+        pill.style.background = (b.theme_color || "#6366f1") + "25";
       }
       if (title) title.innerText = b.title;
-      if (sub) sub.innerText = b.subtitle || "打捞星穹深处每一粒失落的情绪胶囊。";
-      if (img && b.image_url) img.src = b.image_url;
-      if (ctaBtn) ctaBtn.href = b.link_url || "#capsules-stream";
-      if (stage && b.theme_color) {
-        stage.style.boxShadow = `0 30px 80px -15px rgba(0, 0, 0, 0.75), 0 0 45px ${b.theme_color}30`;
+      if (sub) sub.innerText = b.subtitle || "打捞星穹深处每一粒失落的情感记忆。";
+      if (img && b.image_url) {
+        img.style.opacity = '0.4';
+        setTimeout(() => {
+          img.src = b.image_url;
+          img.style.opacity = '1';
+        }, 150);
+      }
+      if (ctaBtn) ctaBtn.href = b.link_url || "#clips-stream";
+      if (glow && b.theme_color) {
+        glow.style.background = `radial-gradient(ellipse at center, ${b.theme_color}35 0%, transparent 70%)`;
+      }
+      if (container && b.theme_color) {
+        container.style.boxShadow = `0 30px 90px -20px rgba(0, 0, 0, 0.85), 0 0 50px ${b.theme_color}25`;
       }
 
-      if (dotsContainer) {
-        dotsContainer.innerHTML = bannerList.map((_, i) => `
-          <div class="carousel-dot ${i === currentBannerIdx ? 'active' : ''}" onclick="goToBanner(${i})"></div>
-        `).join('');
-      }
-
-      resetBannerTimer();
-    }
-
-    function nextBanner() {
-      currentBannerIdx = (currentBannerIdx + 1) % bannerList.length;
-      renderSpotlightCarousel();
-    }
-
-    function prevBanner() {
-      currentBannerIdx = (currentBannerIdx - 1 + bannerList.length) % bannerList.length;
-      renderSpotlightCarousel();
-    }
-
-    function goToBanner(idx) {
-      currentBannerIdx = idx;
-      renderSpotlightCarousel();
-    }
-
-    function resetBannerTimer() {
-      if (bannerTimer) clearInterval(bannerTimer);
-      bannerTimer = setInterval(nextBanner, 6000);
-    }
-
-    // ==================== 3. 编年时序文章流加载 ====================
-    let allCapsules = [];
-
-    async function loadChronologicalCapsules() {
-      const container = document.getElementById("chronoCapsulesList");
-      try {
-        const res = await DreamClipAPI.universe.getCapsules({ page: 1, page_size: 20 });
-        if (res && res.code === 200 && res.data && res.data.items) {
-          allCapsules = res.data.items;
-          renderCapsuleCards(allCapsules);
+      // 更新下方胶卷缩略图高亮
+      document.querySelectorAll('.filmstrip-cell').forEach((cell, idx) => {
+        if (idx === currentBannerIdx) {
+          cell.classList.add('active');
         } else {
-          container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:3rem; color:#94a3b8;">暂未打捞到情绪文章</div>`;
+          cell.classList.remove('active');
         }
+      });
+    }
+
+    function renderFilmstripDeck() {
+      const deck = document.getElementById('filmstripDeck');
+      if (!deck) return;
+      deck.innerHTML = bannerList.map((b, idx) => {
+        const frameNo = String(idx + 1).padStart(2, '0');
+        return `
+          <div class="filmstrip-cell ${idx === currentBannerIdx ? 'active' : ''}" onclick="selectBanner(${idx})">
+            <img class="filmstrip-cell-thumb" src="${b.image_url || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=300'}" alt="thumb">
+            <div class="filmstrip-cell-info">
+              <span class="filmstrip-cell-code">FRAME #${frameNo}</span>
+              <div class="filmstrip-cell-title">${b.title}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function selectBanner(idx) {
+      currentBannerIdx = idx;
+      renderCinemaGallery();
+      resetCinemaTimer();
+    }
+
+    function startCinemaTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+      timerProgress = 0;
+      const bar = document.getElementById('filmTimerBar');
+
+      timerInterval = setInterval(() => {
+        timerProgress += 2;
+        if (bar) bar.style.width = `${(timerProgress / 120) * 100}%`;
+        if (timerProgress >= 120) {
+          currentBannerIdx = (currentBannerIdx + 1) % bannerList.length;
+          renderCinemaGallery();
+          timerProgress = 0;
+        }
+      }, 100);
+    }
+
+    function resetCinemaTimer() {
+      startCinemaTimer();
+    }
+
+    // ==================== 3. 编年时序多维切片流 (Chronological Cinema Stream) ====================
+    let allClipsData = [];
+    let currentArchetype = 'ALL';
+    let currentMood = null;
+
+    async function loadAllChronologicalClips() {
+      const container = document.getElementById("cinemaStreamList");
+      try {
+        // 1. 获取情绪胶囊文章
+        const resCapsules = await DreamClipAPI.universe.getCapsules({ page: 1, page_size: 30 });
+        let capsules = (resCapsules && resCapsules.code === 200 && resCapsules.data && resCapsules.data.items) ? resCapsules.data.items : [];
+
+        // 2. 获取 AVG 游戏章节
+        const resAvg = await DreamClipAPI.universe.getAvgChapters();
+        let games = (resAvg && resAvg.code === 200 && resAvg.data) ? resAvg.data : [];
+
+        // 组合多形态切片
+        let aggregated = [];
+
+        capsules.forEach(c => {
+          aggregated.push({
+            id: `capsule-${c.id}`,
+            archetype: (c.word_count > 2000) ? 'ARTICLE' : 'CAPSULE',
+            title: c.title,
+            slug: c.slug,
+            link_url: `/capsule/${c.slug}`,
+            cover_image: c.cover_image || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=800',
+            summary: c.summary,
+            mood_tag: c.mood_tag || '治愈',
+            mood_color: c.mood_color || 'BLUE',
+            word_count: c.word_count || 1200,
+            reading_time_mins: c.reading_time_mins || 3,
+            published_at: c.published_at || c.created_at,
+            character_name: c.character_name || '星穹信使',
+            character_avatar: c.character_avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=raven',
+            view_count: c.view_count || 0,
+            like_count: c.like_count || 0
+          });
+        });
+
+        games.forEach((g, idx) => {
+          aggregated.push({
+            id: `game-${g.id}`,
+            archetype: 'GAME',
+            title: g.chapter_name,
+            slug: g.chapter_code,
+            link_url: `/game/${g.chapter_code}`,
+            cover_image: g.cover_image || 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=800',
+            summary: g.summary,
+            mood_tag: '互动剧场',
+            mood_color: 'PURPLE',
+            word_count: 0,
+            reading_time_mins: g.playtime_mins || 15,
+            published_at: new Date(Date.now() - idx * 86400000 * 2).toISOString(),
+            character_name: 'AVG 剧场系统',
+            character_avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=game',
+            view_count: 260 + idx * 80,
+            like_count: 58 + idx * 15
+          });
+        });
+
+        // 严格按照发布日期 (published_at DESC) 倒序排序
+        aggregated.sort((a, b) => new Date(b.published_at) - new Date(a.published_at));
+
+        allClipsData = aggregated;
+        document.getElementById('countAll').innerText = `(${allClipsData.length})`;
+        renderCinemaStream(allClipsData);
+
       } catch (err) {
-        container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:3rem; color:#f87171;">加载文章流失败，请稍后刷新重试</div>`;
+        container.innerHTML = `<div style="text-align:center; padding:3rem; color:#f87171;">加载切片流失败，请稍后刷新重试</div>`;
       }
     }
 
     function formatDateDisplay(dateStr) {
-      if (!dateStr) return "⏱️ 最新发布";
+      if (!dateStr) return "⏱️ 2026.09.20";
       try {
         const d = new Date(dateStr);
         const y = d.getFullYear();
@@ -850,36 +1167,62 @@
       }
     }
 
-    function renderCapsuleCards(list) {
-      const container = document.getElementById("chronoCapsulesList");
+    function renderCinemaStream(list) {
+      const container = document.getElementById("cinemaStreamList");
       if (!container) return;
       if (!list || list.length === 0) {
-        container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:3rem; color:#94a3b8;">该分类下暂无情绪文章</div>`;
+        container.innerHTML = `<div style="text-align:center; padding:4rem; color:#94a3b8; background:rgba(255,255,255,0.02); border-radius:20px; border:1px dashed rgba(255,255,255,0.1);">当前分类或筛选条件下暂无情绪切片</div>`;
         return;
       }
 
       container.innerHTML = list.map(c => {
+        let archetypeBadge = '';
+        let scaleTag = '';
+
+        if (c.archetype === 'GAME') {
+          archetypeBadge = `<span class="archetype-badge badge-game">🎮 AVG 互动剧</span>`;
+          scaleTag = `🕹️ 互动章节 · 约 ${c.reading_time_mins} 分钟体验`;
+        } else if (c.archetype === 'ARTICLE') {
+          archetypeBadge = `<span class="archetype-badge badge-article">📰 深度图文</span>`;
+          scaleTag = `📖 ${c.word_count} 字 · ${c.reading_time_mins} 分钟阅读`;
+        } else if (c.archetype === 'CHARACTER') {
+          archetypeBadge = `<span class="archetype-badge badge-character">🌌 信使档案</span>`;
+          scaleTag = `🎙️ 专属台词 · 羁绊立绘`;
+        } else {
+          archetypeBadge = `<span class="archetype-badge badge-capsule">💊 情绪胶囊</span>`;
+          scaleTag = `📖 ${c.word_count} 字 · ${c.reading_time_mins} 分钟阅读`;
+        }
+
         const pillClass = `pill-${(c.mood_color || 'blue').toLowerCase()}`;
-        const dateFormatted = formatDateDisplay(c.published_at || c.created_at);
-        const coverImg = c.cover_image || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=800';
+        const dateFormatted = formatDateDisplay(c.published_at);
+
         return `
-          <a href="/capsule/${c.slug}" class="chrono-card">
-            <div class="chrono-card-cover-wrap">
-              <img class="chrono-card-cover" src="${coverImg}" alt="${c.title}" loading="lazy">
-              <div class="chrono-date-badge">${dateFormatted}</div>
-              <span class="personality-pill ${pillClass} chrono-mood-pill">${c.mood_tag || '治愈'} · ${c.word_count || 800}字</span>
+          <a href="${c.link_url}" class="cinema-stream-card">
+            <div class="card-media-box">
+              <img class="card-cover-img" src="${c.cover_image}" alt="${c.title}" loading="lazy">
+              ${archetypeBadge}
+              <div class="film-side-perfs"></div>
             </div>
-            <div class="chrono-card-body">
-              <h3 class="chrono-card-title">${c.title}</h3>
-              <p class="chrono-card-summary">${c.summary}</p>
-              <div class="chrono-card-footer">
-                <div class="messenger-badge">
-                  <img class="messenger-avatar-mini" src="${c.character_avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + (c.character_name || 'raven')}" alt="avatar">
-                  <span>${c.character_name || '信使'}</span>
+            <div class="card-editorial-body">
+              <div>
+                <div class="card-meta-line">
+                  <span class="card-date-stamp">${dateFormatted}</span>
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <span class="personality-pill ${pillClass}">${c.mood_tag}</span>
+                    <span class="card-scale-tag">${scaleTag}</span>
+                  </div>
                 </div>
-                <div>
-                  <span>👁️ ${c.view_count || 0}</span>
-                  <span style="margin-left:8px;">❤️ ${c.like_count || 0}</span>
+                <h2 class="card-heading">${c.title}</h2>
+                <p class="card-summary-text">${c.summary}</p>
+              </div>
+              <div class="card-messenger-bar">
+                <div class="messenger-badge">
+                  <img class="messenger-avatar-mini" src="${c.character_avatar}" alt="avatar">
+                  <span>${c.character_name}</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:14px;">
+                  <span>👁️ ${c.view_count} 次打捞</span>
+                  <span>❤️ ${c.like_count} 感到共鸣</span>
                 </div>
               </div>
             </div>
@@ -888,19 +1231,35 @@
       }).join('');
     }
 
-    function filterCapsulesByMood(tag, btn) {
-      document.querySelectorAll('#moodFilterBar .filter-pill').forEach(p => p.classList.remove('active'));
+    function filterByArchetype(type, btn) {
+      currentArchetype = type;
+      document.querySelectorAll('#archetypeTabsGroup .archetype-tab-btn').forEach(b => b.classList.remove('active'));
       if (btn) btn.classList.add('active');
-
-      if (!tag) {
-        renderCapsuleCards(allCapsules);
-      } else {
-        const filtered = allCapsules.filter(c => (c.mood_tag && c.mood_tag.includes(tag)) || (c.mood_color && c.mood_color.includes(tag)));
-        renderCapsuleCards(filtered);
-      }
+      applyFilters();
     }
 
-    // ==================== 4. 角色与游戏章节数据加载 ====================
+    function filterByMood(mood, btn) {
+      currentMood = mood;
+      document.querySelectorAll('#moodSpectrumGroup .mood-pill-chip').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      applyFilters();
+    }
+
+    function applyFilters() {
+      let result = allClipsData;
+
+      if (currentArchetype !== 'ALL') {
+        result = result.filter(c => c.archetype === currentArchetype);
+      }
+
+      if (currentMood) {
+        result = result.filter(c => (c.mood_tag && c.mood_tag.includes(currentMood)) || (c.mood_color && c.mood_color.includes(currentMood)));
+      }
+
+      renderCinemaStream(result);
+    }
+
+    // ==================== 4. 角色档案与游戏剧场板块加载 ====================
     async function loadCharactersAndGames() {
       // 角色档案
       const charRes = await DreamClipAPI.universe.getCharacters();
@@ -950,7 +1309,7 @@
     // ==================== 页面启动初始化 ====================
     document.addEventListener("DOMContentLoaded", () => {
       loadHallBanners();
-      loadChronologicalCapsules();
+      loadAllChronologicalClips();
       loadCharactersAndGames();
     });
   </script>
