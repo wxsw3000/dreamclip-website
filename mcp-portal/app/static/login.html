@@ -1067,8 +1067,8 @@
       sessionStorage.setItem('dreamclip_user', JSON.stringify(userInfo));
 
       const successMsg = isNewRegister
-        ? "✨ 注册成功！正在开启应用门户..."
-        : "登录成功，正在开启应用门户...";
+        ? "✨ 注册成功！正在进入主站..."
+        : "登录成功，正在进入主站...";
       showToast(successMsg, "success");
 
       const params = new URLSearchParams(window.location.search);
@@ -1081,7 +1081,7 @@
         if (redirectUrl && !redirectUrl.includes('login.dreamclip.cn')) {
           targetBase = redirectUrl;
         } else {
-          targetBase = isOnline ? 'https://portal.dreamclip.cn/' : '/portal';
+          targetBase = isOnline ? 'https://dreamclip.cn/' : '/';
         }
 
         let targetUrl;

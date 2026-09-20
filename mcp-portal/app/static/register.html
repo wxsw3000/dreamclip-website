@@ -444,7 +444,7 @@
 
           setTimeout(() => {
             const isOnline = window.location.hostname.endsWith('dreamclip.cn');
-            const portalBase = isOnline ? 'https://portal.dreamclip.cn/' : '/portal';
+            const portalBase = isOnline ? 'https://dreamclip.cn/' : '/';
             const targetUrl = isOnline ? portalBase : `${portalBase}?mcp_token=${encodeURIComponent(accessToken)}&mcp_user=${encodeURIComponent(JSON.stringify(userInfo))}`;
             window.location.href = targetUrl;
           }, 350);
