@@ -2,22 +2,68 @@
  * DreamClip 客户端统一 API 与状态管理
  */
 function getAuthCookie(name) {
-  const match = document.cookie.match(new RegExp('(?:^|;\\s*)' + name + '=([^;]*)'));
-  return match ? decodeURIComponent(match[1]) : null;
+  if (!document.cookie) return null;
+  const prefix = name + '=';
+  const cookies = document.cookie.split(';');
+  for (let i = 0; i < cookies.length; i++) {
+    const c = cookies[i].trim();
+    if (c.startsWith(prefix)) {
+      return decodeURIComponent(c.substring(prefix.length));
+    }
+  }
+  return null;
+}
+
+function setAuthCookie(name, value, days = 7) {
+  const isOnline = window.location.hostname.endsWith('dreamclip.cn');
+  const domainPart = isOnline ? '; domain=.dreamclip.cn' : '';
+  let maxAgePart = '';
+  if (typeof days === 'number' && days > 0) {
+    maxAgePart = `; max-age=${days * 24 * 60 * 60}`;
+  }
+  document.cookie = `${name}=${encodeURIComponent(value)}${domainPart}; path=/; SameSite=Lax${maxAgePart}`;
 }
 
 function clearAuthCookie(name) {
-  const isOnline = window.location.hostname.endsWith('dreamclip.cn');
-  const domainPart = isOnline ? '; domain=.dreamclip.cn' : '';
   document.cookie = `${name}=; path=/; domain=.dreamclip.cn; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
   document.cookie = `${name}=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+}
+
+function getStoredToken() {
+  return (
+    getAuthCookie("mcp_token") ||
+    getAuthCookie("dreamclip_token") ||
+    sessionStorage.getItem("mcp_token") ||
+    sessionStorage.getItem("dreamclip_token") ||
+    localStorage.getItem("mcp_token") ||
+    localStorage.getItem("dreamclip_token") ||
+    null
+  );
+}
+
+function getStoredUser() {
+  const raw = (
+    getAuthCookie("mcp_user") ||
+    getAuthCookie("dreamclip_user") ||
+    sessionStorage.getItem("mcp_user") ||
+    sessionStorage.getItem("dreamclip_user") ||
+    localStorage.getItem("mcp_user") ||
+    localStorage.getItem("dreamclip_user") ||
+    null
+  );
+  if (!raw) return null;
+  try {
+    return typeof raw === 'object' ? raw : JSON.parse(raw);
+  } catch (e) {
+    return null;
+  }
 }
 
 const DreamClipAPI = {
   // 基础请求封装
   async request(endpoint, options = {}) {
     const isOnline = window.location.hostname.endsWith('dreamclip.cn');
-    let token = isOnline ? getAuthCookie("mcp_token") : (sessionStorage.getItem("mcp_token") || localStorage.getItem("mcp_token") || localStorage.getItem("dreamclip_token"));
+    const token = getStoredToken();
 
     const headers = {
       "Content-Type": "application/json",
@@ -41,18 +87,20 @@ const DreamClipAPI = {
         resp = await fetch(altEndpoint, { ...options, headers });
       }
       if (resp.status === 401) {
-        if (isOnline) {
-          clearAuthCookie("mcp_token");
-          clearAuthCookie("mcp_user");
-          clearAuthCookie("dreamclip_token");
-          clearAuthCookie("dreamclip_user");
+        if (token) {
+          if (isOnline) {
+            clearAuthCookie("mcp_token");
+            clearAuthCookie("mcp_user");
+            clearAuthCookie("dreamclip_token");
+            clearAuthCookie("dreamclip_user");
+          }
+          localStorage.removeItem("dreamclip_token");
+          localStorage.removeItem("dreamclip_user");
+          localStorage.removeItem("mcp_token");
+          localStorage.removeItem("mcp_user");
+          sessionStorage.clear();
+          initUserSessionUI();
         }
-        localStorage.removeItem("dreamclip_token");
-        localStorage.removeItem("dreamclip_user");
-        localStorage.removeItem("mcp_token");
-        localStorage.removeItem("mcp_user");
-        sessionStorage.clear();
-        initUserSessionUI();
         return { code: 401, message: "登录凭据已过期" };
       }
       const data = await resp.json();
@@ -145,32 +193,11 @@ const DreamClipAPI = {
 };
 
 // 全局 UI 辅助函数
-document.addEventListener("DOMContentLoaded", () => {
-  initUserSessionUI();
-});
-
 async function initUserSessionUI() {
-  const isOnline = window.location.hostname.endsWith('dreamclip.cn');
-  const token = isOnline ? getAuthCookie('mcp_token') : (sessionStorage.getItem("mcp_token") || localStorage.getItem("mcp_token") || localStorage.getItem("dreamclip_token"));
   const authContainer = document.getElementById("header-auth-area");
   const heroCtaBtn = document.getElementById("hero-main-cta");
-
-  if (!token) {
-    if (authContainer) {
-      const loginUrl = DreamClipAPI.auth.getLoginUrl('login');
-      const registerUrl = DreamClipAPI.auth.getLoginUrl('register');
-      authContainer.innerHTML = `
-        <a href="/portal" class="btn btn-outline" style="padding:0.35rem 0.75rem; font-size:0.82rem; margin-right:6px;">📱 平台桌面</a>
-        <a href="${loginUrl}" class="btn btn-outline" style="padding:0.35rem 0.75rem; font-size:0.82rem; margin-right:6px;">登录</a>
-        <a href="${registerUrl}" class="btn btn-primary" style="padding:0.35rem 0.75rem; font-size:0.82rem;">✨ 立即注册</a>
-      `;
-    }
-    if (heroCtaBtn) {
-      heroCtaBtn.innerText = "✨ 开启探索 (立即注册)";
-      heroCtaBtn.href = DreamClipAPI.auth.getLoginUrl('register');
-    }
-    return;
-  }
+  const token = getStoredToken();
+  const cachedUser = getStoredUser();
 
   function renderUserUI(u) {
     if (!authContainer) return;
@@ -195,18 +222,33 @@ async function initUserSessionUI() {
     }
   }
 
-  let cachedUser = null;
-  const rawUserCookie = getAuthCookie('mcp_user') || getAuthCookie('dreamclip_user');
-  const rawUserStorage = sessionStorage.getItem('mcp_user') || localStorage.getItem('mcp_user') || localStorage.getItem('dreamclip_user');
-  const cachedUserStr = rawUserCookie || rawUserStorage;
-  if (cachedUserStr) {
-    try { cachedUser = JSON.parse(cachedUserStr); } catch (e) {}
+  function renderGuestUI() {
+    if (authContainer) {
+      const loginUrl = DreamClipAPI.auth.getLoginUrl('login');
+      const registerUrl = DreamClipAPI.auth.getLoginUrl('register');
+      authContainer.innerHTML = `
+        <a href="/portal" class="btn btn-outline" style="padding:0.35rem 0.75rem; font-size:0.82rem; margin-right:6px;">📱 平台桌面</a>
+        <a href="${loginUrl}" class="btn btn-outline" style="padding:0.35rem 0.75rem; font-size:0.82rem; margin-right:6px;">登录</a>
+        <a href="${registerUrl}" class="btn btn-primary" style="padding:0.35rem 0.75rem; font-size:0.82rem;">✨ 立即注册</a>
+      `;
+    }
+    if (heroCtaBtn) {
+      heroCtaBtn.innerText = "✨ 开启探索 (立即注册)";
+      heroCtaBtn.href = DreamClipAPI.auth.getLoginUrl('register');
+    }
   }
 
+  if (!token) {
+    renderGuestUI();
+    return;
+  }
+
+  // 1. 如果本地或 Cookie 有缓存用户数据，立即渲染，零延迟消除未登录闪烁
   if (cachedUser) {
     renderUserUI(cachedUser);
   }
 
+  // 2. 异步向后端验证并拉取最新用户资料
   try {
     const meRes = await DreamClipAPI.auth.getMe();
     if (meRes && meRes.code === 200 && meRes.data) {
@@ -218,6 +260,14 @@ async function initUserSessionUI() {
     console.warn("Failed to fetch fresh user info on main site:", err);
   }
 }
+
+// 确保无论在任何 DOM 生命周期阶段加载都能立即初始化 UI
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initUserSessionUI);
+} else {
+  initUserSessionUI();
+}
+window.initUserSessionUI = initUserSessionUI;
 
 function ensureAuthModalDOM() {
   if (document.getElementById("auth-modal")) return;
@@ -322,6 +372,10 @@ async function handleAuthSubmit(event) {
 
     const res = await DreamClipAPI.auth.login(u, p);
     if (res.code === 200 && res.data) {
+      setAuthCookie('mcp_token', res.data.access_token, 7);
+      setAuthCookie('mcp_user', JSON.stringify(res.data.user_info), 7);
+      setAuthCookie('dreamclip_token', res.data.access_token, 7);
+      setAuthCookie('dreamclip_user', JSON.stringify(res.data.user_info), 7);
       localStorage.setItem("dreamclip_token", res.data.access_token);
       localStorage.setItem("dreamclip_user", JSON.stringify(res.data.user_info));
       localStorage.setItem("mcp_token", res.data.access_token);
@@ -342,6 +396,10 @@ async function handleAuthSubmit(event) {
 
     const res = await DreamClipAPI.auth.register(u, p, n, color, zodiac);
     if (res.code === 200 && res.data) {
+      setAuthCookie('mcp_token', res.data.access_token, 7);
+      setAuthCookie('mcp_user', JSON.stringify(res.data.user_info), 7);
+      setAuthCookie('dreamclip_token', res.data.access_token, 7);
+      setAuthCookie('dreamclip_user', JSON.stringify(res.data.user_info), 7);
       localStorage.setItem("dreamclip_token", res.data.access_token);
       localStorage.setItem("dreamclip_user", JSON.stringify(res.data.user_info));
       localStorage.setItem("mcp_token", res.data.access_token);

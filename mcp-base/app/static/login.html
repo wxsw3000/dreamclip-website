@@ -290,8 +290,7 @@
           setTimeout(() => {
             const isOnline = window.location.hostname.endsWith('dreamclip.cn');
             const portalUrl = isOnline ? 'https://portal.dreamclip.cn/' : '/portal';
-            const joinChar = portalUrl.includes('?') ? '&' : '?';
-            window.location.href = `${portalUrl}${joinChar}mcp_token=${encodeURIComponent(res.data.access_token)}&mcp_user=${encodeURIComponent(JSON.stringify(res.data.user_info))}`;
+            window.location.href = portalUrl;
           }, 350);
         } else {
           showToast(res ? res.message : "登录失败，请检查账号密码", "error");

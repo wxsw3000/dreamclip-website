@@ -18,8 +18,16 @@ window.PortalOS = (function() {
   }
 
   function getAuthCookie(name) {
-    const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-    return match ? decodeURIComponent(match[2]) : null;
+    if (!document.cookie) return null;
+    const prefix = name + '=';
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const c = cookies[i].trim();
+      if (c.startsWith(prefix)) {
+        return decodeURIComponent(c.substring(prefix.length));
+      }
+    }
+    return null;
   }
 
   function clearAuthCookie(name) {
@@ -32,7 +40,7 @@ window.PortalOS = (function() {
   function getToken() {
     const isOnline = window.location.hostname.endsWith('dreamclip.cn');
     if (isOnline) {
-      const cookieToken = getAuthCookie('mcp_token');
+      const cookieToken = getAuthCookie('mcp_token') || getAuthCookie('dreamclip_token');
       if (!cookieToken) {
         localStorage.removeItem('mcp_token');
         localStorage.removeItem('mcp_user');
@@ -47,13 +55,13 @@ window.PortalOS = (function() {
 
   function getUser() {
     const isOnline = window.location.hostname.endsWith('dreamclip.cn');
-    if (isOnline && !getAuthCookie('mcp_token')) {
+    if (isOnline && !(getAuthCookie('mcp_token') || getAuthCookie('dreamclip_token'))) {
       return null;
     }
     try {
-      const rawCookie = getAuthCookie('mcp_user');
+      const rawCookie = getAuthCookie('mcp_user') || getAuthCookie('dreamclip_user');
       const raw = rawCookie || localStorage.getItem('mcp_user') || localStorage.getItem('dreamclip_user');
-      return raw ? JSON.parse(raw) : null;
+      return raw ? (typeof raw === 'object' ? raw : JSON.parse(raw)) : null;
     } catch (e) {
       return null;
     }
