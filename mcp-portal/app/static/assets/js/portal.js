@@ -10,8 +10,11 @@ window.PortalOS = (function() {
   function setAuthCookie(name, value, days = 7) {
     const isOnline = window.location.hostname.endsWith('dreamclip.cn');
     const domainPart = isOnline ? '; domain=.dreamclip.cn' : '';
-    const maxAge = days > 0 ? `; max-age=${days * 24 * 60 * 60}` : '; max-age=0';
-    document.cookie = `${name}=${encodeURIComponent(value)}${domainPart}; path=/; SameSite=Lax${maxAge}`;
+    let maxAgePart = '';
+    if (typeof days === 'number' && days > 0) {
+      maxAgePart = `; max-age=${days * 24 * 60 * 60}`;
+    }
+    document.cookie = `${name}=${encodeURIComponent(value)}${domainPart}; path=/; SameSite=Lax${maxAgePart}`;
   }
 
   function getAuthCookie(name) {
@@ -484,16 +487,19 @@ window.PortalOS = (function() {
     const userFromUrl = urlParams.get('mcp_user') || urlParams.get('user');
 
     if (tokenFromUrl) {
-      setAuthCookie('mcp_token', tokenFromUrl, 7);
-      setAuthCookie('dreamclip_token', tokenFromUrl, 7);
-      localStorage.setItem('mcp_token', tokenFromUrl);
-      localStorage.setItem('dreamclip_token', tokenFromUrl);
-      if (userFromUrl) {
-        const decodedUser = decodeURIComponent(userFromUrl);
-        setAuthCookie('mcp_user', decodedUser, 7);
-        setAuthCookie('dreamclip_user', decodedUser, 7);
-        localStorage.setItem('mcp_user', decodedUser);
-        localStorage.setItem('dreamclip_user', decodedUser);
+      const isOnline = window.location.hostname.endsWith('dreamclip.cn');
+      if (!isOnline) {
+        setAuthCookie('mcp_token', tokenFromUrl, 7);
+        setAuthCookie('dreamclip_token', tokenFromUrl, 7);
+        localStorage.setItem('mcp_token', tokenFromUrl);
+        localStorage.setItem('dreamclip_token', tokenFromUrl);
+        if (userFromUrl) {
+          const decodedUser = decodeURIComponent(userFromUrl);
+          setAuthCookie('mcp_user', decodedUser, 7);
+          setAuthCookie('dreamclip_user', decodedUser, 7);
+          localStorage.setItem('mcp_user', decodedUser);
+          localStorage.setItem('dreamclip_user', decodedUser);
+        }
       }
       urlParams.delete('mcp_token');
       urlParams.delete('token');

@@ -619,11 +619,11 @@
           </div>
         </div>
 
-        <!-- 记住账号 & 辅助选项 -->
+        <!-- 保持登录状态 & 辅助选项 -->
         <div class="form-extra-row">
-          <label class="remember-label">
-            <input type="checkbox" id="rememberUsername" checked>
-            <span>记住账号</span>
+          <label class="remember-label" title="勾选后7天内免登录；不勾选则在关闭浏览器后自动结束登录会话">
+            <input type="checkbox" id="rememberMe" checked>
+            <span>保持登录状态 (7天免登)</span>
           </label>
           <a class="forgot-link" onclick="showToast('如需重置密码，请联系平台管理员或在工作台个人中心修改', 'info')">忘记密码？</a>
         </div>
@@ -880,8 +880,11 @@
     function setAuthCookie(name, value, days = 7) {
       const isOnline = window.location.hostname.endsWith('dreamclip.cn');
       const domainPart = isOnline ? '; domain=.dreamclip.cn' : '';
-      const maxAge = days > 0 ? `; max-age=${days * 24 * 60 * 60}` : '; max-age=0';
-      document.cookie = `${name}=${encodeURIComponent(value)}${domainPart}; path=/; SameSite=Lax${maxAge}`;
+      let maxAgePart = '';
+      if (typeof days === 'number' && days > 0) {
+        maxAgePart = `; max-age=${days * 24 * 60 * 60}`;
+      }
+      document.cookie = `${name}=${encodeURIComponent(value)}${domainPart}; path=/; SameSite=Lax${maxAgePart}`;
     }
 
     function getAuthCookie(name) {
@@ -921,22 +924,25 @@
         window.history.replaceState(null, '', cleanUrl.toString());
 
         showToast("已安全退出登录", "info");
-        return;
       }
 
       // 1. 回显之前勾选“记住账号”的用户名
       const savedUsername = localStorage.getItem('saved_username');
       const usernameInput = document.getElementById('username');
-      const rememberCb = document.getElementById('rememberUsername');
+      const rememberCb = document.getElementById('rememberMe');
       if (savedUsername) {
-        usernameInput.value = savedUsername;
+        if (usernameInput) usernameInput.value = savedUsername;
         if (rememberCb) rememberCb.checked = true;
         const pwdInput = document.getElementById('password');
         if (pwdInput && !isLogout) {
           pwdInput.focus();
         }
       } else {
-        if (usernameInput) usernameInput.focus();
+        if (usernameInput && !isLogout) usernameInput.focus();
+      }
+
+      if (isLogout) {
+        return;
       }
 
       // 2. 如果显式带有 mode=register，留在注册卡片
@@ -961,14 +967,27 @@
           if (resp.ok) {
             const res = await resp.json();
             if (res && res.code === 200 && res.data) {
-              handleAuthSuccess(ssoToken, res.data, false);
+              const rememberMe = rememberCb ? rememberCb.checked : true;
+              handleAuthSuccess(ssoToken, res.data, false, rememberMe);
             } else {
               clearAuthCookie('mcp_token');
               clearAuthCookie('mcp_user');
+              clearAuthCookie('dreamclip_token');
+              clearAuthCookie('dreamclip_user');
+              localStorage.removeItem('mcp_token');
+              localStorage.removeItem('mcp_user');
+              localStorage.removeItem('dreamclip_token');
+              localStorage.removeItem('dreamclip_user');
             }
           } else {
             clearAuthCookie('mcp_token');
             clearAuthCookie('mcp_user');
+            clearAuthCookie('dreamclip_token');
+            clearAuthCookie('dreamclip_user');
+            localStorage.removeItem('mcp_token');
+            localStorage.removeItem('mcp_user');
+            localStorage.removeItem('dreamclip_token');
+            localStorage.removeItem('dreamclip_user');
           }
         } catch (err) {
           console.warn('SSO session check skipped:', err);
@@ -1014,18 +1033,30 @@
     }
 
     // ==================== 5. 跳转目标解析与直通 ====================
-    function handleAuthSuccess(accessToken, userInfo, isNewRegister = false) {
+    function handleAuthSuccess(accessToken, userInfo, isNewRegister = false, rememberMe = true) {
+      const cookieDays = rememberMe ? 7 : null;
       // 跨主域 Cookie 写入（.dreamclip.cn 下所有子域一处登录处处免登）
-      setAuthCookie('mcp_token', accessToken, 7);
-      setAuthCookie('mcp_user', JSON.stringify(userInfo), 7);
-      setAuthCookie('dreamclip_token', accessToken, 7);
-      setAuthCookie('dreamclip_user', JSON.stringify(userInfo), 7);
+      setAuthCookie('mcp_token', accessToken, cookieDays);
+      setAuthCookie('mcp_user', JSON.stringify(userInfo), cookieDays);
+      setAuthCookie('dreamclip_token', accessToken, cookieDays);
+      setAuthCookie('dreamclip_user', JSON.stringify(userInfo), cookieDays);
 
-      // 本地持久化保存身份 Token 作为兜底
-      localStorage.setItem('mcp_token', accessToken);
-      localStorage.setItem('mcp_user', JSON.stringify(userInfo));
-      localStorage.setItem('dreamclip_token', accessToken);
-      localStorage.setItem('dreamclip_user', JSON.stringify(userInfo));
+      // 持久化存储与会话存储管理
+      if (rememberMe) {
+        localStorage.setItem('mcp_token', accessToken);
+        localStorage.setItem('mcp_user', JSON.stringify(userInfo));
+        localStorage.setItem('dreamclip_token', accessToken);
+        localStorage.setItem('dreamclip_user', JSON.stringify(userInfo));
+      } else {
+        localStorage.removeItem('mcp_token');
+        localStorage.removeItem('mcp_user');
+        localStorage.removeItem('dreamclip_token');
+        localStorage.removeItem('dreamclip_user');
+      }
+      sessionStorage.setItem('mcp_token', accessToken);
+      sessionStorage.setItem('mcp_user', JSON.stringify(userInfo));
+      sessionStorage.setItem('dreamclip_token', accessToken);
+      sessionStorage.setItem('dreamclip_user', JSON.stringify(userInfo));
 
       const successMsg = isNewRegister
         ? "✨ 注册成功！正在开启应用门户..."
@@ -1065,9 +1096,10 @@
         return;
       }
 
-      // 记住账号偏好设置保存
-      const rememberCb = document.getElementById('rememberUsername');
-      if (rememberCb && rememberCb.checked) {
+      // 保持登录状态 (7天免登) 偏好设置保存
+      const rememberCb = document.getElementById('rememberMe');
+      const rememberMe = rememberCb ? rememberCb.checked : true;
+      if (rememberMe) {
         localStorage.setItem('saved_username', username);
       } else {
         localStorage.removeItem('saved_username');
@@ -1100,7 +1132,7 @@
         }
 
         if (res && res.code === 200 && res.data) {
-          handleAuthSuccess(res.data.access_token, res.data.user_info, false);
+          handleAuthSuccess(res.data.access_token, res.data.user_info, false, rememberMe);
         } else {
           const errMsg = (res && (res.message || res.detail)) || `登录失败 (HTTP ${resp.status})`;
           showToast(errMsg, "error");
@@ -1187,7 +1219,7 @@
         }
 
         if (res && res.code === 200 && res.data) {
-          handleAuthSuccess(res.data.access_token, res.data.user_info, true);
+          handleAuthSuccess(res.data.access_token, res.data.user_info, true, true);
         } else {
           const errMsg = (res && (res.message || res.detail)) || `注册失败 (HTTP ${resp.status})`;
           showToast(errMsg, "error");

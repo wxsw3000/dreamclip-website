@@ -16,7 +16,20 @@ function clearAuthCookie(name) {
 const DreamClipAPI = {
   // 基础请求封装
   async request(endpoint, options = {}) {
-    const token = getAuthCookie("mcp_token") || localStorage.getItem("dreamclip_token") || localStorage.getItem("mcp_token");
+    const isOnline = window.location.hostname.endsWith('dreamclip.cn');
+    let token = null;
+    if (isOnline) {
+      token = getAuthCookie("mcp_token");
+      if (!token) {
+        localStorage.removeItem("dreamclip_token");
+        localStorage.removeItem("dreamclip_user");
+        localStorage.removeItem("mcp_token");
+        localStorage.removeItem("mcp_user");
+      }
+    } else {
+      token = localStorage.getItem("dreamclip_token") || localStorage.getItem("mcp_token");
+    }
+
     const headers = {
       "Content-Type": "application/json",
       ...(options.headers || {})
@@ -121,7 +134,15 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function initUserSessionUI() {
-  const userJson = localStorage.getItem("dreamclip_user") || localStorage.getItem("mcp_user");
+  const isOnline = window.location.hostname.endsWith('dreamclip.cn');
+  if (isOnline && !getAuthCookie('mcp_token')) {
+    localStorage.removeItem("dreamclip_token");
+    localStorage.removeItem("dreamclip_user");
+    localStorage.removeItem("mcp_token");
+    localStorage.removeItem("mcp_user");
+  }
+  const rawUser = isOnline ? (getAuthCookie('mcp_user') || localStorage.getItem("dreamclip_user") || localStorage.getItem("mcp_user")) : (localStorage.getItem("dreamclip_user") || localStorage.getItem("mcp_user"));
+  const userJson = (isOnline && !getAuthCookie('mcp_token')) ? null : rawUser;
   const authContainer = document.getElementById("header-auth-area");
   if (!authContainer) return;
 
