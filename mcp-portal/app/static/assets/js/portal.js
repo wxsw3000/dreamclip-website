@@ -30,16 +30,13 @@ window.PortalOS = (function() {
     setTimeout(() => t.remove(), 3000);
   }
 
-  function getLoginUrl(redirectUrl) {
-    const targetRedirect = redirectUrl || window.location.href;
+  function getLoginUrl() {
     const isOnline = window.location.hostname.endsWith('dreamclip.cn');
-    const loginBase = isOnline ? 'https://login.dreamclip.cn/' : '/login';
-    const joinChar = loginBase.includes('?') ? '&' : '?';
-    return `${loginBase}${joinChar}redirect=` + encodeURIComponent(targetRedirect);
+    return isOnline ? 'https://login.dreamclip.cn/' : '/login';
   }
 
-  function goToLogin(redirectUrl) {
-    window.location.href = getLoginUrl(redirectUrl);
+  function goToLogin() {
+    window.location.href = getLoginUrl();
   }
 
   async function api(path, options = {}) {
@@ -426,14 +423,10 @@ window.PortalOS = (function() {
     localStorage.removeItem('dreamclip_token');
     localStorage.removeItem('dreamclip_user');
     showToast("已安全退出登录", "info");
-    renderStatusBar();
-    renderApps();
     const isOnline = window.location.hostname.endsWith('dreamclip.cn');
-    if (isOnline) {
-      setTimeout(() => {
-        goToLogin(window.location.origin + '/portal');
-      }, 500);
-    }
+    setTimeout(() => {
+      window.location.href = isOnline ? 'https://login.dreamclip.cn/' : '/login';
+    }, 400);
   }
 
   function init() {
