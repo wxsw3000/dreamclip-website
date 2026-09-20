@@ -155,7 +155,7 @@ window.PortalOS = (function() {
     const adminAppGrid = document.getElementById('adminAppGrid');
     if (!appGrid) return;
 
-    // 动态从底座 IAM /auth/my-apps 获取当前登录用户被授权的全部微服务应用
+    // 动态从底座 IAM /auth/my-apps 获取当前登录用户被授权的全部微服务应用 (1 微服务 = 1 应用)
     let myApps = [];
     try {
       const res = await api('/auth/my-apps');
@@ -166,50 +166,37 @@ window.PortalOS = (function() {
       console.warn("Failed to fetch my-apps:", e);
     }
 
-    // 兜底默认应用
+    // 兜底默认应用列表 (1 微服务 = 1 应用)
     if (myApps.length === 0) {
       myApps = [
         {
-          id: 'app-universe',
-          name: '角色宇宙',
-          sub: 'DreamClip Universe',
+          id: 'app-mcp-service-universe',
+          service_code: 'mcp-service-universe',
+          name: 'DreamClip 角色宇宙',
+          sub: 'mcp-service-universe',
           icon: '🌌',
           gradient: 'linear-gradient(135deg, #4f46e5, #06b6d4)',
-          url: '/universe',
+          url: 'https://universe.dreamclip.cn/',
           is_admin: false,
-          health_status: 'HEALTHY'
-        },
-        {
-          id: 'app-capsules',
-          name: '情绪胶囊',
-          sub: 'Emotion Lab',
-          icon: '💊',
-          gradient: 'linear-gradient(135deg, #0ea5e9, #6366f1)',
-          url: '/universe#capsules-section',
-          is_admin: false,
-          health_status: 'HEALTHY'
-        },
-        {
-          id: 'app-theatre',
-          name: 'AVG 沉浸剧场',
-          sub: 'DreamClip Theatre',
-          icon: '🎮',
-          gradient: 'linear-gradient(135deg, #8b5cf6, #ec4899)',
-          url: '/games',
-          is_admin: false,
-          health_status: 'HEALTHY'
-        },
-        {
-          id: 'app-docs',
-          name: 'API 开放文档',
-          sub: 'OpenAPI Swagger',
-          icon: '📖',
-          gradient: 'linear-gradient(135deg, #10b981, #059669)',
-          url: '/base/docs',
-          is_admin: false,
+          description: '汇聚世界观、角色档案、情绪胶囊与沉浸式 AVG 互动剧场的独立业务应用',
           health_status: 'HEALTHY'
         }
       ];
+      const user = getUser();
+      if (user && (user.is_superadmin || (user.roles && user.roles.includes('ROLE_SUPER_ADMIN')))) {
+        myApps.push({
+          id: 'app-mcp-base',
+          service_code: 'mcp-base',
+          name: 'MagicStar MCP 配置治理底座',
+          sub: 'mcp-base',
+          icon: '⭐',
+          gradient: 'linear-gradient(135deg, #6366f1, #3b82f6)',
+          url: 'https://base.dreamclip.cn/',
+          is_admin: true,
+          description: '通用用户中心、多租户管理、微服务生命周期治理、20秒健康心跳巡检与统一SSO鉴权',
+          health_status: 'HEALTHY'
+        });
+      }
     }
 
     const businessApps = myApps.filter(a => !a.is_admin);
@@ -219,10 +206,10 @@ window.PortalOS = (function() {
       <div class="app-item" onclick="PortalOS.launchApp('${app.url}')" title="${app.description || app.name}">
         <div class="squircle-icon" style="background:${app.gradient || 'linear-gradient(135deg, #4f46e5, #06b6d4)'};">
           ${app.icon || '📱'}
-          <span class="app-status-badge" style="background:${app.health_status === 'HEALTHY' ? '#10b981' : '#f59e0b'};"></span>
+          <span class="app-status-badge" style="background:${app.health_status === 'HEALTHY' ? '#10b981' : '#f59e0b'};" title="微服务状态: ${app.health_status || 'HEALTHY'}"></span>
         </div>
         <div class="app-label">${app.name}</div>
-        <div class="app-sublabel">${app.sub || ''}</div>
+        <div class="app-sublabel">${app.sub || app.service_code || ''}</div>
       </div>
     `).join('');
 
@@ -233,10 +220,10 @@ window.PortalOS = (function() {
           <div class="app-item" onclick="PortalOS.launchAdminApp('${app.url}')" title="${app.description || app.name}">
             <div class="squircle-icon" style="background:${app.gradient || 'linear-gradient(135deg, #6366f1, #3b82f6)'};">
               ${app.icon || '⭐'}
-              <span class="app-status-badge" style="background:#6366f1; box-shadow:0 0 6px #6366f1;"></span>
+              <span class="app-status-badge" style="background:#6366f1; box-shadow:0 0 6px #6366f1;" title="微服务状态: ${app.health_status || 'HEALTHY'}"></span>
             </div>
             <div class="app-label">${app.name}</div>
-            <div class="app-sublabel">${app.sub || ''}</div>
+            <div class="app-sublabel">${app.sub || app.service_code || ''}</div>
           </div>
         `).join('');
       } else {
@@ -245,11 +232,23 @@ window.PortalOS = (function() {
     }
   }
 
+  function resolveAppLaunchUrl(targetUrl) {
+    const isOnline = window.location.hostname.endsWith('dreamclip.cn');
+    if (!isOnline) {
+      if (targetUrl.includes('universe.dreamclip.cn')) return '/universe';
+      if (targetUrl.includes('base.dreamclip.cn')) return '/admin';
+      if (targetUrl.includes('portal.dreamclip.cn')) return '/portal';
+    }
+    return targetUrl;
+  }
+
   function launchApp(url) {
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      const token = getToken();
-      const user = getUser();
-      const u = new URL(url, window.location.origin);
+    const targetUrl = resolveAppLaunchUrl(url);
+    const token = getToken();
+    const user = getUser();
+
+    if (targetUrl.startsWith('http://') || targetUrl.startsWith('https://')) {
+      const u = new URL(targetUrl, window.location.origin);
       if (token) {
         u.searchParams.set('mcp_token', token);
         if (user) {
@@ -258,7 +257,12 @@ window.PortalOS = (function() {
       }
       window.open(u.toString(), '_blank');
     } else {
-      window.location.href = url;
+      let jump = targetUrl;
+      if (token) {
+        const join = jump.includes('?') ? '&' : '?';
+        jump = `${jump}${join}mcp_token=${encodeURIComponent(token)}`;
+      }
+      window.location.href = jump;
     }
   }
 
@@ -267,16 +271,23 @@ window.PortalOS = (function() {
     const user = getUser();
     if (!token) {
       showToast("请先以管理员身份登录", "info");
-      openAuthModal('login');
+      goToLogin();
       return;
     }
-    // 跨子域名自动携带 Token 免密握手
-    const u = new URL(url, window.location.origin);
-    u.searchParams.set('mcp_token', token);
-    if (user) {
-      u.searchParams.set('mcp_user', encodeURIComponent(JSON.stringify(user)));
+    const targetUrl = resolveAppLaunchUrl(url);
+    if (targetUrl.startsWith('http://') || targetUrl.startsWith('https://')) {
+      const u = new URL(targetUrl, window.location.origin);
+      u.searchParams.set('mcp_token', token);
+      if (user) {
+        u.searchParams.set('mcp_user', encodeURIComponent(JSON.stringify(user)));
+      }
+      window.open(u.toString(), '_blank');
+    } else {
+      let jump = targetUrl;
+      const join = jump.includes('?') ? '&' : '?';
+      jump = `${jump}${join}mcp_token=${encodeURIComponent(token)}`;
+      window.location.href = jump;
     }
-    window.open(u.toString(), '_blank');
   }
 
   // ---------------- 模态弹窗与认证 ----------------

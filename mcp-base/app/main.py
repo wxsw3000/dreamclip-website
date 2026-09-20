@@ -136,7 +136,7 @@ def init_db_and_seed_data():
         if not base_svc:
             base_svc = SysMicroservice(
                 service_code="mcp-base",
-                service_name="MagicStar MCP 核心配置治理底座",
+                service_name="MagicStar MCP 配置治理底座",
                 tech_stack="PYTHON",
                 base_url=f"http://127.0.0.1:{settings.SERVER_PORT}",
                 health_url="/health",
@@ -151,6 +151,27 @@ def init_db_and_seed_data():
             db.add(base_svc)
             db.commit()
             logger.info("Initialized core microservice registration: mcp-base (Port 8000)")
+
+        # 8. 检查并正式注册业务微服务应用 (mcp-service-universe / 8081)
+        universe_svc = db.query(SysMicroservice).filter(SysMicroservice.service_code == "mcp-service-universe").first()
+        if not universe_svc:
+            universe_svc = SysMicroservice(
+                service_code="mcp-service-universe",
+                service_name="DreamClip 角色宇宙",
+                tech_stack="PYTHON",
+                base_url="http://127.0.0.1:8081",
+                health_url="/health",
+                docs_url="/docs",
+                gateway_prefix="/universe",
+                category="UNIVERSE",
+                version="1.0.0",
+                status="ACTIVE",
+                health_status="HEALTHY",
+                description="沉浸式世界观、角色档案、情绪胶囊与 AVG 互动剧场的独立业务微服务应用"
+            )
+            db.add(universe_svc)
+            db.commit()
+            logger.info("Initialized core microservice registration: mcp-service-universe (Port 8081)")
 
     finally:
         db.close()

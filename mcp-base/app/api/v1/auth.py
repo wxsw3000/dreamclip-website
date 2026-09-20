@@ -248,161 +248,80 @@ def get_my_permitted_apps(
                                 if m.service_code and m.is_deleted == 0:
                                     allowed_service_codes.add(m.service_code)
 
-    # 查出当前平台所有已登记生效的微服务
+    # 查出当前平台所有已登记生效的微服务 (sys_microservice 表)
     registered_svcs = db.query(SysMicroservice).filter(
         SysMicroservice.is_deleted == 0,
         SysMicroservice.status == "ACTIVE"
-    ).all()
-    svc_map = {s.service_code: s for s in registered_svcs}
+    ).order_by(SysMicroservice.id.asc()).all()
+
+    # 应用图标与渐变映射
+    icon_map = {
+        "mcp-base": "⭐",
+        "mcp-service-universe": "🌌",
+        "mcp-portal": "📱",
+        "mcp-service-game": "🎮",
+        "mcp-service-mdm": "🏭",
+        "mcp-service-ai": "🤖",
+        "mcp-service-data": "💾"
+    }
+
+    gradient_map = {
+        "mcp-base": "linear-gradient(135deg, #6366f1, #3b82f6)",
+        "mcp-service-universe": "linear-gradient(135deg, #4f46e5, #06b6d4)",
+        "mcp-portal": "linear-gradient(135deg, #0ea5e9, #6366f1)",
+        "mcp-service-game": "linear-gradient(135deg, #8b5cf6, #ec4899)",
+        "mcp-service-ai": "linear-gradient(135deg, #10b981, #059669)",
+        "mcp-service-mdm": "linear-gradient(135deg, #f59e0b, #d97706)"
+    }
 
     apps: List[MyAppItem] = []
 
-    # 1. 角色宇宙与主站业务 (mcp-service-universe)
-    # 规则：公开可见，或者用户拥有 mcp-service-universe 权限 / 超管
-    if is_superadmin or "mcp-service-universe" in allowed_service_codes or payload is None or len(allowed_service_codes) == 0:
-        universe_svc = svc_map.get("mcp-service-universe")
-        apps.append(MyAppItem(
-            id="app-universe",
-            service_code="mcp-service-universe",
-            name="角色宇宙",
-            sub="DreamClip Universe",
-            icon="🌌",
-            gradient="linear-gradient(135deg, #4f46e5, #06b6d4)",
-            url="/universe",
-            category="BIZ",
-            badge="主站",
-            is_admin=False,
-            description="沉浸式角色互动与原创深度文学元宇宙",
-            health_status=universe_svc.health_status if universe_svc else "HEALTHY"
-        ))
-        apps.append(MyAppItem(
-            id="app-capsules",
-            service_code="mcp-service-universe",
-            name="情绪胶囊",
-            sub="Emotion Lab",
-            icon="💊",
-            gradient="linear-gradient(135deg, #0ea5e9, #6366f1)",
-            url="/universe#capsules-section",
-            category="BIZ",
-            badge="文学",
-            is_admin=False,
-            description="打捞星穹深处每一粒情绪胶囊",
-            health_status=universe_svc.health_status if universe_svc else "HEALTHY"
-        ))
-        apps.append(MyAppItem(
-            id="app-theatre",
-            service_code="mcp-service-universe",
-            name="AVG 沉浸剧场",
-            sub="DreamClip Theatre",
-            icon="🎮",
-            gradient="linear-gradient(135deg, #8b5cf6, #ec4899)",
-            url="/games",
-            category="GAME",
-            badge="互动",
-            is_admin=False,
-            description="原创 AVG 分支沉浸剧场与互动体验",
-            health_status=universe_svc.health_status if universe_svc else "HEALTHY"
-        ))
-
-    # 2. 开发者 API 开放文档 (公开可见)
-    apps.append(MyAppItem(
-        id="app-docs",
-        service_code="mcp-base",
-        name="API 开放文档",
-        sub="OpenAPI Swagger",
-        icon="📖",
-        gradient="linear-gradient(135deg, #10b981, #059669)",
-        url="/base/docs",
-        category="TOOL",
-        badge="接口",
-        is_admin=False,
-        description="微服务架构 OpenAPI 3.0 标准接口在线调试中心",
-        health_status="HEALTHY"
-    ))
-
-    # 3. 登录用户专属资产应用
-    if user:
-        apps.append(MyAppItem(
-            id="app-vault",
-            service_code="mcp-service-universe",
-            name="星际背包",
-            sub="Capsule Vault",
-            icon="🎒",
-            gradient="linear-gradient(135deg, #f59e0b, #d97706)",
-            url="/universe",
-            category="BIZ",
-            badge="资产",
-            is_admin=False,
-            description="用户个性化情绪胶囊与个人星际档案背包",
-            health_status="HEALTHY"
-        ))
-
-    # 4. 平台治理底座应用 (仅当拥有 mcp-base 权限或超管时展现)
-    if is_superadmin or "mcp-base" in allowed_service_codes:
-        base_svc = svc_map.get("mcp-base")
-        base_health = base_svc.health_status if base_svc else "HEALTHY"
-        
-        apps.append(MyAppItem(
-            id="app-base",
-            service_code="mcp-base",
-            name="MCP Base 控制台",
-            sub="底座运维与微服务治理",
-            icon="⭐",
-            gradient="linear-gradient(135deg, #6366f1, #3b82f6)",
-            url="https://base.dreamclip.cn/",
-            category="BASE",
-            badge="底座",
-            is_admin=True,
-            description="微服务注册生命周期、健康探活巡检与技术底座管理",
-            health_status=base_health
-        ))
-        apps.append(MyAppItem(
-            id="app-users",
-            service_code="mcp-base",
-            name="用户与角色权限中心",
-            sub="平台用户与微服务赋权",
-            icon="👥",
-            gradient="linear-gradient(135deg, #8b5cf6, #a855f7)",
-            url="https://base.dreamclip.cn/?tab=tab-users",
-            category="BASE",
-            badge="IAM",
-            is_admin=True,
-            description="平台用户密码修改、角色创建与微服务清单授权管理",
-            health_status=base_health
-        ))
-        apps.append(MyAppItem(
-            id="app-configs",
-            service_code="mcp-base",
-            name="全局参数字典",
-            sub="系统运行参数与字典",
-            icon="⚙️",
-            gradient="linear-gradient(135deg, #64748b, #475569)",
-            url="https://base.dreamclip.cn/?tab=tab-configs",
-            category="BASE",
-            badge="配置",
-            is_admin=True,
-            description="系统级参数热更新与微服务数据字典配置中心",
-            health_status=base_health
-        ))
-
-    # 5. 动态挂载其他第三方/扩展已注册微服务 (如有)
+    # 核心设计原则：一个微服务就是一个独立应用 (1 Microservice = 1 Application)
     for svc in registered_svcs:
-        if svc.service_code in ["mcp-base", "mcp-portal", "mcp-service-universe"]:
+        # 跳过网关门户自身 (门户是启动各微服务应用的桌面容器/跳板)
+        if svc.service_code == "mcp-portal":
             continue
-        if is_superadmin or svc.service_code in allowed_service_codes:
-            apps.append(MyAppItem(
-                id=f"app-custom-{svc.service_code}",
-                service_code=svc.service_code,
-                name=svc.service_name,
-                sub=svc.service_code,
-                icon="🔌",
-                gradient="linear-gradient(135deg, #3b82f6, #8b5cf6)",
-                url=svc.gateway_prefix or svc.base_url,
-                category=svc.category or "BIZ",
-                badge=svc.tech_stack or "SVC",
-                is_admin=svc.category == "BASE",
-                description=svc.description or "已接入平台的独立微服务",
-                health_status=svc.health_status or "HEALTHY"
-            ))
+
+        is_base_app = (svc.category == "BASE" or svc.service_code == "mcp-base")
+
+        # 权限校验：
+        # 1. 超级管理员：可访问全部微服务应用
+        # 2. 底座治理类应用：仅当角色拥有 mcp-base 等对应权限时可见
+        # 3. 业务类微服务应用：有角色权限或默认公开业务应用对用户可见
+        if is_superadmin:
+            has_permission = True
+        elif is_base_app:
+            has_permission = (svc.service_code in allowed_service_codes)
+        else:
+            if len(allowed_service_codes) > 0:
+                has_permission = (svc.service_code in allowed_service_codes)
+            else:
+                has_permission = True
+
+        if not has_permission:
+            continue
+
+        # 确定应用启动入口 URL
+        if svc.service_code == "mcp-base":
+            app_url = "https://base.dreamclip.cn/"
+        elif svc.service_code == "mcp-service-universe":
+            app_url = "https://universe.dreamclip.cn/"
+        else:
+            app_url = svc.gateway_prefix or svc.base_url
+
+        apps.append(MyAppItem(
+            id=f"app-{svc.service_code}",
+            service_code=svc.service_code,
+            name=svc.service_name,
+            sub=svc.service_code,
+            icon=icon_map.get(svc.service_code, "🔌"),
+            gradient=gradient_map.get(svc.service_code, "linear-gradient(135deg, #3b82f6, #8b5cf6)"),
+            url=app_url,
+            category=svc.category or ("BASE" if is_base_app else "BIZ"),
+            badge=svc.tech_stack or ("BASE" if is_base_app else "APP"),
+            is_admin=is_base_app,
+            description=svc.description or f"已接入平台的独立微服务应用 ({svc.service_name})",
+            health_status=svc.health_status or "HEALTHY"
+        ))
 
     return Result.ok(data=apps)
