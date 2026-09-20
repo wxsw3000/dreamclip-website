@@ -2,6 +2,7 @@ import logging
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from app.core.database import get_db
 from app.core.config import settings
 from app.core.security import (
@@ -24,33 +25,49 @@ router = APIRouter(prefix="/auth", tags=["01.认证与身份中心"])
 @router.post("/register", response_model=Result[TokenResponse], summary="用户注册")
 def register(req: RegisterRequest, db: Session = Depends(get_db)):
     try:
-        # 检查用户名是否已存在
-        existing = db.query(SysUser).filter(SysUser.username == req.username, SysUser.is_deleted == 0).first()
-        if existing:
-            return Result.fail(f"用户名 '{req.username}' 已被占用，请更换", code=400)
+        # 1. 检查用户名是否存在（全量检索）
+        existing = db.query(SysUser).filter(SysUser.username == req.username).first()
 
         # 默认分配平台标准注册会员角色 (ROLE_MEMBER)
         default_role = db.query(SysRole).filter(SysRole.role_code == "ROLE_MEMBER", SysRole.is_deleted == 0).first()
         if not default_role:
             default_role = db.query(SysRole).filter(SysRole.role_code == "ROLE_OPERATOR", SysRole.is_deleted == 0).first()
-        
-        new_user = SysUser(
-            username=req.username,
-            password_hash=get_password_hash(req.password),
-            real_name=req.real_name or req.username,
-            email=req.email,
-            avatar=req.avatar or f"https://api.dicebear.com/7.x/bottts/svg?seed={req.username}",
-            is_superadmin=0,
-            tenant_code="SYSTEM",
-            status="ACTIVE",
-            remark="自主注册用户"
-        )
-        if default_role:
-            new_user.roles.append(default_role)
 
-        db.add(new_user)
-        db.commit()
-        db.refresh(new_user)
+        if existing:
+            if existing.is_deleted == 0:
+                return Result.fail(f"用户名 '{req.username}' 已被注册占用，请直接登录或更换用户名", code=400)
+            else:
+                # 若此前处于已删除状态，重置激活该账号并更新资料
+                existing.is_deleted = 0
+                existing.password_hash = get_password_hash(req.password)
+                existing.real_name = req.real_name or req.username
+                existing.email = req.email
+                existing.avatar = req.avatar or f"https://api.dicebear.com/7.x/bottts/svg?seed={req.username}"
+                existing.status = "ACTIVE"
+                existing.remark = "自主重新注册激活"
+                if default_role and default_role not in existing.roles:
+                    existing.roles.append(default_role)
+                db.commit()
+                db.refresh(existing)
+                new_user = existing
+        else:
+            new_user = SysUser(
+                username=req.username,
+                password_hash=get_password_hash(req.password),
+                real_name=req.real_name or req.username,
+                email=req.email,
+                avatar=req.avatar or f"https://api.dicebear.com/7.x/bottts/svg?seed={req.username}",
+                is_superadmin=0,
+                tenant_code="SYSTEM",
+                status="ACTIVE",
+                remark="自主注册用户"
+            )
+            if default_role:
+                new_user.roles.append(default_role)
+
+            db.add(new_user)
+            db.commit()
+            db.refresh(new_user)
 
         # 生成 Token
         role_codes = [r.role_code for r in new_user.roles] if new_user.roles else ["ROLE_MEMBER"]
@@ -84,6 +101,10 @@ def register(req: RegisterRequest, db: Session = Depends(get_db)):
         )
         logger.info("User registered successfully: %s (ID: %s, Role: %s)", new_user.username, new_user.id, role_codes)
         return Result.ok(data=token_resp, message="注册成功，欢迎开启应用平台！")
+    except IntegrityError as ie:
+        db.rollback()
+        logger.warning("Integrity error on register for %s: %s", req.username, ie)
+        return Result.fail(f"用户名 '{req.username}' 已被占用，请直接登录或更换用户名", code=400)
     except Exception as e:
         db.rollback()
         logger.error("User registration error for %s: %s", req.username, e, exc_info=True)
