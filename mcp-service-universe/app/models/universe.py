@@ -91,3 +91,16 @@ class AvgChapter(BaseModel):
 
     worldview = relationship("Worldview", back_populates="chapters")
     character = relationship("Character", back_populates="chapters")
+
+class HallBanner(BaseModel):
+    """梦之厅图文跑马灯/焦点走马灯配置表"""
+    __tablename__ = "uc_hall_banners"
+
+    title = Column(String(255), nullable=False, comment="焦点主标题")
+    subtitle = Column(String(500), nullable=True, comment="副标题/情绪导语")
+    badge_text = Column(String(64), default="✨ 梦之焦点", nullable=False, comment="特色标签 (如 ✨ 梦之焦点 / 🌌 核心世界观 / 🎮 互动剧场)")
+    image_url = Column(String(500), nullable=True, comment="封面背景图URL")
+    link_url = Column(String(500), default="/#capsules-stream", nullable=False, comment="点击跳转目标URL")
+    theme_color = Column(String(32), default="#6366f1", nullable=False, comment="主题光晕主色 (如 #6366f1, #06b6d4, #ec4899, #10b981)")
+    sort_order = Column(Integer, default=0, nullable=False, comment="排序权重 (数字越大越靠前)")
+    is_active = Column(SmallInteger, default=1, nullable=False, comment="是否启用展示 (1-启用, 0-下线)")

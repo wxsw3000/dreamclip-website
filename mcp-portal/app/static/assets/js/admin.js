@@ -95,8 +95,10 @@ async function api(path, options = {}) {
     ...(options.headers || {})
   };
 
+  const url = path.startsWith('/api/') ? path : (API_BASE + path);
+
   try {
-    const resp = await fetch(API_BASE + path, { ...options, headers });
+    const resp = await fetch(url, { ...options, headers });
     if (resp.status === 401) {
       redirectToLogin();
       return null;
@@ -161,12 +163,14 @@ function switchTab(tabId, el) {
   const titles = {
     'tab-dashboard': '控制台总览大盘',
     'tab-services': '微服务接入与健康治理',
+    'tab-hall-banners': '梦之厅焦点跑马灯运营管理',
     'tab-users': '用户与角色权限中心',
     'tab-configs': '字典与全局参数设置'
   };
   const titleIcons = {
     'tab-dashboard': '📊',
     'tab-services': '🔌',
+    'tab-hall-banners': '✨',
     'tab-users': '👥',
     'tab-configs': '⚙️'
   };
@@ -179,6 +183,7 @@ function switchTab(tabId, el) {
 
   if (tabId === 'tab-dashboard') loadDashboard();
   if (tabId === 'tab-services') loadMicroservices();
+  if (tabId === 'tab-hall-banners') loadHallBanners();
   if (tabId === 'tab-users') {
     loadUsers();
     loadRoles();
@@ -944,6 +949,188 @@ async function updateConfig(key, inputId) {
     showToast("参数保存成功", "success");
   } else {
     showToast(res ? res.message : "保存失败", "danger");
+  }
+}
+
+// ---------------- 5. 梦之厅焦点跑马灯运营 ----------------
+let currentHallBanners = [];
+
+async function loadHallBanners() {
+  const res = await api('/api/universe/hall/banners?all_status=true');
+  const tbody = document.getElementById('hallBannerListTable');
+  if (!tbody) return;
+
+  if (!res || res.code !== 200 || !Array.isArray(res.data)) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#f87171;">无法加载梦之厅焦点图文数据 (微服务 mcp-service-universe 可能尚未就绪)</td></tr>`;
+    return;
+  }
+
+  currentHallBanners = res.data;
+  renderHallBanners(currentHallBanners);
+}
+
+function renderHallBanners(items) {
+  const tbody = document.getElementById('hallBannerListTable');
+  if (!tbody) return;
+
+  if (items.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#94a3b8; padding:24px;">暂无焦点图文，点击右上角“➕ 新增焦点跑马灯”进行创建</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = items.map(b => {
+    const isActive = b.is_active === 1;
+    const themeColor = b.theme_color || '#6366f1';
+    const imgUrl = b.image_url || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=300';
+    return `
+      <tr>
+        <td>
+          <img src="${imgUrl}" style="width:72px; height:42px; object-fit:cover; border-radius:6px; border:1px solid #e2e8f0;" alt="${b.title}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 60%22><rect fill=%22%23334155%22 width=%22100%22 height=%2260%22/><text fill=%22%23fff%22 x=%2250%%22 y=%2250%%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-size=%2212%22>No Image</text></svg>'">
+        </td>
+        <td>
+          <div style="font-weight:700; color:#0f172a; font-size:13.5px; margin-bottom:2px;">${b.title}</div>
+          <div style="font-size:12px; color:#64748b; max-width:280px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${b.subtitle || ''}">${b.subtitle || '暂无副标题'}</div>
+        </td>
+        <td>
+          <span style="display:inline-block; font-size:11.5px; padding:2px 8px; border-radius:12px; background:${themeColor}15; color:${themeColor}; border:1px solid ${themeColor}40; font-weight:600;">
+            ${b.badge_text || '✨ 梦之焦点'}
+          </span>
+        </td>
+        <td>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span style="width:14px; height:14px; border-radius:4px; background:${themeColor}; display:inline-block; box-shadow:0 0 6px ${themeColor}80;"></span>
+            <code style="font-size:11px;">${themeColor}</code>
+          </div>
+        </td>
+        <td>
+          <a href="${b.link_url}" target="_blank" style="color:var(--primary); font-size:12.5px; text-decoration:none; max-width:140px; display:inline-block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${b.link_url}">
+            ${b.link_url} ↗
+          </a>
+        </td>
+        <td>
+          <span style="font-weight:700; color:#475569;">${b.sort_order}</span>
+        </td>
+        <td>
+          <span class="badge ${isActive ? 'badge-success' : 'badge-outline'}" style="cursor:pointer;" onclick="toggleHallBannerStatus(${b.id})" title="点击切换上下线">
+            ${isActive ? '● 上线中' : '○ 已下线'}
+          </span>
+        </td>
+        <td>
+          <button class="btn btn-outline btn-sm" style="padding:3px 8px; font-size:12px; margin-right:4px;" onclick="openEditHallBannerModal(${b.id})">✏️ 编辑</button>
+          <button class="btn btn-outline btn-sm" style="padding:3px 8px; font-size:12px; color:#ef4444; border-color:#fca5a5;" onclick="deleteHallBanner(${b.id})">🗑️</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function openCreateHallBannerModal() {
+  document.getElementById('hallBannerModalTitle').innerText = "✨ 新增梦之厅焦点跑马灯";
+  document.getElementById('hb_id').value = "";
+  document.getElementById('hb_title').value = "";
+  document.getElementById('hb_subtitle').value = "";
+  document.getElementById('hb_badge').value = "✨ 梦之焦点";
+  document.getElementById('hb_color').value = "#6366f1";
+  document.getElementById('hb_color_picker').value = "#6366f1";
+  document.getElementById('hb_image').value = "";
+  document.getElementById('hb_link').value = "/#capsules-stream";
+  document.getElementById('hb_sort').value = "100";
+  document.getElementById('hb_active').value = "1";
+  openModal('hallBannerModal');
+}
+
+function openEditHallBannerModal(id) {
+  const b = currentHallBanners.find(item => item.id === id);
+  if (!b) return showToast("未找到对应焦点图文", "danger");
+
+  document.getElementById('hallBannerModalTitle').innerText = "✏️ 编辑梦之厅焦点跑马灯";
+  document.getElementById('hb_id').value = b.id;
+  document.getElementById('hb_title').value = b.title || "";
+  document.getElementById('hb_subtitle').value = b.subtitle || "";
+  document.getElementById('hb_badge').value = b.badge_text || "✨ 梦之焦点";
+  document.getElementById('hb_color').value = b.theme_color || "#6366f1";
+  document.getElementById('hb_color_picker').value = b.theme_color || "#6366f1";
+  document.getElementById('hb_image').value = b.image_url || "";
+  document.getElementById('hb_link').value = b.link_url || "/#capsules-stream";
+  document.getElementById('hb_sort').value = b.sort_order || 0;
+  document.getElementById('hb_active').value = String(b.is_active);
+  openModal('hallBannerModal');
+}
+
+async function saveHallBanner(e) {
+  e.preventDefault();
+  const id = document.getElementById('hb_id').value;
+  const title = document.getElementById('hb_title').value.trim();
+  const subtitle = document.getElementById('hb_subtitle').value.trim();
+  const badge_text = document.getElementById('hb_badge').value.trim() || "✨ 梦之焦点";
+  const theme_color = document.getElementById('hb_color').value.trim() || "#6366f1";
+  const image_url = document.getElementById('hb_image').value.trim();
+  const link_url = document.getElementById('hb_link').value.trim() || "/#capsules-stream";
+  const sort_order = parseInt(document.getElementById('hb_sort').value) || 0;
+  const is_active = parseInt(document.getElementById('hb_active').value) || 1;
+
+  if (!title) return showToast("请填写焦点主标题", "warning");
+
+  const payload = {
+    title,
+    subtitle: subtitle || null,
+    badge_text,
+    theme_color,
+    image_url: image_url || null,
+    link_url,
+    sort_order,
+    is_active
+  };
+
+  const btn = document.getElementById('hbSubmitBtn');
+  btn.disabled = true;
+  btn.innerText = "正在保存...";
+
+  try {
+    let res;
+    if (id) {
+      res = await api(`/api/universe/hall/banners/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(payload)
+      });
+    } else {
+      res = await api(`/api/universe/hall/banners`, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+    }
+
+    if (res && res.code === 200) {
+      showToast(id ? "焦点图文更新成功" : "新增焦点图文成功", "success");
+      closeModal('hallBannerModal');
+      loadHallBanners();
+    } else {
+      showToast(res ? res.message : "保存失败", "danger");
+    }
+  } finally {
+    btn.disabled = false;
+    btn.innerText = "保 存 焦 点 图 文";
+  }
+}
+
+async function toggleHallBannerStatus(id) {
+  const res = await api(`/api/universe/hall/banners/${id}/toggle`, { method: 'POST' });
+  if (res && res.code === 200) {
+    showToast(res.message || "状态已切换", "success");
+    loadHallBanners();
+  } else {
+    showToast(res ? res.message : "状态切换失败", "danger");
+  }
+}
+
+async function deleteHallBanner(id) {
+  if (!confirm("确定要删除这则梦之厅焦点跑马灯图文吗？此操作不可撤销。")) return;
+  const res = await api(`/api/universe/hall/banners/${id}`, { method: 'DELETE' });
+  if (res && res.code === 200) {
+    showToast("焦点图文已删除", "success");
+    loadHallBanners();
+  } else {
+    showToast(res ? res.message : "删除失败", "danger");
   }
 }
 

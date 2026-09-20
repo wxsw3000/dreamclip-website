@@ -117,3 +117,35 @@ class AvgChapterOut(AvgChapterBase):
 
     class Config:
         from_attributes = True
+
+# ==================== Hall Banner Schemas ====================
+class HallBannerBase(BaseModel):
+    title: str = Field(..., description="焦点主标题")
+    subtitle: Optional[str] = Field(None, description="副标题/导语")
+    badge_text: str = Field("✨ 梦之焦点", description="标签文案")
+    image_url: Optional[str] = Field(None, description="封面背景图URL")
+    link_url: str = Field("/#capsules-stream", description="跳转链接")
+    theme_color: str = Field("#6366f1", description="光晕主题色")
+    sort_order: int = Field(0, description="排序权重")
+    is_active: int = Field(1, description="是否启用展示 (1-启用, 0-下线)")
+
+class HallBannerCreate(HallBannerBase):
+    pass
+
+class HallBannerUpdate(BaseModel):
+    title: Optional[str] = None
+    subtitle: Optional[str] = None
+    badge_text: Optional[str] = None
+    image_url: Optional[str] = None
+    link_url: Optional[str] = None
+    theme_color: Optional[str] = None
+    sort_order: Optional[int] = None
+    is_active: Optional[int] = None
+
+class HallBannerOut(HallBannerBase):
+    id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True

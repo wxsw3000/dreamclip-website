@@ -189,6 +189,35 @@ const DreamClipAPI = {
       const query = new URLSearchParams(params).toString();
       return await DreamClipAPI.request(`/api/universe/avg/chapters?${query}`);
     }
+  },
+
+  // 梦之厅跑马灯与焦点图文 API
+  hall: {
+    async getBanners(allStatus = false) {
+      return await DreamClipAPI.request(`/api/universe/hall/banners?all_status=${allStatus}`);
+    },
+    async createBanner(data) {
+      return await DreamClipAPI.request(`/api/universe/hall/banners`, {
+        method: "POST",
+        body: JSON.stringify(data)
+      });
+    },
+    async updateBanner(id, data) {
+      return await DreamClipAPI.request(`/api/universe/hall/banners/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data)
+      });
+    },
+    async toggleBanner(id) {
+      return await DreamClipAPI.request(`/api/universe/hall/banners/${id}/toggle`, {
+        method: "POST"
+      });
+    },
+    async deleteBanner(id) {
+      return await DreamClipAPI.request(`/api/universe/hall/banners/${id}`, {
+        method: "DELETE"
+      });
+    }
   }
 };
 

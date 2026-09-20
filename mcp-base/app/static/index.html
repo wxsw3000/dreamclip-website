@@ -685,6 +685,12 @@
         <span>微服务接入治理</span>
       </a>
 
+      <div class="menu-category">业务与内容运营</div>
+      <a class="nav-item" onclick="switchTab('tab-hall-banners', this)">
+        <span class="icon">✨</span>
+        <span>梦之厅焦点图文</span>
+      </a>
+
       <div class="menu-category">系统设置</div>
       <a class="nav-item" onclick="switchTab('tab-users', this)">
         <span class="icon">👥</span>
@@ -996,7 +1002,105 @@
           </div>
         </div>
       </section>
+
+      <!-- 5. 梦之厅焦点图文跑马灯运营 -->
+      <section class="tab-pane" id="tab-hall-banners">
+        <div class="panel-card">
+          <div class="panel-header">
+            <div class="panel-title">
+              <span>✨ 梦之厅 (Hall of Dreams) 焦点跑马灯运营管理</span>
+            </div>
+            <div style="display:flex; gap:10px;">
+              <button class="btn btn-outline" onclick="loadHallBanners()">🔄 刷新数据</button>
+              <button class="btn btn-primary" onclick="openCreateHallBannerModal()">➕ 新增焦点跑马灯</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <p style="font-size:13px; color:var(--text-secondary); margin-bottom:16px;">
+              配置展示在 <strong>DreamClip 主站首页（梦之厅）</strong> 顶部的动能图文跑马灯与 3D 焦点大卡，支持自定义海报、发光主题色、特色徽章标签、跳转链接与排序权重。
+            </p>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width: 100px;">海报封面</th>
+                  <th>焦点标题 & 引言导语</th>
+                  <th>徽章标签</th>
+                  <th>主题光晕</th>
+                  <th>目标链接</th>
+                  <th style="width: 70px;">排序</th>
+                  <th style="width: 90px;">状态</th>
+                  <th style="width: 140px;">操作</th>
+                </tr>
+              </thead>
+              <tbody id="hallBannerListTable">
+                <tr><td colspan="8" style="text-align:center; color:#94a3b8;">加载中...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
     </main>
+  </div>
+</div>
+
+<!-- 模态窗：新增/编辑梦之厅焦点图文 -->
+<div id="hallBannerModal" class="modal-overlay">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <span id="hallBannerModalTitle">✨ 新增梦之厅焦点跑马灯</span>
+      <button class="btn-outline btn-sm" onclick="closeModal('hallBannerModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <form id="hallBannerForm" onsubmit="saveHallBanner(event)">
+        <input type="hidden" id="hb_id">
+        <div class="form-group">
+          <label class="form-label">焦点主标题 *</label>
+          <input type="text" id="hb_title" class="form-control" placeholder="如 打捞星穹深处每一粒失落的情绪胶囊" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">副标题 / 情绪导语</label>
+          <textarea id="hb_subtitle" class="form-control" rows="2" placeholder="如 在新安托利亚的微光夜色中，跟随深夜修补师重启心跳..."></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">特色徽章标签</label>
+            <input type="text" id="hb_badge" class="form-control" placeholder="如 ✨ 梦之焦点 / 🌌 核心世界观">
+          </div>
+          <div class="form-group">
+            <label class="form-label">主题光晕主色</label>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <input type="color" id="hb_color_picker" value="#6366f1" style="width:40px; height:38px; border:none; border-radius:6px; cursor:pointer;" onchange="document.getElementById('hb_color').value=this.value">
+              <input type="text" id="hb_color" class="form-control" value="#6366f1" placeholder="#6366f1" onchange="document.getElementById('hb_color_picker').value=this.value">
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">海报/封面图片 URL (建议 1200x600 高清横图)</label>
+          <input type="text" id="hb_image" class="form-control" placeholder="如 https://images.unsplash.com/photo-...">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">点击跳转链接 *</label>
+            <input type="text" id="hb_link" class="form-control" value="/#capsules-stream" placeholder="如 /#capsules-stream 或 /games" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">排序权重 (越大越靠前)</label>
+            <input type="number" id="hb_sort" class="form-control" value="0">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">展示状态</label>
+          <select id="hb_active" class="form-control">
+            <option value="1">1 - 上线展示中</option>
+            <option value="0">0 - 下线隐藏</option>
+          </select>
+        </div>
+        <div class="modal-footer" style="margin: 0 -22px -22px; padding: 12px 22px;">
+          <button type="button" class="btn btn-outline" onclick="closeModal('hallBannerModal')">取消</button>
+          <button type="submit" id="hbSubmitBtn" class="btn btn-primary">保 存 焦 点 图 文</button>
+        </div>
+      </form>
+    </div>
   </div>
 </div>
 

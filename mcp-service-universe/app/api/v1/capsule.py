@@ -35,7 +35,7 @@ def list_capsules(
         query = query.filter(EmotionCapsule.is_published == is_published)
 
     total = query.count()
-    capsules = query.order_by(EmotionCapsule.is_featured.desc(), EmotionCapsule.published_at.desc())\
+    capsules = query.order_by(EmotionCapsule.published_at.desc())\
                     .offset((page - 1) * page_size)\
                     .limit(page_size)\
                     .all()

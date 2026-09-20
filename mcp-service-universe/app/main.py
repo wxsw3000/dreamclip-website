@@ -7,7 +7,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.database import engine, Base, SessionLocal
 from app.core.register import register_to_base
-from app.models.universe import Worldview, Character, EmotionCapsule, AvgChapter
+from app.models.universe import Worldview, Character, EmotionCapsule, AvgChapter, HallBanner
+from app.api.v1.hall import ensure_seed_banners
 from app.api.v1.router import api_v1_router
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s - %(message)s")
@@ -183,6 +184,8 @@ def init_seed_universe_data():
             db.add(avg1)
             db.commit()
             logger.info("Initialized seed data for DreamClip Universe & Characters successfully!")
+        
+        ensure_seed_banners(db)
     finally:
         db.close()
 
