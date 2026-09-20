@@ -117,46 +117,47 @@
       border: 1px solid rgba(99, 102, 241, 0.4);
     }
 
-    /* 2. 方案 B：超宽电影胶卷画廊 (Cinema Gallery & Filmstrip Deck - 极致纤薄全景胶卷) */
+    /* 2. 方案 B：真正的全景三格电影胶卷 (Authentic 3-Frame Cinema Film Reel) */
     .cinema-hero-section {
-      margin: 0.8rem 0 1.6rem;
+      margin: 1.2rem 0 2.2rem;
       position: relative;
     }
 
-    /* 电影舞台背后的全息光晕氛围 */
+    /* 胶卷背后的全息氛围光 */
     .cinema-ambient-glow {
       position: absolute;
       top: -10%;
-      left: 10%;
-      right: 10%;
-      bottom: 10%;
-      background: radial-gradient(ellipse at center, rgba(99, 102, 241, 0.2) 0%, transparent 70%);
-      filter: blur(40px);
+      left: 5%;
+      right: 5%;
+      bottom: 5%;
+      background: radial-gradient(ellipse at center, rgba(99, 102, 241, 0.25) 0%, transparent 70%);
+      filter: blur(50px);
       z-index: 1;
       pointer-events: none;
       transition: background 0.8s ease;
     }
 
-    /* 21:9 超宽屏电影巨幕舞台 - 扁长全景胶卷质感 */
-    .cinema-stage-container {
+    /* 连续长卷电影胶片容器 (Film Reel Chassis) */
+    .film-reel-chassis {
       position: relative;
       z-index: 2;
-      border-radius: 14px;
-      background: #090d18;
+      border-radius: 18px;
+      background: #060810;
       border: 1px solid rgba(255, 255, 255, 0.12);
-      box-shadow: 0 15px 45px -10px rgba(0, 0, 0, 0.85), 0 0 28px rgba(99, 102, 241, 0.16);
+      box-shadow: 0 20px 60px -15px rgba(0, 0, 0, 0.85), 0 0 35px rgba(99, 102, 241, 0.15);
       overflow: hidden;
     }
 
-    /* 电影胶片上下齿孔装饰条 (Film Perforation Bar - 微型纤薄) */
+    /* 胶卷上下齿孔带 (Continuous Film Perforations) */
     .film-perforation-bar {
-      height: 10px;
-      background: #060810;
+      height: 16px;
+      background: #04060c;
       border-bottom: 1px solid rgba(255, 255, 255, 0.06);
       display: flex;
       align-items: center;
-      justify-content: space-around;
-      padding: 0 8px;
+      justify-content: space-between;
+      padding: 0 12px;
+      gap: 12px;
       overflow: hidden;
     }
     .film-perforation-bar.bottom {
@@ -164,230 +165,164 @@
       border-top: 1px solid rgba(255, 255, 255, 0.06);
     }
     .film-perf-hole {
-      width: 8px;
-      height: 5px;
-      border-radius: 1px;
+      flex: 1;
+      max-width: 14px;
+      height: 8px;
+      border-radius: 2px;
       background: rgba(255, 255, 255, 0.08);
       border: 1px solid rgba(255, 255, 255, 0.04);
     }
 
-    .cinema-screen {
-      position: relative;
-      min-height: 190px;
-      max-height: 230px;
+    /* 三格电影切片长轨 (3-Frame Film Reel Track) */
+    .film-frames-track {
       display: grid;
-      grid-template-columns: 1.3fr 1fr;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      padding: 18px 20px;
+      background: rgba(10, 14, 26, 0.95);
+      position: relative;
+    }
+
+    /* 每一个电影胶片格 (Individual Film Frame Cell) */
+    .film-frame-card {
+      background: rgba(18, 24, 42, 0.75);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
       overflow: hidden;
     }
 
-    /* 电影镜头暗角与扫描线 */
-    .cinema-screen-vignette {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: radial-gradient(circle at center, transparent 60%, rgba(5, 7, 15, 0.65) 100%),
-                  repeating-linear-gradient(0deg, rgba(0,0,0,0.06) 0px, rgba(0,0,0,0.06) 1px, transparent 2px, transparent 4px);
-      pointer-events: none;
-      z-index: 6;
+    .film-frame-card:hover, .film-frame-card.active-tour {
+      transform: translateY(-4px);
+      background: rgba(26, 34, 60, 0.9);
+      border-color: rgba(99, 102, 241, 0.6);
+      box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.75), 0 0 25px rgba(99, 102, 241, 0.3);
     }
 
-    .cinema-screen-content {
-      padding: 18px 28px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      position: relative;
-      z-index: 8;
-    }
-
-    .cinema-meta-header {
+    .film-frame-header {
       display: flex;
       align-items: center;
-      gap: 8px;
-      margin-bottom: 6px;
+      justify-content: space-between;
+      margin-bottom: 10px;
     }
 
-    .cinema-clip-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 0.7rem;
-      font-weight: 800;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      padding: 2px 9px;
-      border-radius: 12px;
-      background: rgba(99, 102, 241, 0.25);
-      border: 1px solid rgba(99, 102, 241, 0.5);
+    .film-frame-code {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #818cf8;
+      letter-spacing: 0.8px;
+    }
+
+    .film-frame-badge {
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: rgba(99, 102, 241, 0.2);
+      border: 1px solid rgba(99, 102, 241, 0.4);
       color: #c7d2fe;
     }
 
-    .cinema-frame-code {
-      font-family: 'Courier New', Courier, monospace;
-      font-size: 0.7rem;
-      color: var(--text-muted);
-      letter-spacing: 0.6px;
-    }
-
-    .cinema-title {
-      font-size: 1.35rem;
-      font-weight: 800;
-      line-height: 1.28;
-      margin-bottom: 6px;
-      background: linear-gradient(135deg, #ffffff 30%, #c7d2fe 80%, #93c5fd 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      letter-spacing: -0.2px;
-      text-shadow: 0 2px 10px rgba(0,0,0,0.6);
-      transition: all 0.4s ease;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-
-    .cinema-subtitle {
-      font-size: 0.84rem;
-      color: #cbd5e1;
-      line-height: 1.5;
-      margin-bottom: 12px;
-      max-width: 560px;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-
-    .cinema-actions {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .cinema-actions .btn {
-      padding: 0.36rem 0.95rem !important;
-      font-size: 0.8rem !important;
-      border-radius: 8px !important;
-    }
-
-    .cinema-media-pane {
+    /* 完整 16:9 比例电影海报视窗 */
+    .film-frame-media {
       position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border-radius: 8px;
       overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      margin-bottom: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
-    .cinema-img {
+    .film-frame-img {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      object-position: center;
-      transform: scale(1.02);
-      transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease;
+      transition: transform 0.5s ease;
     }
 
-    .cinema-media-pane:hover .cinema-img {
-      transform: scale(1.06);
+    .film-frame-card:hover .film-frame-img {
+      transform: scale(1.08);
     }
 
-    .cinema-media-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: linear-gradient(90deg, #090d18 0%, rgba(9, 13, 24, 0.3) 25%, transparent 70%);
-      z-index: 5;
-    }
-
-    /* 倒计时胶片刻度线 */
-    .film-timer-bar-wrap {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 2.5px;
-      background: rgba(255, 255, 255, 0.08);
-      z-index: 10;
-    }
-    .film-timer-bar {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, #6366f1, #06b6d4);
-      transition: width 0.1s linear;
-    }
-
-    /* 悬浮电影胶卷托盘 (Filmstrip Deck - 完美展示图片与文字) */
-    .filmstrip-deck {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 10px;
-      margin-top: 10px;
-    }
-
-    .filmstrip-cell {
-      background: rgba(13, 19, 36, 0.75);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 10px;
-      padding: 7px 10px;
-      cursor: pointer;
+    .film-frame-body {
       display: flex;
-      align-items: center;
-      gap: 10px;
-      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-      backdrop-filter: blur(12px);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .filmstrip-cell:hover {
-      background: rgba(255, 255, 255, 0.08);
-      border-color: rgba(255, 255, 255, 0.25);
-      transform: translateY(-2px);
-    }
-
-    .filmstrip-cell.active {
-      background: rgba(99, 102, 241, 0.2);
-      border-color: #6366f1;
-      box-shadow: 0 0 16px rgba(99, 102, 241, 0.35);
-    }
-
-    .filmstrip-cell-thumb {
-      width: 52px;
-      height: 34px;
-      border-radius: 5px;
-      object-fit: cover;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      flex-shrink: 0;
-    }
-
-    .filmstrip-cell-info {
+      flex-direction: column;
       flex: 1;
-      min-width: 0;
+      justify-content: space-between;
     }
 
-    .filmstrip-cell-code {
-      font-size: 0.65rem;
-      font-family: monospace;
-      color: #818cf8;
-      font-weight: 700;
-      display: block;
-      margin-bottom: 2px;
-    }
-
-    .filmstrip-cell-title {
-      font-size: 0.78rem;
-      font-weight: 700;
-      color: #f1f5f9;
-      line-height: 1.3;
+    .film-frame-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1.35;
+      margin-bottom: 6px;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
+      transition: color 0.2s ease;
+    }
+
+    .film-frame-card:hover .film-frame-title {
+      color: #93c5fd;
+    }
+
+    .film-frame-desc {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      line-height: 1.5;
+      margin-bottom: 12px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      flex: 1;
+    }
+
+    .film-frame-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 10px;
+      margin-top: auto;
+    }
+
+    .film-frame-cta {
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: #38bdf8;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: gap 0.2s ease;
+    }
+
+    .film-frame-card:hover .film-frame-cta {
+      gap: 8px;
+      color: #60a5fa;
+    }
+
+    @media (max-width: 900px) {
+      .film-frames-track {
+        grid-template-columns: repeat(3, minmax(280px, 1fr));
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        padding-bottom: 14px;
+      }
+      .film-frame-card {
+        scroll-snap-align: start;
+      }
     }
 
     /* 3. 三维形态与分类标签选择器 (Filmstrip Archetype & Taxonomy Deck) */
@@ -712,13 +647,13 @@
     <!-- 主体内容 -->
     <main class="main-content">
       
-      <!-- 2. 方案 B：超宽电影胶卷画廊 (Cinema Gallery Stage) -->
+      <!-- 2. 方案 B：真正的全景三格电影胶卷 (Authentic 3-Frame Cinema Film Reel) -->
       <section class="cinema-hero-section">
         <!-- 动态氛围背景光晕 -->
         <div class="cinema-ambient-glow" id="cinemaAmbientGlow"></div>
 
-        <div class="cinema-stage-container" id="cinemaStageContainer">
-          <!-- 胶卷顶部齿孔 -->
+        <div class="film-reel-chassis" id="filmReelChassis">
+          <!-- 胶卷顶部连续齿孔 -->
           <div class="film-perforation-bar">
             <div class="film-perf-hole"></div><div class="film-perf-hole"></div>
             <div class="film-perf-hole"></div><div class="film-perf-hole"></div>
@@ -727,43 +662,16 @@
             <div class="film-perf-hole"></div><div class="film-perf-hole"></div>
             <div class="film-perf-hole"></div><div class="film-perf-hole"></div>
             <div class="film-perf-hole"></div><div class="film-perf-hole"></div>
+            <div class="film-perf-hole"></div><div class="film-perf-hole"></div>
+            <div class="film-perf-hole"></div><div class="film-perf-hole"></div>
           </div>
 
-          <div class="cinema-screen">
-            <!-- 电影镜头滤镜 -->
-            <div class="cinema-screen-vignette"></div>
-
-            <div class="cinema-screen-content">
-              <div class="cinema-meta-header">
-                <span class="cinema-clip-pill" id="cinemaClipPill">✨ 梦之厅 · 焦点首发</span>
-                <span class="cinema-frame-code" id="cinemaFrameCode">CLIP // 01 · 2026.09.20</span>
-              </div>
-              <h1 class="cinema-title" id="cinemaTitle">打捞星穹深处每一粒失落的情绪胶囊</h1>
-              <p class="cinema-subtitle" id="cinemaSubtitle">
-                在浩瀚星海中，每一段情绪都是一卷未冲洗的独立记忆胶片。通过纯原创散文、角色档案与交互剧场，探索不同灵魂在时间尽头的温度。
-              </p>
-              <div class="cinema-actions">
-                <a href="#clips-stream" id="cinemaCtaBtn" class="btn btn-primary">
-                  ▶️ 探索切片 →
-                </a>
-                <a href="/games" class="btn btn-outline">
-                  🎮 AVG 剧场
-                </a>
-              </div>
-            </div>
-
-            <div class="cinema-media-pane">
-              <img class="cinema-img" id="cinemaImg" src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1200&auto=format&fit=crop" alt="Cinema Spotlight">
-              <div class="cinema-media-overlay"></div>
-            </div>
-
-            <!-- 倒计时进度条 -->
-            <div class="film-timer-bar-wrap">
-              <div class="film-timer-bar" id="filmTimerBar"></div>
-            </div>
+          <!-- 三格全景电影胶片轨道 (由 JS 动态渲染 3 个完整图文电影胶片格) -->
+          <div class="film-frames-track" id="filmFramesTrack">
+            <!-- 动态渲染三格胶片 -->
           </div>
 
-          <!-- 胶卷底部齿孔 -->
+          <!-- 胶卷底部连续齿孔 -->
           <div class="film-perforation-bar bottom">
             <div class="film-perf-hole"></div><div class="film-perf-hole"></div>
             <div class="film-perf-hole"></div><div class="film-perf-hole"></div>
@@ -772,12 +680,9 @@
             <div class="film-perf-hole"></div><div class="film-perf-hole"></div>
             <div class="film-perf-hole"></div><div class="film-perf-hole"></div>
             <div class="film-perf-hole"></div><div class="film-perf-hole"></div>
+            <div class="film-perf-hole"></div><div class="film-perf-hole"></div>
+            <div class="film-perf-hole"></div><div class="film-perf-hole"></div>
           </div>
-        </div>
-
-        <!-- 悬浮胶卷缩略图托盘 (Filmstrip Deck) -->
-        <div class="filmstrip-deck" id="filmstripDeck">
-          <!-- 由 JS 动态渲染胶卷缩略格 -->
         </div>
       </section>
 
@@ -972,6 +877,10 @@
       }
     ];
 
+    let bannerList = [];
+    let activeTourIdx = 0;
+    let tourTimer = null;
+
     async function loadHallBanners() {
       try {
         const res = await DreamClipAPI.hall.getBanners(false);
@@ -984,9 +893,8 @@
         bannerList = fallbackBanners;
       }
       renderMarqueeTrack(bannerList);
-      renderCinemaGallery();
-      renderFilmstripDeck();
-      startCinemaTimer();
+      renderFilmFramesTrack(bannerList);
+      startTourTimer();
     }
 
     function renderMarqueeTrack(banners) {
@@ -1001,94 +909,67 @@
       track.innerHTML = htmlContent + htmlContent;
     }
 
-    function renderCinemaGallery() {
-      if (!bannerList.length) return;
-      const b = bannerList[currentBannerIdx];
-      const pill = document.getElementById('cinemaClipPill');
-      const frameCode = document.getElementById('cinemaFrameCode');
-      const title = document.getElementById('cinemaTitle');
-      const sub = document.getElementById('cinemaSubtitle');
-      const img = document.getElementById('cinemaImg');
-      const ctaBtn = document.getElementById('cinemaCtaBtn');
-      const glow = document.getElementById('cinemaAmbientGlow');
-      const container = document.getElementById('cinemaStageContainer');
+    function renderFilmFramesTrack(banners) {
+      const track = document.getElementById('filmFramesTrack');
+      if (!track) return;
 
-      const frameNo = String(currentBannerIdx + 1).padStart(2, '0');
-      if (frameCode) frameCode.innerText = `CLIP // ${frameNo} · 2026.09.20`;
-      if (pill) {
-        pill.innerText = b.badge_text || "✨ 梦之焦点";
-        pill.style.color = b.theme_color || "#c7d2fe";
-        pill.style.borderColor = (b.theme_color || "#6366f1") + "60";
-        pill.style.background = (b.theme_color || "#6366f1") + "25";
-      }
-      if (title) title.innerText = b.title;
-      if (sub) sub.innerText = b.subtitle || "打捞星穹深处每一粒失落的情感记忆。";
-      if (img && b.image_url) {
-        img.style.opacity = '0.4';
-        setTimeout(() => {
-          img.src = b.image_url;
-          img.style.opacity = '1';
-        }, 150);
-      }
-      if (ctaBtn) ctaBtn.href = b.link_url || "#clips-stream";
-      if (glow && b.theme_color) {
-        glow.style.background = `radial-gradient(ellipse at center, ${b.theme_color}35 0%, transparent 70%)`;
-      }
-      if (container && b.theme_color) {
-        container.style.boxShadow = `0 30px 90px -20px rgba(0, 0, 0, 0.85), 0 0 50px ${b.theme_color}25`;
-      }
+      track.innerHTML = banners.slice(0, 3).map((b, idx) => {
+        const frameNo = String(idx + 1).padStart(2, '0');
+        const themeColor = b.theme_color || '#6366f1';
+        return `
+          <a href="${b.link_url || '#clips-stream'}" class="film-frame-card ${idx === activeTourIdx ? 'active-tour' : ''}" id="filmFrame-${idx}" onmouseenter="focusFrame(${idx})">
+            <div class="film-frame-header">
+              <span class="film-frame-code">FRAME // #${frameNo}</span>
+              <span class="film-frame-badge" style="background:${themeColor}25; color:${themeColor}; border-color:${themeColor}50;">${b.badge_text || '✨ 梦之焦点'}</span>
+            </div>
+            <div class="film-frame-media">
+              <img class="film-frame-img" src="${b.image_url || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=800'}" alt="${b.title}" loading="lazy">
+            </div>
+            <div class="film-frame-body">
+              <div>
+                <h3 class="film-frame-title">${b.title}</h3>
+                <p class="film-frame-desc">${b.subtitle || '打捞星穹深处每一粒失落的情感记忆。'}</p>
+              </div>
+              <div class="film-frame-footer">
+                <span class="film-frame-cta">▶️ 探索切片 →</span>
+                <span style="font-size:0.72rem; color:var(--text-muted); font-family:monospace;">2026.09.20</span>
+              </div>
+            </div>
+          </a>
+        `;
+      }).join('');
 
-      // 更新下方胶卷缩略图高亮
-      document.querySelectorAll('.filmstrip-cell').forEach((cell, idx) => {
-        if (idx === currentBannerIdx) {
-          cell.classList.add('active');
+      updateTourGlow();
+    }
+
+    function focusFrame(idx) {
+      activeTourIdx = idx;
+      updateTourGlow();
+    }
+
+    function updateTourGlow() {
+      document.querySelectorAll('.film-frame-card').forEach((card, i) => {
+        if (i === activeTourIdx) {
+          card.classList.add('active-tour');
+          const b = bannerList[i];
+          const glow = document.getElementById('cinemaAmbientGlow');
+          if (glow && b && b.theme_color) {
+            glow.style.background = `radial-gradient(ellipse at center, ${b.theme_color}35 0%, transparent 70%)`;
+          }
         } else {
-          cell.classList.remove('active');
+          card.classList.remove('active-tour');
         }
       });
     }
 
-    function renderFilmstripDeck() {
-      const deck = document.getElementById('filmstripDeck');
-      if (!deck) return;
-      deck.innerHTML = bannerList.map((b, idx) => {
-        const frameNo = String(idx + 1).padStart(2, '0');
-        return `
-          <div class="filmstrip-cell ${idx === currentBannerIdx ? 'active' : ''}" onclick="selectBanner(${idx})">
-            <img class="filmstrip-cell-thumb" src="${b.image_url || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=300'}" alt="thumb">
-            <div class="filmstrip-cell-info">
-              <span class="filmstrip-cell-code">FRAME #${frameNo}</span>
-              <div class="filmstrip-cell-title">${b.title}</div>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    function selectBanner(idx) {
-      currentBannerIdx = idx;
-      renderCinemaGallery();
-      resetCinemaTimer();
-    }
-
-    function startCinemaTimer() {
-      if (timerInterval) clearInterval(timerInterval);
-      timerProgress = 0;
-      const bar = document.getElementById('filmTimerBar');
-
-      timerInterval = setInterval(() => {
-        timerProgress += 2;
-        if (bar) bar.style.width = `${(timerProgress / 120) * 100}%`;
-        if (timerProgress >= 120) {
-          currentBannerIdx = (currentBannerIdx + 1) % bannerList.length;
-          renderCinemaGallery();
-          timerProgress = 0;
+    function startTourTimer() {
+      if (tourTimer) clearInterval(tourTimer);
+      tourTimer = setInterval(() => {
+        if (bannerList.length > 0) {
+          activeTourIdx = (activeTourIdx + 1) % Math.min(3, bannerList.length);
+          updateTourGlow();
         }
-      }, 100);
-    }
-
-    function resetCinemaTimer() {
-      startCinemaTimer();
+      }, 5000);
     }
 
     // ==================== 3. 编年时序多维切片流 (Chronological Cinema Stream) ====================
