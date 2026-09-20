@@ -29,12 +29,9 @@ const DreamClipAPI = {
   auth: {
     getLoginUrl(mode = 'login') {
       const isOnline = window.location.hostname.endsWith('dreamclip.cn');
-      if (mode === 'register') {
-        return isOnline ? 'https://dreamclip.cn/register' : '/register';
-      }
       const ssoHost = isOnline ? 'https://login.dreamclip.cn/' : '/login';
       const redirectParam = encodeURIComponent(window.location.href);
-      return `${ssoHost}?redirect=${redirectParam}`;
+      return `${ssoHost}?mode=${mode}&redirect=${redirectParam}`;
     },
 
     async register(username, password, realName, email) {

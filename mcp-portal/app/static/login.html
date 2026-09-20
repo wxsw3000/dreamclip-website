@@ -36,13 +36,14 @@
       align-items: center;
       justify-content: center;
       min-height: 100vh;
-      overflow: hidden;
+      overflow-x: hidden;
+      padding: 30px 16px;
       position: relative;
     }
 
     /* 动态粒子画布背景 */
     #particleCanvas {
-      position: absolute;
+      position: fixed;
       top: 0;
       left: 0;
       width: 100%;
@@ -53,7 +54,7 @@
 
     /* 光晕流光背景球 */
     .ambient-glow {
-      position: absolute;
+      position: fixed;
       border-radius: 50%;
       filter: blur(90px);
       pointer-events: none;
@@ -82,22 +83,22 @@
       100% { transform: translate(-20px, 20px) scale(0.95); }
     }
 
-    /* 酷炫毛玻璃登录卡片 */
+    /* 酷炫毛玻璃卡片容器 */
     .login-wrapper {
       position: relative;
       z-index: 10;
       width: 100%;
-      max-width: 440px;
-      padding: 0 20px;
+      max-width: 450px;
+      margin: auto;
     }
 
     .login-card {
       position: relative;
-      background: rgba(13, 19, 36, 0.76);
+      background: rgba(13, 19, 36, 0.78);
       backdrop-filter: blur(28px);
       -webkit-backdrop-filter: blur(28px);
       border-radius: 26px;
-      padding: 44px 38px 38px;
+      padding: 38px 34px 34px;
       border: 1px solid rgba(255, 255, 255, 0.12);
       box-shadow: 
         0 30px 80px -15px rgba(0, 0, 0, 0.8),
@@ -121,14 +122,14 @@
     /* 品牌徽标与标题 */
     .brand-section {
       text-align: center;
-      margin-bottom: 28px;
+      margin-bottom: 20px;
     }
 
     .logo-container {
       position: relative;
-      width: 70px;
-      height: 70px;
-      margin: 0 auto 14px;
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 12px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -138,9 +139,9 @@
       position: absolute;
       width: 100%;
       height: 100%;
-      border-radius: 22px;
+      border-radius: 20px;
       background: linear-gradient(135deg, rgba(99, 102, 241, 0.8), rgba(6, 182, 212, 0.8));
-      filter: blur(14px);
+      filter: blur(12px);
       opacity: 0.6;
       animation: pulseOrbit 4s infinite ease-in-out;
     }
@@ -152,21 +153,21 @@
 
     .logo-badge {
       position: relative;
-      width: 60px;
-      height: 60px;
+      width: 56px;
+      height: 56px;
       background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 50%, #06b6d4 100%);
-      border-radius: 18px;
+      border-radius: 16px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 28px;
+      font-size: 26px;
       color: #ffffff;
       box-shadow: 0 10px 25px rgba(99, 102, 241, 0.5), inset 0 1px 2px rgba(255, 255, 255, 0.4);
       border: 1px solid rgba(255, 255, 255, 0.2);
     }
 
     .brand-title {
-      font-size: 23px;
+      font-size: 22px;
       font-weight: 800;
       color: #ffffff;
       letter-spacing: 0.8px;
@@ -174,9 +175,9 @@
     }
 
     .brand-subtitle {
-      font-size: 13px;
+      font-size: 12.5px;
       color: #94a3b8;
-      margin-top: 6px;
+      margin-top: 5px;
       letter-spacing: 0.5px;
       display: flex;
       align-items: center;
@@ -199,9 +200,64 @@
       50% { opacity: 0.4; transform: scale(0.8); }
     }
 
+    /* 登录 / 注册 分段切换选项卡 (Tabs) */
+    .auth-tabs {
+      display: flex;
+      background: rgba(15, 23, 42, 0.75);
+      border-radius: 14px;
+      padding: 4px;
+      margin-bottom: 22px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      position: relative;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 10px 0;
+      border: none;
+      background: transparent;
+      color: #94a3b8;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .tab-btn:hover {
+      color: #ffffff;
+    }
+
+    .tab-btn.active {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.35), rgba(6, 182, 212, 0.35));
+      color: #ffffff;
+      border: 1px solid rgba(99, 102, 241, 0.6);
+      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+      text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+    }
+
+    /* 表单面板动画 */
+    .form-panel {
+      display: none;
+      animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .form-panel.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
     /* 输入框组 */
     .form-group {
-      margin-bottom: 20px;
+      margin-bottom: 16px;
       position: relative;
     }
 
@@ -213,7 +269,7 @@
 
     .input-icon {
       position: absolute;
-      left: 15px;
+      left: 14px;
       color: #64748b;
       display: flex;
       align-items: center;
@@ -223,18 +279,18 @@
     }
 
     .input-icon svg {
-      width: 19px;
-      height: 19px;
+      width: 18px;
+      height: 18px;
     }
 
     .form-control {
       width: 100%;
-      height: 50px;
-      padding: 0 46px 0 44px;
+      height: 48px;
+      padding: 0 44px 0 42px;
       background: rgba(15, 23, 42, 0.75);
       border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 14px;
-      font-size: 14.5px;
+      border-radius: 13px;
+      font-size: 14px;
       color: #f8fafc;
       outline: none;
       transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -243,7 +299,7 @@
 
     .form-control::placeholder {
       color: #64748b;
-      font-size: 14px;
+      font-size: 13.5px;
     }
 
     .form-control:focus {
@@ -251,7 +307,7 @@
       border-color: #6366f1;
       box-shadow: 
         0 0 0 3px rgba(99, 102, 241, 0.25),
-        0 0 20px rgba(99, 102, 241, 0.25),
+        0 0 18px rgba(99, 102, 241, 0.25),
         inset 0 2px 4px rgba(0, 0, 0, 0.3);
     }
 
@@ -279,23 +335,23 @@
     }
 
     .toggle-pwd svg {
-      width: 18px;
-      height: 18px;
+      width: 17px;
+      height: 17px;
     }
 
-    /* 酷炫发光登录按钮 */
-    .btn-login {
+    /* 酷炫发光按钮 */
+    .btn-submit {
       position: relative;
       width: 100%;
-      height: 50px;
+      height: 48px;
       margin-top: 10px;
       background: linear-gradient(135deg, #4f46e5 0%, #6366f1 45%, #06b6d4 100%);
       color: #ffffff;
       border: none;
-      border-radius: 14px;
-      font-size: 15.5px;
+      border-radius: 13px;
+      font-size: 15px;
       font-weight: 700;
-      letter-spacing: 1px;
+      letter-spacing: 0.8px;
       cursor: pointer;
       box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
       transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -306,7 +362,7 @@
       gap: 8px;
     }
 
-    .btn-login::before {
+    .btn-submit::before {
       content: '';
       position: absolute;
       top: 0;
@@ -317,21 +373,21 @@
       transition: left 0.6s ease;
     }
 
-    .btn-login:hover {
+    .btn-submit:hover {
       transform: translateY(-2px);
       box-shadow: 0 10px 28px rgba(99, 102, 241, 0.6), 0 0 20px rgba(6, 182, 212, 0.4);
     }
 
-    .btn-login:hover::before {
+    .btn-submit:hover::before {
       left: 100%;
     }
 
-    .btn-login:active {
+    .btn-submit:active {
       transform: translateY(0);
       box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
     }
 
-    .btn-login:disabled {
+    .btn-submit:disabled {
       background: #334155;
       color: #94a3b8;
       cursor: not-allowed;
@@ -339,25 +395,26 @@
       box-shadow: none;
     }
 
-    /* 跳转至主站注册引导栏 */
-    .register-guide-bar {
-      margin-top: 22px;
+    /* 快捷切换链接 */
+    .switch-mode-bar {
+      margin-top: 18px;
       text-align: center;
-      font-size: 13.5px;
+      font-size: 13px;
       color: #94a3b8;
     }
 
-    .register-link {
+    .switch-link {
       color: #38bdf8;
       text-decoration: none;
       font-weight: 600;
-      margin-left: 6px;
+      cursor: pointer;
       transition: all 0.2s ease;
+      margin-left: 4px;
     }
 
-    .register-link:hover {
+    .switch-link:hover {
       color: #7dd3fc;
-      text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+      text-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
     }
 
     /* 加载中 Spinner */
@@ -422,11 +479,11 @@
       border: 1px solid rgba(74, 222, 128, 0.4);
     }
 
-    /* 底部版权极简小字 */
+    /* 底部极简版权 */
     .footer-bar {
       position: relative;
       z-index: 10;
-      margin-top: 24px;
+      margin-top: 20px;
       font-size: 12px;
       color: rgba(148, 163, 184, 0.6);
       letter-spacing: 0.5px;
@@ -443,7 +500,7 @@
   <div class="ambient-glow ambient-glow-1"></div>
   <div class="ambient-glow ambient-glow-2"></div>
 
-  <!-- 登录卡片容器 -->
+  <!-- 登录/注册 卡片容器 -->
   <div class="login-wrapper">
     <div class="login-card" id="loginCard">
       
@@ -456,13 +513,22 @@
         <h1 class="brand-title">MagicStar & DreamClip</h1>
         <div class="brand-subtitle">
           <span class="status-dot"></span>
-          <span>统一身份单点登录认证中心 · SSO</span>
+          <span>统一身份单点登录与注册中心 · SSO</span>
         </div>
       </div>
 
-      <!-- 登录表单 -->
-      <form id="loginForm" onsubmit="handleLogin(event)">
-        
+      <!-- 登录 / 注册 分段切换栏 -->
+      <div class="auth-tabs">
+        <button type="button" class="tab-btn active" id="tabLoginBtn" onclick="switchAuthMode('login')">
+          <span>🔐 账号登录</span>
+        </button>
+        <button type="button" class="tab-btn" id="tabRegisterBtn" onclick="switchAuthMode('register')">
+          <span>✨ 注册新账号</span>
+        </button>
+      </div>
+
+      <!-- 1. 登录表单 -->
+      <form id="loginForm" class="form-panel active" onsubmit="handleLogin(event)">
         <!-- 用户名 -->
         <div class="form-group">
           <div class="input-wrapper">
@@ -476,7 +542,7 @@
               type="text" 
               id="username" 
               class="form-control" 
-              placeholder="请输入身份账号 / 用户名" 
+              placeholder="请输入账号 / 用户名" 
               required 
               autocomplete="username"
               autofocus
@@ -501,8 +567,8 @@
               required 
               autocomplete="current-password"
             >
-            <button type="button" class="toggle-pwd" onclick="togglePasswordVisibility()" title="显示/隐藏密码">
-              <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <button type="button" class="toggle-pwd" onclick="togglePasswordVisibility('password', 'eyeIconLogin')" title="显示/隐藏密码">
+              <svg id="eyeIconLogin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                 <circle cx="12" cy="12" r="3"></circle>
               </svg>
@@ -511,16 +577,134 @@
         </div>
 
         <!-- 登录按钮 -->
-        <button type="submit" id="submitBtn" class="btn-login">
-          <span id="btnText">登 录 统 一 身 份</span>
+        <button type="submit" id="submitBtn" class="btn-submit">
+          <span>登 录 统 一 身 份</span>
         </button>
 
-        <!-- 注册引导 (直接通向主站通用注册地址) -->
-        <div class="register-guide-bar">
-          还没有账号？<a href="/register" id="toRegisterLink" class="register-link">立即注册新账号 →</a>
+        <div class="switch-mode-bar">
+          还没有账号？<a class="switch-link" onclick="switchAuthMode('register')">立即注册新账号 →</a>
+        </div>
+      </form>
+
+      <!-- 2. 注册表单 -->
+      <form id="registerForm" class="form-panel" onsubmit="handleRegister(event)">
+        <!-- 用户名 -->
+        <div class="form-group">
+          <div class="input-wrapper">
+            <span class="input-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </span>
+            <input 
+              type="text" 
+              id="reg_username" 
+              class="form-control" 
+              placeholder="设置账号 / 用户名 (3~32位字母数字)" 
+              required 
+              autocomplete="username"
+            >
+          </div>
         </div>
 
+        <!-- 昵称/姓名 -->
+        <div class="form-group">
+          <div class="input-wrapper">
+            <span class="input-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+              </svg>
+            </span>
+            <input 
+              type="text" 
+              id="reg_realname" 
+              class="form-control" 
+              placeholder="用户昵称 / 显示名称" 
+              required
+            >
+          </div>
+        </div>
+
+        <!-- 电子邮箱 (选填) -->
+        <div class="form-group">
+          <div class="input-wrapper">
+            <span class="input-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                <polyline points="22,6 12,13 2,6"></polyline>
+              </svg>
+            </span>
+            <input 
+              type="email" 
+              id="reg_email" 
+              class="form-control" 
+              placeholder="电子邮箱 (选填，用于安全通知)"
+            >
+          </div>
+        </div>
+
+        <!-- 设置密码 -->
+        <div class="form-group">
+          <div class="input-wrapper">
+            <span class="input-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+            </span>
+            <input 
+              type="password" 
+              id="reg_password" 
+              class="form-control" 
+              placeholder="设置密码 (至少 6 位)" 
+              required 
+              autocomplete="new-password"
+            >
+            <button type="button" class="toggle-pwd" onclick="togglePasswordVisibility('reg_password', 'eyeIconReg')" title="显示/隐藏密码">
+              <svg id="eyeIconReg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- 确认密码 -->
+        <div class="form-group">
+          <div class="input-wrapper">
+            <span class="input-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+            </span>
+            <input 
+              type="password" 
+              id="reg_confirm_password" 
+              class="form-control" 
+              placeholder="再次输入密码" 
+              required 
+              autocomplete="new-password"
+            >
+            <button type="button" class="toggle-pwd" onclick="togglePasswordVisibility('reg_confirm_password', 'eyeIconRegConfirm')" title="显示/隐藏密码">
+              <svg id="eyeIconRegConfirm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- 注册提交按钮 -->
+        <button type="submit" id="regSubmitBtn" class="btn-submit">
+          <span>✨ 注 册 统 一 账 号</span>
+        </button>
+
+        <div class="switch-mode-bar">
+          已有账号？<a class="switch-link" onclick="switchAuthMode('login')">立即返回登录 →</a>
+        </div>
       </form>
+
     </div>
 
     <!-- 极简微小版权 -->
@@ -536,21 +720,7 @@
   </div>
 
   <script>
-    // ==================== 1. 动态校准主站注册跳转链接 ====================
-    (function initLinks() {
-      const isOnline = window.location.hostname.endsWith('dreamclip.cn');
-      const regUrl = isOnline ? 'https://dreamclip.cn/register' : '/register';
-      const regLink = document.getElementById('toRegisterLink');
-      if (regLink) regLink.href = regUrl;
-
-      // 若携带 mode=register 参数则直接跳转至主站注册
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('mode') === 'register' || params.get('tab') === 'register') {
-        window.location.href = regUrl;
-      }
-    })();
-
-    // ==================== 2. 粒子网络背景特效 ====================
+    // ==================== 1. 粒子网络背景特效 ====================
     (function initParticles() {
       const canvas = document.getElementById('particleCanvas');
       const ctx = canvas.getContext('2d');
@@ -627,10 +797,47 @@
       animate();
     })();
 
+    // ==================== 2. 登录 / 注册 模式切换 ====================
+    function switchAuthMode(mode) {
+      const tabLogin = document.getElementById('tabLoginBtn');
+      const tabReg = document.getElementById('tabRegisterBtn');
+      const formLogin = document.getElementById('loginForm');
+      const formReg = document.getElementById('registerForm');
+
+      if (mode === 'register') {
+        tabLogin.classList.remove('active');
+        tabReg.classList.add('active');
+        formLogin.classList.remove('active');
+        formReg.classList.add('active');
+        document.getElementById('reg_username').focus();
+      } else {
+        tabReg.classList.remove('active');
+        tabLogin.classList.add('active');
+        formReg.classList.remove('active');
+        formLogin.classList.add('active');
+        document.getElementById('username').focus();
+      }
+
+      // 同步 URL 参数（不刷新页面）
+      const url = new URL(window.location.href);
+      url.searchParams.set('mode', mode);
+      window.history.replaceState(null, '', url.toString());
+    }
+
+    // 初始化时根据 URL 参数或路径预置选项卡
+    window.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      const mode = params.get('mode') || params.get('tab');
+      if (mode === 'register' || window.location.pathname.endsWith('/register')) {
+        switchAuthMode('register');
+      }
+    });
+
     // ==================== 3. 密码显示/隐藏切换 ====================
-    function togglePasswordVisibility() {
-      const pwd = document.getElementById('password');
-      const icon = document.getElementById('eyeIcon');
+    function togglePasswordVisibility(inputId, iconId) {
+      const pwd = document.getElementById(inputId);
+      const icon = document.getElementById(iconId);
+      if (!pwd || !icon) return;
       if (pwd.type === 'password') {
         pwd.type = 'text';
         icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
@@ -658,7 +865,39 @@
       }, 3500);
     }
 
-    // ==================== 5. 统一登录核心逻辑 ====================
+    // ==================== 5. 跳转目标解析与直通 ====================
+    function handleAuthSuccess(accessToken, userInfo, isNewRegister = false) {
+      // 本地持久化保存身份 Token
+      localStorage.setItem('mcp_token', accessToken);
+      localStorage.setItem('mcp_user', JSON.stringify(userInfo));
+      localStorage.setItem('dreamclip_token', accessToken);
+      localStorage.setItem('dreamclip_user', JSON.stringify(userInfo));
+
+      const successMsg = isNewRegister
+        ? "✨ 账号注册成功！正在开启应用门户..."
+        : "身份验证成功，正在开启应用门户...";
+      showToast(successMsg, "success");
+
+      const params = new URLSearchParams(window.location.search);
+      const redirectUrl = params.get('redirect');
+
+      setTimeout(() => {
+        const isOnline = window.location.hostname.endsWith('dreamclip.cn');
+        let targetBase;
+
+        if (redirectUrl && !redirectUrl.includes('login.dreamclip.cn')) {
+          targetBase = redirectUrl;
+        } else {
+          targetBase = isOnline ? 'https://portal.dreamclip.cn/' : '/portal';
+        }
+
+        const joinChar = targetBase.includes('?') ? '&' : '?';
+        const targetUrl = `${targetBase}${joinChar}mcp_token=${encodeURIComponent(accessToken)}&mcp_user=${encodeURIComponent(JSON.stringify(userInfo))}`;
+        window.location.href = targetUrl;
+      }, 380);
+    }
+
+    // ==================== 6. 统一登录逻辑 ====================
     async function handleLogin(e) {
       e.preventDefault();
       const btn = document.getElementById('submitBtn');
@@ -699,26 +938,7 @@
         }
 
         if (res && res.code === 200 && res.data) {
-          const accessToken = res.data.access_token;
-          const userInfo = res.data.user_info;
-
-          // 本地持久化保存身份 Token
-          localStorage.setItem('mcp_token', accessToken);
-          localStorage.setItem('mcp_user', JSON.stringify(userInfo));
-          localStorage.setItem('dreamclip_token', accessToken);
-          localStorage.setItem('dreamclip_user', JSON.stringify(userInfo));
-
-          showToast("身份验证成功，正在开启应用门户...", "success");
-
-          // 核心需求：无论何种情况，登录成功一律直达门户应用桌面 (PortalOS)
-          setTimeout(() => {
-            const isOnline = window.location.hostname.endsWith('dreamclip.cn');
-            const portalBase = isOnline ? 'https://portal.dreamclip.cn/' : '/portal';
-            const joinChar = portalBase.includes('?') ? '&' : '?';
-            const targetUrl = `${portalBase}${joinChar}mcp_token=${encodeURIComponent(accessToken)}&mcp_user=${encodeURIComponent(JSON.stringify(userInfo))}`;
-            window.location.href = targetUrl;
-          }, 350);
-
+          handleAuthSuccess(res.data.access_token, res.data.user_info, false);
         } else {
           showToast(res ? res.message : "登录失败，请检查账号密码", "error");
           card.classList.add('shake');
@@ -732,6 +952,84 @@
         setTimeout(() => card.classList.remove('shake'), 500);
         btn.disabled = false;
         btn.innerHTML = '<span>登 录 统 一 身 份</span>';
+      }
+    }
+
+    // ==================== 7. 统一注册逻辑 ====================
+    async function handleRegister(e) {
+      e.preventDefault();
+      const btn = document.getElementById('regSubmitBtn');
+      const card = document.getElementById('loginCard');
+
+      const username = document.getElementById('reg_username').value.trim();
+      const realName = document.getElementById('reg_realname').value.trim();
+      const email = document.getElementById('reg_email').value.trim() || undefined;
+      const password = document.getElementById('reg_password').value;
+      const confirmPassword = document.getElementById('reg_confirm_password').value;
+
+      if (!username || username.length < 3) {
+        showToast("用户名至少需要 3 位字符", "error");
+        return;
+      }
+      if (!realName) {
+        showToast("请输入用户昵称 / 姓名", "error");
+        return;
+      }
+      if (!password || password.length < 6) {
+        showToast("密码长度不能少于 6 位", "error");
+        return;
+      }
+      if (password !== confirmPassword) {
+        showToast("两次输入的密码不一致，请核对", "error");
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<div class="spinner"></div><span>正在创建统一账号...</span>';
+
+      const payload = {
+        username,
+        password,
+        real_name: realName,
+        email: email
+      };
+
+      try {
+        let resp = await fetch('/api/v1/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (!resp.ok && resp.status === 404) {
+          resp = await fetch('/api/base/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+        }
+
+        let res;
+        try {
+          res = await resp.json();
+        } catch (jsonErr) {
+          throw new Error(`服务端响应异常 (HTTP ${resp.status})`);
+        }
+
+        if (res && res.code === 200 && res.data) {
+          handleAuthSuccess(res.data.access_token, res.data.user_info, true);
+        } else {
+          showToast(res ? res.message : "注册失败，请更换用户名重试", "error");
+          card.classList.add('shake');
+          setTimeout(() => card.classList.remove('shake'), 500);
+          btn.disabled = false;
+          btn.innerHTML = '<span>✨ 注 册 统 一 账 号</span>';
+        }
+      } catch (err) {
+        showToast("注册连接异常: " + err.message, "error");
+        card.classList.add('shake');
+        setTimeout(() => card.classList.remove('shake'), 500);
+        btn.disabled = false;
+        btn.innerHTML = '<span>✨ 注 册 统 一 账 号</span>';
       }
     }
   </script>
