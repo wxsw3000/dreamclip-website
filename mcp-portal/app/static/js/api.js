@@ -2,8 +2,8 @@
  * DreamClip 客户端统一 API 与状态管理
  */
 function getAuthCookie(name) {
-  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-  return match ? decodeURIComponent(match[2]) : null;
+  const match = document.cookie.match(new RegExp('(?:^|;\\s*)' + name + '=([^;]*)'));
+  return match ? decodeURIComponent(match[1]) : null;
 }
 
 function clearAuthCookie(name) {
@@ -17,18 +17,7 @@ const DreamClipAPI = {
   // 基础请求封装
   async request(endpoint, options = {}) {
     const isOnline = window.location.hostname.endsWith('dreamclip.cn');
-    let token = null;
-    if (isOnline) {
-      token = getAuthCookie("mcp_token");
-      if (!token) {
-        localStorage.removeItem("dreamclip_token");
-        localStorage.removeItem("dreamclip_user");
-        localStorage.removeItem("mcp_token");
-        localStorage.removeItem("mcp_user");
-      }
-    } else {
-      token = localStorage.getItem("dreamclip_token") || localStorage.getItem("mcp_token");
-    }
+    let token = isOnline ? getAuthCookie("mcp_token") : (sessionStorage.getItem("mcp_token") || localStorage.getItem("mcp_token") || localStorage.getItem("dreamclip_token"));
 
     const headers = {
       "Content-Type": "application/json",
@@ -39,10 +28,33 @@ const DreamClipAPI = {
     }
 
     try {
-      const resp = await fetch(endpoint, {
+      let resp = await fetch(endpoint, {
         ...options,
         headers
       });
+      if (!resp.ok && resp.status === 404 && endpoint.startsWith('/api/base/')) {
+        const altEndpoint = endpoint.replace('/api/base/', '/api/v1/');
+        resp = await fetch(altEndpoint, { ...options, headers });
+      }
+      if (!resp.ok && resp.status === 404 && endpoint.startsWith('/api/v1/')) {
+        const altEndpoint = endpoint.replace('/api/v1/', '/api/base/');
+        resp = await fetch(altEndpoint, { ...options, headers });
+      }
+      if (resp.status === 401) {
+        if (isOnline) {
+          clearAuthCookie("mcp_token");
+          clearAuthCookie("mcp_user");
+          clearAuthCookie("dreamclip_token");
+          clearAuthCookie("dreamclip_user");
+        }
+        localStorage.removeItem("dreamclip_token");
+        localStorage.removeItem("dreamclip_user");
+        localStorage.removeItem("mcp_token");
+        localStorage.removeItem("mcp_user");
+        sessionStorage.clear();
+        initUserSessionUI();
+        return { code: 401, message: "登录凭据已过期" };
+      }
       const data = await resp.json();
       return data;
     } catch (err) {
@@ -79,7 +91,11 @@ const DreamClipAPI = {
     },
 
     async getMe() {
-      return await DreamClipAPI.request("/api/base/auth/me");
+      let res = await DreamClipAPI.request("/api/v1/auth/me");
+      if (!res || res.code !== 200) {
+        res = await DreamClipAPI.request("/api/base/auth/me");
+      }
+      return res;
     },
 
     logout() {
@@ -133,43 +149,73 @@ document.addEventListener("DOMContentLoaded", () => {
   initUserSessionUI();
 });
 
-function initUserSessionUI() {
+async function initUserSessionUI() {
   const isOnline = window.location.hostname.endsWith('dreamclip.cn');
-  if (isOnline && !getAuthCookie('mcp_token')) {
-    localStorage.removeItem("dreamclip_token");
-    localStorage.removeItem("dreamclip_user");
-    localStorage.removeItem("mcp_token");
-    localStorage.removeItem("mcp_user");
-  }
-  const rawUser = isOnline ? (getAuthCookie('mcp_user') || localStorage.getItem("dreamclip_user") || localStorage.getItem("mcp_user")) : (localStorage.getItem("dreamclip_user") || localStorage.getItem("mcp_user"));
-  const userJson = (isOnline && !getAuthCookie('mcp_token')) ? null : rawUser;
+  const token = isOnline ? getAuthCookie('mcp_token') : (sessionStorage.getItem("mcp_token") || localStorage.getItem("mcp_token") || localStorage.getItem("dreamclip_token"));
   const authContainer = document.getElementById("header-auth-area");
-  if (!authContainer) return;
+  const heroCtaBtn = document.getElementById("hero-main-cta");
 
-  if (userJson) {
-    try {
-      const user = JSON.parse(userJson);
+  if (!token) {
+    if (authContainer) {
+      const loginUrl = DreamClipAPI.auth.getLoginUrl('login');
+      const registerUrl = DreamClipAPI.auth.getLoginUrl('register');
       authContainer.innerHTML = `
-        <a href="/portal" class="btn btn-outline" style="padding:0.35rem 0.75rem; font-size:0.82rem; margin-right:6px;" title="进入应用工作台">📱 平台桌面</a>
-        <div class="user-badge" style="display:inline-flex; align-items:center; gap:0.4rem; background:rgba(255,255,255,0.06); padding:0.25rem 0.6rem; border-radius:20px; border:1px solid rgba(255,255,255,0.12);">
-          <img class="user-avatar-mini" style="width:22px; height:22px; border-radius:50%;" src="${user.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + user.username}" alt="avatar">
-          <span style="font-size:0.85rem; font-weight:600; color:#fff;">${user.real_name || user.username}</span>
-          <span style="font-size:0.7rem; color:#818cf8; background:rgba(99,102,241,0.15); border:1px solid rgba(99,102,241,0.3); padding:0.1rem 0.4rem; border-radius:6px;">会员</span>
-        </div>
-        <button class="btn btn-outline" style="padding:0.35rem 0.65rem; font-size:0.8rem; margin-left:6px;" onclick="DreamClipAPI.auth.logout()">退出</button>
+        <a href="/portal" class="btn btn-outline" style="padding:0.35rem 0.75rem; font-size:0.82rem; margin-right:6px;">📱 平台桌面</a>
+        <a href="${loginUrl}" class="btn btn-outline" style="padding:0.35rem 0.75rem; font-size:0.82rem; margin-right:6px;">登录</a>
+        <a href="${registerUrl}" class="btn btn-primary" style="padding:0.35rem 0.75rem; font-size:0.82rem;">✨ 立即注册</a>
       `;
-    } catch (e) {
-      localStorage.removeItem("dreamclip_user");
-      localStorage.removeItem("mcp_user");
     }
-  } else {
-    const loginUrl = DreamClipAPI.auth.getLoginUrl('login');
-    const registerUrl = DreamClipAPI.auth.getLoginUrl('register');
+    if (heroCtaBtn) {
+      heroCtaBtn.innerText = "✨ 开启探索 (立即注册)";
+      heroCtaBtn.href = DreamClipAPI.auth.getLoginUrl('register');
+    }
+    return;
+  }
+
+  function renderUserUI(u) {
+    if (!authContainer) return;
+    const isSuper = Boolean(u.is_superadmin || u.username === 'superadmin');
+    const roleText = isSuper ? '超级管理员' : (u.role_name || (u.roles && u.roles[0]) || '会员');
+    const avatarUrl = u.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${u.username}`;
+    const displayName = u.real_name || u.username;
+
     authContainer.innerHTML = `
-      <a href="/portal" class="btn btn-outline" style="padding:0.35rem 0.75rem; font-size:0.82rem; margin-right:6px;">📱 平台桌面</a>
-      <a href="${loginUrl}" class="btn btn-outline" style="padding:0.35rem 0.75rem; font-size:0.82rem; margin-right:6px;">登录</a>
-      <a href="${registerUrl}" class="btn btn-primary" style="padding:0.35rem 0.75rem; font-size:0.82rem;">✨ 立即注册</a>
+      <a href="/portal" class="btn btn-primary" style="padding:0.35rem 0.85rem; font-size:0.82rem; margin-right:6px;" title="进入已授权的微服务应用桌面">📱 平台应用桌面</a>
+      <div class="user-badge" style="display:inline-flex; align-items:center; gap:0.4rem; background:rgba(255,255,255,0.08); padding:0.25rem 0.65rem; border-radius:20px; border:1px solid rgba(255,255,255,0.15);">
+        <img class="user-avatar-mini" style="width:22px; height:22px; border-radius:50%; border:1px solid rgba(255,255,255,0.2);" src="${avatarUrl}" alt="avatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👤</text></svg>'">
+        <span style="font-size:0.85rem; font-weight:600; color:#fff;">${displayName}</span>
+        <span style="font-size:0.7rem; color:${isSuper ? '#c7d2fe' : '#818cf8'}; background:${isSuper ? 'rgba(99,102,241,0.3)' : 'rgba(99,102,241,0.15)'}; border:1px solid rgba(99,102,241,0.4); padding:0.1rem 0.4rem; border-radius:6px;">${roleText}</span>
+      </div>
+      <button class="btn btn-outline" style="padding:0.35rem 0.65rem; font-size:0.8rem; margin-left:6px;" onclick="DreamClipAPI.auth.logout()">退出</button>
     `;
+
+    if (heroCtaBtn) {
+      heroCtaBtn.innerText = "📱 进入平台应用桌面 (已登录)";
+      heroCtaBtn.href = "/portal";
+    }
+  }
+
+  let cachedUser = null;
+  const rawUserCookie = getAuthCookie('mcp_user') || getAuthCookie('dreamclip_user');
+  const rawUserStorage = sessionStorage.getItem('mcp_user') || localStorage.getItem('mcp_user') || localStorage.getItem('dreamclip_user');
+  const cachedUserStr = rawUserCookie || rawUserStorage;
+  if (cachedUserStr) {
+    try { cachedUser = JSON.parse(cachedUserStr); } catch (e) {}
+  }
+
+  if (cachedUser) {
+    renderUserUI(cachedUser);
+  }
+
+  try {
+    const meRes = await DreamClipAPI.auth.getMe();
+    if (meRes && meRes.code === 200 && meRes.data) {
+      renderUserUI(meRes.data);
+    } else if (meRes && meRes.code === 401) {
+      DreamClipAPI.auth.logout();
+    }
+  } catch (err) {
+    console.warn("Failed to fetch fresh user info on main site:", err);
   }
 }
 
