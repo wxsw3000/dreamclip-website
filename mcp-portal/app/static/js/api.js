@@ -234,8 +234,12 @@ async function initUserSessionUI() {
     const roleText = isSuper ? '超级管理员' : (u.role_name || (u.roles && u.roles[0]) || '会员');
     const avatarUrl = u.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${u.username}`;
     const displayName = u.real_name || u.username;
+    const isOnline = window.location.hostname.endsWith('dreamclip.cn');
+    const adminBaseUrl = isOnline ? 'https://base.dreamclip.cn/' : 'http://localhost:8000/';
+    const adminLinkHtml = isSuper ? `<a href="${adminBaseUrl}" class="btn btn-outline" style="padding:0.35rem 0.85rem; font-size:0.82rem; margin-right:6px; border-color:#818cf8; color:#c7d2fe;" title="进入 MagicStar 超管控制台">⚙️ 超管控制台</a>` : '';
 
     authContainer.innerHTML = `
+      ${adminLinkHtml}
       <a href="/portal" class="btn btn-primary" style="padding:0.35rem 0.85rem; font-size:0.82rem; margin-right:6px;" title="进入已授权的微服务应用桌面">📱 平台应用桌面</a>
       <div class="user-badge" style="display:inline-flex; align-items:center; gap:0.4rem; background:rgba(255,255,255,0.08); padding:0.25rem 0.65rem; border-radius:20px; border:1px solid rgba(255,255,255,0.15);">
         <img class="user-avatar-mini" style="width:22px; height:22px; border-radius:50%; border:1px solid rgba(255,255,255,0.2);" src="${avatarUrl}" alt="avatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👤</text></svg>'">
