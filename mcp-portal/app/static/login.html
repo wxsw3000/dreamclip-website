@@ -513,7 +513,7 @@
         <h1 class="brand-title">MagicStar & DreamClip</h1>
         <div class="brand-subtitle">
           <span class="status-dot"></span>
-          <span>统一身份单点登录与注册中心 · SSO</span>
+          <span>SSO 登录与注册中心</span>
         </div>
       </div>
 
@@ -578,11 +578,11 @@
 
         <!-- 登录按钮 -->
         <button type="submit" id="submitBtn" class="btn-submit">
-          <span>登 录 统 一 身 份</span>
+          <span>登 录</span>
         </button>
 
         <div class="switch-mode-bar">
-          还没有账号？<a class="switch-link" onclick="switchAuthMode('register')">立即注册新账号 →</a>
+          还没有账号？<a class="switch-link" onclick="switchAuthMode('register')">立即注册 →</a>
         </div>
       </form>
 
@@ -697,11 +697,11 @@
 
         <!-- 注册提交按钮 -->
         <button type="submit" id="regSubmitBtn" class="btn-submit">
-          <span>✨ 注 册 统 一 账 号</span>
+          <span>注 册</span>
         </button>
 
         <div class="switch-mode-bar">
-          已有账号？<a class="switch-link" onclick="switchAuthMode('login')">立即返回登录 →</a>
+          已有账号？<a class="switch-link" onclick="switchAuthMode('login')">立即登录 →</a>
         </div>
       </form>
 
@@ -824,13 +824,52 @@
       window.history.replaceState(null, '', url.toString());
     }
 
-    // 初始化时根据 URL 参数或路径预置选项卡
-    window.addEventListener('DOMContentLoaded', () => {
+    // 检查是否已有活跃登录权限并直接直通门户
+    async function checkExistingSessionAndRedirect() {
       const params = new URLSearchParams(window.location.search);
+      const isLogout = params.get('logout') === 'true' || params.get('force') === 'true';
+      if (isLogout) {
+        localStorage.removeItem('mcp_token');
+        localStorage.removeItem('mcp_user');
+        localStorage.removeItem('dreamclip_token');
+        localStorage.removeItem('dreamclip_user');
+        return;
+      }
+
+      // 如果显式带有 mode=register，留在注册卡片
       const mode = params.get('mode') || params.get('tab');
       if (mode === 'register' || window.location.pathname.endsWith('/register')) {
         switchAuthMode('register');
+        return;
       }
+
+      const token = localStorage.getItem('mcp_token') || localStorage.getItem('dreamclip_token');
+      if (!token) return;
+
+      // 验证当前本地 Token 是否依然有效
+      try {
+        let resp = await fetch('/api/v1/auth/me', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!resp.ok && resp.status === 404) {
+          resp = await fetch('/api/base/auth/me', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+        }
+        if (resp.ok) {
+          const res = await resp.json();
+          if (res && res.code === 200 && res.data) {
+            handleAuthSuccess(token, res.data, false);
+          }
+        }
+      } catch (err) {
+        console.warn('Session verification skipped:', err);
+      }
+    }
+
+    // 初始化时执行
+    window.addEventListener('DOMContentLoaded', () => {
+      checkExistingSessionAndRedirect();
     });
 
     // ==================== 3. 密码显示/隐藏切换 ====================
@@ -874,8 +913,8 @@
       localStorage.setItem('dreamclip_user', JSON.stringify(userInfo));
 
       const successMsg = isNewRegister
-        ? "✨ 账号注册成功！正在开启应用门户..."
-        : "身份验证成功，正在开启应用门户...";
+        ? "✨ 注册成功！正在开启应用门户..."
+        : "登录成功，正在开启应用门户...";
       showToast(successMsg, "success");
 
       const params = new URLSearchParams(window.location.search);
@@ -912,7 +951,7 @@
       }
 
       btn.disabled = true;
-      btn.innerHTML = '<div class="spinner"></div><span>正在验证凭证...</span>';
+      btn.innerHTML = '<div class="spinner"></div><span>正在登录...</span>';
 
       const payload = { username, password };
 
@@ -945,14 +984,14 @@
           card.classList.add('shake');
           setTimeout(() => card.classList.remove('shake'), 500);
           btn.disabled = false;
-          btn.innerHTML = '<span>登 录 统 一 身 份</span>';
+          btn.innerHTML = '<span>登 录</span>';
         }
       } catch (err) {
         showToast("登录连接异常: " + err.message, "error");
         card.classList.add('shake');
         setTimeout(() => card.classList.remove('shake'), 500);
         btn.disabled = false;
-        btn.innerHTML = '<span>登 录 统 一 身 份</span>';
+        btn.innerHTML = '<span>登 录</span>';
       }
     }
 
@@ -994,7 +1033,7 @@
       }
 
       btn.disabled = true;
-      btn.innerHTML = '<div class="spinner"></div><span>正在创建统一账号...</span>';
+      btn.innerHTML = '<div class="spinner"></div><span>正在注册...</span>';
 
       const payload = {
         username,
@@ -1032,14 +1071,14 @@
           card.classList.add('shake');
           setTimeout(() => card.classList.remove('shake'), 500);
           btn.disabled = false;
-          btn.innerHTML = '<span>✨ 注 册 统 一 账 号</span>';
+          btn.innerHTML = '<span>注 册</span>';
         }
       } catch (err) {
         showToast("注册连接异常: " + err.message, "error");
         card.classList.add('shake');
         setTimeout(() => card.classList.remove('shake'), 500);
         btn.disabled = false;
-        btn.innerHTML = '<span>✨ 注 册 统 一 账 号</span>';
+        btn.innerHTML = '<span>注 册</span>';
       }
     }
   </script>

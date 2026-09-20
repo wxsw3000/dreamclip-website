@@ -35,8 +35,10 @@ def list_users(
             (SysUser.real_name.ilike(f"%{keyword}%")) |
             (SysUser.email.ilike(f"%{keyword}%"))
         )
-    if role_code:
-        query = query.join(SysUser.roles).filter(SysRole.role_code == role_code, SysRole.is_deleted == 0)
+    if role_code == "ROLE_SUPER_ADMIN":
+        query = query.filter((SysUser.is_superadmin == 1) | SysUser.roles.any(SysRole.role_code == "ROLE_SUPER_ADMIN"))
+    elif role_code:
+        query = query.filter(SysUser.roles.any(SysRole.role_code == role_code))
     if status:
         query = query.filter(SysUser.status == status)
     if tenant_code:

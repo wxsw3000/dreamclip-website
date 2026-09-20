@@ -182,7 +182,7 @@
       <div class="brand-section">
         <div class="logo-badge">⭐</div>
         <h1 class="brand-title">MagicStar MCP</h1>
-        <div class="brand-subtitle">统一身份与底座控制台</div>
+        <div class="brand-subtitle">底座管理控制台</div>
       </div>
       <form onsubmit="handleLogin(event)">
         <div class="form-group">
@@ -191,7 +191,7 @@
         <div class="form-group">
           <input type="password" id="password" class="form-control" placeholder="请输入安全登录密码" required autocomplete="current-password">
         </div>
-        <button type="submit" id="submitBtn" class="btn-login">登 录 统 一 身 份</button>
+        <button type="submit" id="submitBtn" class="btn-login">登 录</button>
       </form>
     </div>
   </div>
@@ -250,7 +250,7 @@
     async function handleLogin(e) {
       e.preventDefault();
       const btn = document.getElementById('submitBtn');
-      btn.innerText = "正在验证...";
+      btn.innerText = "正在登录...";
       btn.disabled = true;
 
       const payload = {
@@ -281,12 +281,12 @@
           }, 350);
         } else {
           showToast(res ? res.message : "登录失败，请检查账号密码", "error");
-          btn.innerText = "登 录 统 一 身 份";
+          btn.innerText = "登 录";
           btn.disabled = false;
         }
       } catch (err) {
         showToast("服务连接异常: " + err.message, "error");
-        btn.innerText = "登 录 统 一 身 份";
+        btn.innerText = "登 录";
         btn.disabled = false;
       }
     }
