@@ -62,7 +62,9 @@ const DreamClipAPI = {
       localStorage.removeItem("dreamclip_user");
       localStorage.removeItem("mcp_token");
       localStorage.removeItem("mcp_user");
-      window.location.href = DreamClipAPI.auth.getLoginUrl('login');
+      sessionStorage.clear();
+      const isOnline = window.location.hostname.endsWith('dreamclip.cn');
+      window.location.href = isOnline ? 'https://login.dreamclip.cn/?logout=true' : '/login?logout=true';
     }
   },
 

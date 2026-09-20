@@ -16,17 +16,23 @@ function getUser() {
   }
 }
 
-function getLoginUrl() {
+function getLoginUrl(isLogout = false) {
   const isOnline = window.location.hostname.endsWith('dreamclip.cn');
-  return isOnline ? 'https://login.dreamclip.cn/' : '/login';
+  const base = isOnline ? 'https://login.dreamclip.cn/' : '/login';
+  return isLogout ? `${base}?logout=true` : base;
 }
 
-function redirectToLogin() {
+function redirectToLogin(isLogout = false) {
   localStorage.removeItem('mcp_token');
   localStorage.removeItem('mcp_user');
   localStorage.removeItem('dreamclip_token');
   localStorage.removeItem('dreamclip_user');
-  window.location.href = getLoginUrl();
+  sessionStorage.clear();
+  window.location.href = getLoginUrl(isLogout);
+}
+
+function handleLogout() {
+  redirectToLogin(true);
 }
 
 async function api(path, options = {}) {

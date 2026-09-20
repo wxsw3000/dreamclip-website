@@ -429,11 +429,13 @@ window.PortalOS = (function() {
     localStorage.removeItem('mcp_user');
     localStorage.removeItem('dreamclip_token');
     localStorage.removeItem('dreamclip_user');
+    sessionStorage.clear();
     showToast("已安全退出登录", "info");
     const isOnline = window.location.hostname.endsWith('dreamclip.cn');
+    const ssoUrl = isOnline ? 'https://login.dreamclip.cn/?logout=true' : '/login?logout=true';
     setTimeout(() => {
-      window.location.href = isOnline ? 'https://login.dreamclip.cn/' : '/login';
-    }, 400);
+      window.location.href = ssoUrl;
+    }, 300);
   }
 
   function init() {
