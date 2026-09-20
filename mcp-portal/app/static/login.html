@@ -522,59 +522,6 @@
       color: #38bdf8;
     }
 
-    /* 活跃会话快捷卡片 */
-    .active-session-card {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: rgba(99, 102, 241, 0.14);
-      border: 1px solid rgba(99, 102, 241, 0.35);
-      border-radius: 14px;
-      padding: 10px 14px;
-      margin-bottom: 18px;
-      font-size: 13px;
-      color: #e2e8f0;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
-      animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-
-    .active-session-user {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      overflow: hidden;
-    }
-
-    .active-session-text {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .active-session-text strong {
-      color: #38bdf8;
-    }
-
-    .active-session-btn {
-      background: linear-gradient(135deg, #4f46e5, #06b6d4);
-      color: #ffffff;
-      border: none;
-      border-radius: 8px;
-      padding: 6px 14px;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
-    }
-
-    .active-session-btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.6);
-    }
-
     /* 底部极简版权 */
     .footer-bar {
       position: relative;
@@ -611,17 +558,6 @@
           <span class="status-dot"></span>
           <span>SSO 登录与注册中心</span>
         </div>
-      </div>
-
-      <!-- 活跃会话快速入口 (仅在检测到本地已登录且非注销时轻量展示，绝不强制抢占自动跳转) -->
-      <div id="activeSessionBanner" class="active-session-card" style="display: none;">
-        <div class="active-session-user">
-          <span>👤</span>
-          <span class="active-session-text">当前已登录：<strong id="activeSessionName"></strong></span>
-        </div>
-        <button type="button" class="active-session-btn" onclick="directGoPortal()">
-          <span>进入应用门户 →</span>
-        </button>
       </div>
 
       <!-- 登录 / 注册 分段切换栏 -->
@@ -940,8 +876,8 @@
       window.history.replaceState(null, '', url.toString());
     }
 
-    // 页面初始化：处理注销、回显记住的账号、轻量展示已有登录状态
-    async function initAuthSessionAndPreferences() {
+    // 页面初始化：处理注销、回显记住的账号
+    function initAuthSessionAndPreferences() {
       const params = new URLSearchParams(window.location.search);
       const isLogout = params.get('logout') === 'true' || params.get('logout') === '1' || params.get('force') === 'true' || params.get('action') === 'logout';
       
@@ -984,66 +920,6 @@
         switchAuthMode('register');
         return;
       }
-
-      // 3. 探查当前本地是否已有有效 Token（仅在非退出状态下探查并提供快捷入口，绝不强制自动跳转抢占页面）
-      if (!isLogout) {
-        const token = localStorage.getItem('mcp_token') || localStorage.getItem('dreamclip_token');
-        if (token) {
-          try {
-            let resp = await fetch('/api/v1/auth/me', {
-              headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (!resp.ok && resp.status === 404) {
-              resp = await fetch('/api/base/auth/me', {
-                headers: { 'Authorization': `Bearer ${token}` }
-              });
-            }
-            if (resp.ok) {
-              const res = await resp.json();
-              if (res && res.code === 200 && res.data) {
-                const banner = document.getElementById('activeSessionBanner');
-                const nameEl = document.getElementById('activeSessionName');
-                if (banner && nameEl) {
-                  nameEl.innerText = res.data.real_name || res.data.username || '探索者';
-                  banner.style.display = 'flex';
-                }
-              } else {
-                localStorage.removeItem('mcp_token');
-                localStorage.removeItem('mcp_user');
-                localStorage.removeItem('dreamclip_token');
-                localStorage.removeItem('dreamclip_user');
-              }
-            } else {
-              localStorage.removeItem('mcp_token');
-              localStorage.removeItem('mcp_user');
-              localStorage.removeItem('dreamclip_token');
-              localStorage.removeItem('dreamclip_user');
-            }
-          } catch (err) {
-            console.warn('Session check skipped:', err);
-          }
-        }
-      }
-    }
-
-    // 快捷直通门户
-    function directGoPortal() {
-      const token = localStorage.getItem('mcp_token') || localStorage.getItem('dreamclip_token');
-      const rawUser = localStorage.getItem('mcp_user') || localStorage.getItem('dreamclip_user');
-      const isOnline = window.location.hostname.endsWith('dreamclip.cn');
-      const params = new URLSearchParams(window.location.search);
-      const redirectUrl = params.get('redirect');
-
-      let targetBase;
-      if (redirectUrl && !redirectUrl.includes('login.dreamclip.cn')) {
-        targetBase = redirectUrl;
-      } else {
-        targetBase = isOnline ? 'https://portal.dreamclip.cn/' : '/portal';
-      }
-
-      const joinChar = targetBase.includes('?') ? '&' : '?';
-      const targetUrl = `${targetBase}${joinChar}mcp_token=${encodeURIComponent(token || '')}&mcp_user=${encodeURIComponent(rawUser || '')}`;
-      window.location.href = targetUrl;
     }
 
     // 初始化时执行
