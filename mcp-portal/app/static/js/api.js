@@ -1,10 +1,22 @@
 /**
  * DreamClip 客户端统一 API 与状态管理
  */
+function getAuthCookie(name) {
+  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+  return match ? decodeURIComponent(match[2]) : null;
+}
+
+function clearAuthCookie(name) {
+  const isOnline = window.location.hostname.endsWith('dreamclip.cn');
+  const domainPart = isOnline ? '; domain=.dreamclip.cn' : '';
+  document.cookie = `${name}=; path=/; domain=.dreamclip.cn; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+  document.cookie = `${name}=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+}
+
 const DreamClipAPI = {
   // 基础请求封装
   async request(endpoint, options = {}) {
-    const token = localStorage.getItem("dreamclip_token") || localStorage.getItem("mcp_token");
+    const token = getAuthCookie("mcp_token") || localStorage.getItem("dreamclip_token") || localStorage.getItem("mcp_token");
     const headers = {
       "Content-Type": "application/json",
       ...(options.headers || {})
@@ -58,6 +70,10 @@ const DreamClipAPI = {
     },
 
     logout() {
+      clearAuthCookie("mcp_token");
+      clearAuthCookie("mcp_user");
+      clearAuthCookie("dreamclip_token");
+      clearAuthCookie("dreamclip_user");
       localStorage.removeItem("dreamclip_token");
       localStorage.removeItem("dreamclip_user");
       localStorage.removeItem("mcp_token");

@@ -3,13 +3,33 @@
 
 const API_BASE = '/api/v1';
 
+function setAuthCookie(name, value, days = 7) {
+  const isOnline = window.location.hostname.endsWith('dreamclip.cn');
+  const domainPart = isOnline ? '; domain=.dreamclip.cn' : '';
+  const maxAge = days > 0 ? `; max-age=${days * 24 * 60 * 60}` : '; max-age=0';
+  document.cookie = `${name}=${encodeURIComponent(value)}${domainPart}; path=/; SameSite=Lax${maxAge}`;
+}
+
+function getAuthCookie(name) {
+  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+  return match ? decodeURIComponent(match[2]) : null;
+}
+
+function clearAuthCookie(name) {
+  const isOnline = window.location.hostname.endsWith('dreamclip.cn');
+  const domainPart = isOnline ? '; domain=.dreamclip.cn' : '';
+  document.cookie = `${name}=; path=/; domain=.dreamclip.cn; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+  document.cookie = `${name}=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+}
+
 function getToken() {
-  return localStorage.getItem('mcp_token') || localStorage.getItem('dreamclip_token');
+  return getAuthCookie('mcp_token') || localStorage.getItem('mcp_token') || localStorage.getItem('dreamclip_token');
 }
 
 function getUser() {
   try {
-    const raw = localStorage.getItem('mcp_user') || localStorage.getItem('dreamclip_user');
+    const rawCookie = getAuthCookie('mcp_user');
+    const raw = rawCookie || localStorage.getItem('mcp_user') || localStorage.getItem('dreamclip_user');
     return raw ? JSON.parse(raw) : null;
   } catch (e) {
     return null;
@@ -23,6 +43,10 @@ function getLoginUrl(isLogout = false) {
 }
 
 function redirectToLogin(isLogout = false) {
+  clearAuthCookie('mcp_token');
+  clearAuthCookie('mcp_user');
+  clearAuthCookie('dreamclip_token');
+  clearAuthCookie('dreamclip_user');
   localStorage.removeItem('mcp_token');
   localStorage.removeItem('mcp_user');
   localStorage.removeItem('dreamclip_token');
@@ -903,11 +927,16 @@ window.addEventListener('DOMContentLoaded', () => {
   const tabFromUrl = urlParams.get('tab');
 
   if (tokenFromUrl) {
+    setAuthCookie('mcp_token', tokenFromUrl, 7);
+    setAuthCookie('dreamclip_token', tokenFromUrl, 7);
     localStorage.setItem('mcp_token', tokenFromUrl);
     localStorage.setItem('dreamclip_token', tokenFromUrl);
     if (userFromUrl) {
-      localStorage.setItem('mcp_user', decodeURIComponent(userFromUrl));
-      localStorage.setItem('dreamclip_user', decodeURIComponent(userFromUrl));
+      const decodedUser = decodeURIComponent(userFromUrl);
+      setAuthCookie('mcp_user', decodedUser, 7);
+      setAuthCookie('dreamclip_user', decodedUser, 7);
+      localStorage.setItem('mcp_user', decodedUser);
+      localStorage.setItem('dreamclip_user', decodedUser);
     }
     urlParams.delete('mcp_token');
     urlParams.delete('token');

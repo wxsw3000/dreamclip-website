@@ -876,13 +876,37 @@
       window.history.replaceState(null, '', url.toString());
     }
 
-    // 页面初始化：处理注销、回显记住的账号
-    function initAuthSessionAndPreferences() {
+    // ==================== 统一跨子域名 SSO Cookie 驱动 ====================
+    function setAuthCookie(name, value, days = 7) {
+      const isOnline = window.location.hostname.endsWith('dreamclip.cn');
+      const domainPart = isOnline ? '; domain=.dreamclip.cn' : '';
+      const maxAge = days > 0 ? `; max-age=${days * 24 * 60 * 60}` : '; max-age=0';
+      document.cookie = `${name}=${encodeURIComponent(value)}${domainPart}; path=/; SameSite=Lax${maxAge}`;
+    }
+
+    function getAuthCookie(name) {
+      const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+      return match ? decodeURIComponent(match[2]) : null;
+    }
+
+    function clearAuthCookie(name) {
+      const isOnline = window.location.hostname.endsWith('dreamclip.cn');
+      const domainPart = isOnline ? '; domain=.dreamclip.cn' : '';
+      document.cookie = `${name}=; path=/; domain=.dreamclip.cn; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+      document.cookie = `${name}=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+    }
+
+    // 页面初始化：处理注销、回显记住的账号、跨子域自动识别已登录会话并直达门户
+    async function initAuthSessionAndPreferences() {
       const params = new URLSearchParams(window.location.search);
       const isLogout = params.get('logout') === 'true' || params.get('logout') === '1' || params.get('force') === 'true' || params.get('action') === 'logout';
       
       if (isLogout) {
-        // 彻底清空登录域下的所有本地持久化身份（保留记住的账号用户名）
+        // 彻底清空所有跨子域名 Cookie 及本地缓存
+        clearAuthCookie('mcp_token');
+        clearAuthCookie('mcp_user');
+        clearAuthCookie('dreamclip_token');
+        clearAuthCookie('dreamclip_user');
         localStorage.removeItem('mcp_token');
         localStorage.removeItem('mcp_user');
         localStorage.removeItem('dreamclip_token');
@@ -897,6 +921,7 @@
         window.history.replaceState(null, '', cleanUrl.toString());
 
         showToast("已安全退出登录", "info");
+        return;
       }
 
       // 1. 回显之前勾选“记住账号”的用户名
@@ -919,6 +944,35 @@
       if (mode === 'register' || window.location.pathname.endsWith('/register')) {
         switchAuthMode('register');
         return;
+      }
+
+      // 3. 跨子域 SSO 活跃会话探查：如果已在 base/portal 等任意节点登录，验证通过后直接直通门户
+      const ssoToken = getAuthCookie('mcp_token') || localStorage.getItem('mcp_token') || localStorage.getItem('dreamclip_token');
+      if (ssoToken) {
+        try {
+          let resp = await fetch('/api/v1/auth/me', {
+            headers: { 'Authorization': `Bearer ${ssoToken}` }
+          });
+          if (!resp.ok && resp.status === 404) {
+            resp = await fetch('/api/base/auth/me', {
+              headers: { 'Authorization': `Bearer ${ssoToken}` }
+            });
+          }
+          if (resp.ok) {
+            const res = await resp.json();
+            if (res && res.code === 200 && res.data) {
+              handleAuthSuccess(ssoToken, res.data, false);
+            } else {
+              clearAuthCookie('mcp_token');
+              clearAuthCookie('mcp_user');
+            }
+          } else {
+            clearAuthCookie('mcp_token');
+            clearAuthCookie('mcp_user');
+          }
+        } catch (err) {
+          console.warn('SSO session check skipped:', err);
+        }
       }
     }
 
@@ -961,7 +1015,13 @@
 
     // ==================== 5. 跳转目标解析与直通 ====================
     function handleAuthSuccess(accessToken, userInfo, isNewRegister = false) {
-      // 本地持久化保存身份 Token
+      // 跨主域 Cookie 写入（.dreamclip.cn 下所有子域一处登录处处免登）
+      setAuthCookie('mcp_token', accessToken, 7);
+      setAuthCookie('mcp_user', JSON.stringify(userInfo), 7);
+      setAuthCookie('dreamclip_token', accessToken, 7);
+      setAuthCookie('dreamclip_user', JSON.stringify(userInfo), 7);
+
+      // 本地持久化保存身份 Token 作为兜底
       localStorage.setItem('mcp_token', accessToken);
       localStorage.setItem('mcp_user', JSON.stringify(userInfo));
       localStorage.setItem('dreamclip_token', accessToken);
