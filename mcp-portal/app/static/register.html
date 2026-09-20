@@ -426,6 +426,14 @@
           const accessToken = res.data.access_token;
           const userInfo = res.data.user_info;
 
+          // 跨主域 Cookie 写入（.dreamclip.cn 下所有子域一处注册全站通行）
+          const isOnline = window.location.hostname.endsWith('dreamclip.cn');
+          const domainPart = isOnline ? '; domain=.dreamclip.cn' : '';
+          document.cookie = `mcp_token=${encodeURIComponent(accessToken)}${domainPart}; path=/; SameSite=Lax; max-age=604800`;
+          document.cookie = `mcp_user=${encodeURIComponent(JSON.stringify(userInfo))}${domainPart}; path=/; SameSite=Lax; max-age=604800`;
+          document.cookie = `dreamclip_token=${encodeURIComponent(accessToken)}${domainPart}; path=/; SameSite=Lax; max-age=604800`;
+          document.cookie = `dreamclip_user=${encodeURIComponent(JSON.stringify(userInfo))}${domainPart}; path=/; SameSite=Lax; max-age=604800`;
+
           // 本地持久化凭证
           localStorage.setItem('mcp_token', accessToken);
           localStorage.setItem('mcp_user', JSON.stringify(userInfo));

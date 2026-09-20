@@ -2,11 +2,7 @@ import bcrypt
 from datetime import datetime, timedelta
 from typing import Optional, Union, Any
 from jose import jwt, JWTError
-from fastapi import Depends, HTTPException, status, Header
-from fastapi.security import OAuth2PasswordBearer
-from sqlalchemy.orm import Session
-
-from app.core.config import settings
+from fastapi import Depends, HTTPException, status, Header, Cookie
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login", auto_error=False)
 
@@ -53,15 +49,20 @@ def decode_token(token: str) -> Optional[dict]:
 
 def get_current_user_payload(
     token: Optional[str] = Depends(oauth2_scheme),
-    authorization: Optional[str] = Header(None)
+    authorization: Optional[str] = Header(None),
+    mcp_token: Optional[str] = Cookie(None),
+    dreamclip_token: Optional[str] = Cookie(None)
 ) -> dict:
-    """从 Header 或 OAuth2 中解析当前登录用户"""
+    """从 Header、OAuth2 或 Cookie 中解析当前登录用户"""
     raw_token = token
     if not raw_token and authorization:
         if authorization.startswith("Bearer "):
             raw_token = authorization.split(" ")[1]
         else:
             raw_token = authorization
+
+    if not raw_token:
+        raw_token = mcp_token or dreamclip_token
 
     if not raw_token:
         raise HTTPException(
@@ -81,15 +82,20 @@ def get_current_user_payload(
 
 def get_optional_user_payload(
     token: Optional[str] = Depends(oauth2_scheme),
-    authorization: Optional[str] = Header(None)
+    authorization: Optional[str] = Header(None),
+    mcp_token: Optional[str] = Cookie(None),
+    dreamclip_token: Optional[str] = Cookie(None)
 ) -> Optional[dict]:
-    """从 Header 或 OAuth2 中可选解析当前登录用户（若无凭证或凭证无效则返回 None）"""
+    """从 Header、OAuth2 或 Cookie 中可选解析当前登录用户（若无凭证或凭证无效则返回 None）"""
     raw_token = token
     if not raw_token and authorization:
         if authorization.startswith("Bearer "):
             raw_token = authorization.split(" ")[1]
         else:
             raw_token = authorization
+
+    if not raw_token:
+        raw_token = mcp_token or dreamclip_token
 
     if not raw_token:
         return None
