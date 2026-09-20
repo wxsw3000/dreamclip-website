@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>加入角色宇宙 - DreamClip 探索者注册</title>
+  <meta name="description" content="注册 DreamClip 探索者身份，开启跨越维度的角色宇宙、原创情绪胶囊打捞与 AVG 互动剧场体验。">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22><text y=%2222%22 font-size=%2222%22>🌌</text></svg>">
+  <style>
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background-color: #050711;
+      background-image: 
+        radial-gradient(circle at 15% 20%, rgba(99, 102, 241, 0.22) 0%, transparent 45%),
+        radial-gradient(circle at 85% 75%, rgba(6, 182, 212, 0.18) 0%, transparent 45%),
+        radial-gradient(circle at 50% 50%, rgba(168, 85, 247, 0.12) 0%, transparent 60%);
+      color: var(--text-primary);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    }
+
+    .register-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 16px 60px;
+    }
+
+    .register-card {
+      width: 100%;
+      max-width: 520px;
+      background: rgba(13, 19, 36, 0.82);
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+      border-radius: 24px;
+      padding: 40px 36px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 
+        0 30px 80px -15px rgba(0, 0, 0, 0.8),
+        0 0 50px rgba(99, 102, 241, 0.2);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .register-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #6366f1, #06b6d4, #a855f7);
+    }
+
+    .card-header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .badge-universe {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      color: #c7d2fe;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .card-title {
+      font-size: 24px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: 0.5px;
+    }
+
+    .card-desc {
+      font-size: 13.5px;
+      color: #94a3b8;
+      margin-top: 6px;
+      line-height: 1.5;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #cbd5e1;
+      margin-bottom: 6px;
+    }
+
+    .form-control {
+      width: 100%;
+      height: 46px;
+      padding: 0 16px;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      font-size: 14px;
+      color: #f8fafc;
+      outline: none;
+      transition: all 0.2s ease;
+      box-sizing: border-box;
+    }
+
+    .form-control:focus {
+      background: rgba(15, 23, 42, 0.95);
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .personality-select {
+      width: 100%;
+      height: 46px;
+      padding: 0 12px;
+      background: #0f172a;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      color: #ffffff;
+      font-size: 13.5px;
+      outline: none;
+      box-sizing: border-box;
+    }
+
+    .btn-submit {
+      width: 100%;
+      height: 50px;
+      margin-top: 14px;
+      background: linear-gradient(135deg, #4f46e5 0%, #6366f1 50%, #06b6d4 100%);
+      color: #ffffff;
+      border: none;
+      border-radius: 14px;
+      font-size: 15.5px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.45);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(99, 102, 241, 0.6);
+    }
+
+    .btn-submit:active {
+      transform: translateY(0);
+    }
+
+    .btn-submit:disabled {
+      background: #334155;
+      color: #94a3b8;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .card-footer-links {
+      margin-top: 22px;
+      text-align: center;
+      font-size: 13.5px;
+      color: #94a3b8;
+    }
+
+    .card-footer-links a {
+      color: #38bdf8;
+      font-weight: 600;
+      text-decoration: none;
+      margin-left: 6px;
+      transition: color 0.2s ease;
+    }
+
+    .card-footer-links a:hover {
+      color: #7dd3fc;
+      text-shadow: 0 0 8px rgba(56, 189, 248, 0.4);
+    }
+
+    .alert-error {
+      background: rgba(239, 68, 68, 0.18);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #fca5a5;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 13.5px;
+      margin-bottom: 18px;
+      display: none;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2.5px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #ffffff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+  <!-- 顶部导航 -->
+  <header class="header">
+    <div class="header-container">
+      <div class="logo-area">
+        <a href="/" style="display:flex; align-items:center; gap:0.75rem; text-decoration:none;">
+          <div class="logo-icon">🌌</div>
+          <span class="logo-title">DreamClip Universe</span>
+        </a>
+      </div>
+      <nav class="nav-links">
+        <a href="/" class="nav-link">角色宇宙主站</a>
+        <a href="/portal" class="nav-link">📱 平台桌面</a>
+        <a href="/about" class="nav-link">关于我们</a>
+      </nav>
+      <div class="header-actions">
+        <a href="https://login.dreamclip.cn/" id="topLoginBtn" class="btn btn-outline" style="padding:0.35rem 0.85rem; font-size:0.85rem;">🔐 登录已有身份</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- 注册卡片主体 -->
+  <main class="register-container">
+    <div class="register-card">
+      <div class="card-header">
+        <div class="badge-universe">✨ 探索者档案建立 · 业务注册</div>
+        <h1 class="card-title">加入 DreamClip 角色宇宙</h1>
+        <p class="card-desc">开启跨越维度的情绪共鸣之旅，打捞深空记忆与专属角色羁绊</p>
+      </div>
+
+      <div id="errorAlert" class="alert-error">
+        <span>⚠️</span>
+        <span id="errorMsgText">提示信息</span>
+      </div>
+
+      <form id="universeRegisterForm" onsubmit="handleUniverseRegister(event)">
+        <!-- 用户名 -->
+        <div class="form-group">
+          <label class="form-label">登录用户名 / 唯一代号 *</label>
+          <input type="text" id="reg_username" class="form-control" placeholder="输入 3~32 位字母数字或下划线" required autocomplete="username" autofocus>
+        </div>
+
+        <!-- 昵称 -->
+        <div class="form-group">
+          <label class="form-label">探索者称谓 / 昵称 *</label>
+          <input type="text" id="reg_realname" class="form-control" placeholder="公开展示的昵称 (如: 深夜修补师 / 星穹旅人)" required>
+        </div>
+
+        <!-- 密码与确认密码 -->
+        <div class="grid-2 form-group">
+          <div>
+            <label class="form-label">设置安全密码 *</label>
+            <input type="password" id="reg_password" class="form-control" placeholder="至少 6 位密码" required autocomplete="new-password">
+          </div>
+          <div>
+            <label class="form-label">再次确认密码 *</label>
+            <input type="password" id="reg_confirm_password" class="form-control" placeholder="重复输入相同密码" required autocomplete="new-password">
+          </div>
+        </div>
+
+        <!-- 性格色彩与星象属性 -->
+        <div class="grid-2 form-group">
+          <div>
+            <label class="form-label">初始性格色彩共鸣</label>
+            <select id="reg_color" class="personality-select">
+              <option value="BLUE" selected>🔵 静谧理性 (Blue)</option>
+              <option value="YELLOW">🟡 璀璨治愈 (Yellow)</option>
+              <option value="RED">🔴 烈焰开拓 (Red)</option>
+              <option value="GREEN">🟢 深林共情 (Green)</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">星象星座属性</label>
+            <select id="reg_zodiac" class="personality-select">
+              <option value="天秤座" selected>天秤座</option>
+              <option value="天蝎座">天蝎座</option>
+              <option value="双鱼座">双鱼座</option>
+              <option value="白羊座">白羊座</option>
+              <option value="双子座">双子座</option>
+              <option value="巨蟹座">巨蟹座</option>
+              <option value="狮子座">狮子座</option>
+              <option value="处女座">处女座</option>
+              <option value="射手座">射手座</option>
+              <option value="摩羯座">摩羯座</option>
+              <option value="水瓶座">水瓶座</option>
+              <option value="金牛座">金牛座</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 电子邮箱 (选填) -->
+        <div class="form-group">
+          <label class="form-label">电子邮箱 (选填)</label>
+          <input type="email" id="reg_email" class="form-control" placeholder="用于接收情绪胶囊订阅与安全通知">
+        </div>
+
+        <!-- 提交按钮 -->
+        <button type="submit" id="submitBtn" class="btn-submit">
+          <span id="btnText">✨ 启 程 · 开 启 角 色 宇 宙</span>
+        </button>
+
+        <div class="card-footer-links">
+          已有探索者账号？<a href="/login" id="toLoginLink">前往统一认证中心登录 →</a>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <!-- 底部版权 -->
+  <footer class="footer">
+    <div class="footer-bottom">
+      <span>© 2026 DreamClip (dreamclip.cn) All rights reserved.</span>
+      <span>业务注册节点 · 自动挂载平台标准会员角色 (ROLE_MEMBER)</span>
+    </div>
+  </footer>
+
+  <script>
+    // 动态校准登录地址
+    (function initLinks() {
+      const isOnline = window.location.hostname.endsWith('dreamclip.cn');
+      const loginUrl = isOnline ? 'https://login.dreamclip.cn/' : '/login';
+      const topBtn = document.getElementById('topLoginBtn');
+      const bottomLink = document.getElementById('toLoginLink');
+      if (topBtn) topBtn.href = loginUrl;
+      if (bottomLink) bottomLink.href = loginUrl;
+    })();
+
+    function showError(msg) {
+      const el = document.getElementById('errorAlert');
+      const txt = document.getElementById('errorMsgText');
+      txt.innerText = msg;
+      el.style.display = 'flex';
+    }
+
+    function hideError() {
+      const el = document.getElementById('errorAlert');
+      el.style.display = 'none';
+    }
+
+    async function handleUniverseRegister(e) {
+      e.preventDefault();
+      hideError();
+
+      const btn = document.getElementById('submitBtn');
+      const btnText = document.getElementById('btnText');
+
+      const username = document.getElementById('reg_username').value.trim();
+      const realName = document.getElementById('reg_realname').value.trim();
+      const password = document.getElementById('reg_password').value;
+      const confirmPwd = document.getElementById('reg_confirm_password').value;
+      const email = document.getElementById('reg_email').value.trim() || undefined;
+      const personalityColor = document.getElementById('reg_color').value;
+      const zodiac = document.getElementById('reg_zodiac').value;
+
+      if (!username || username.length < 3) {
+        return showError("用户名至少需要 3 位字符");
+      }
+      if (!realName) {
+        return showError("请填写探索者昵称");
+      }
+      if (!password || password.length < 6) {
+        return showError("密码长度不能少于 6 位");
+      }
+      if (password !== confirmPwd) {
+        return showError("两次输入的密码不一致，请核对");
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<div class="spinner"></div><span>正在建立探索者档案...</span>';
+
+      const payload = {
+        username,
+        password,
+        real_name: realName,
+        email,
+        personality_color: personalityColor,
+        zodiac: zodiac
+      };
+
+      try {
+        let resp = await fetch('/api/v1/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (!resp.ok && resp.status === 404) {
+          resp = await fetch('/api/base/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+        }
+
+        let res;
+        try {
+          res = await resp.json();
+        } catch (jsonErr) {
+          throw new Error(`服务端响应异常 (HTTP ${resp.status})`);
+        }
+
+        if (res && res.code === 200 && res.data) {
+          const accessToken = res.data.access_token;
+          const userInfo = res.data.user_info;
+
+          // 本地持久化凭证
+          localStorage.setItem('mcp_token', accessToken);
+          localStorage.setItem('mcp_user', JSON.stringify(userInfo));
+          localStorage.setItem('dreamclip_token', accessToken);
+          localStorage.setItem('dreamclip_user', JSON.stringify(userInfo));
+
+          btn.innerHTML = '<span>✨ 注册成功，正在进入宇宙...</span>';
+
+          setTimeout(() => {
+            const isOnline = window.location.hostname.endsWith('dreamclip.cn');
+            const portalBase = isOnline ? 'https://portal.dreamclip.cn/' : '/portal';
+            const joinChar = portalBase.includes('?') ? '&' : '?';
+            const targetUrl = `${portalBase}${joinChar}mcp_token=${encodeURIComponent(accessToken)}&mcp_user=${encodeURIComponent(JSON.stringify(userInfo))}`;
+            window.location.href = targetUrl;
+          }, 350);
+
+        } else {
+          showError(res ? res.message : "注册失败，请更换用户名重试");
+          btn.disabled = false;
+          btn.innerHTML = '<span>✨ 启 程 · 开 启 角 色 宇 宙</span>';
+        }
+      } catch (err) {
+        showError("连接异常: " + err.message);
+        btn.disabled = false;
+        btn.innerHTML = '<span>✨ 启 程 · 开 启 角 色 宇 宙</span>';
+      }
+    }
+  </script>
+</body>
+</html>

@@ -26,12 +26,15 @@ const DreamClipAPI = {
     }
   },
 
-  // 认证与用户 API
+  auth: {
     getLoginUrl(mode = 'login') {
       const isOnline = window.location.hostname.endsWith('dreamclip.cn');
+      if (mode === 'register') {
+        return isOnline ? 'https://universe.dreamclip.cn/register' : '/register';
+      }
       const ssoHost = isOnline ? 'https://login.dreamclip.cn/' : '/login';
       const redirectParam = encodeURIComponent(window.location.href);
-      return `${ssoHost}?mode=${mode}&redirect=${redirectParam}`;
+      return `${ssoHost}?redirect=${redirectParam}`;
     },
 
     async register(username, password, realName, email) {

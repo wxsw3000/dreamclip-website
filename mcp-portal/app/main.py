@@ -133,6 +133,8 @@ async def host_virtual_routing_middleware(request: Request, call_next):
 
     # 4. 独立统一单点登录入口：login.dreamclip.cn / sso.dreamclip.cn / auth.dreamclip.cn -> 直达统一单点登录中心 (SSO)
     if host in ["login.dreamclip.cn", "sso.dreamclip.cn", "auth.dreamclip.cn"]:
+        if path in ["/register", "/register.html"]:
+            return RedirectResponse(url="https://universe.dreamclip.cn/register")
         if path in ["/", "", "/login", "/sso", "/auth"]:
             return FileResponse(os.path.join(static_dir, "login.html"))
         file_path = os.path.join(static_dir, path.lstrip("/"))
@@ -202,6 +204,10 @@ async def proxy_admin_login():
 @app.get("/login", include_in_schema=False)
 def portal_login_page():
     return serve_static_page("login.html")
+
+@app.get("/register", include_in_schema=False)
+def portal_register_page():
+    return serve_static_page("register.html")
 
 # ==================== 路径模式反向代理：微服务 Swagger 文档中心 ====================
 @app.get("/base/docs", include_in_schema=False)
