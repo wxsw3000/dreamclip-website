@@ -27,16 +27,21 @@ const DreamClipAPI = {
   },
 
   // 认证与用户 API
-  auth: {
-    async register(username, password, realName, personalityColor, zodiac) {
+    getLoginUrl(mode = 'login') {
+      const isOnline = window.location.hostname.endsWith('dreamclip.cn');
+      const ssoHost = isOnline ? 'https://login.dreamclip.cn/' : '/login';
+      const redirectParam = encodeURIComponent(window.location.href);
+      return `${ssoHost}?mode=${mode}&redirect=${redirectParam}`;
+    },
+
+    async register(username, password, realName, email) {
       return await DreamClipAPI.request("/api/base/auth/register", {
         method: "POST",
         body: JSON.stringify({
           username,
           password,
-          real_name: realName,
-          personality_color: personalityColor,
-          zodiac: zodiac
+          real_name: realName || username,
+          email: email || undefined
         })
       });
     },
@@ -57,8 +62,7 @@ const DreamClipAPI = {
       localStorage.removeItem("dreamclip_user");
       localStorage.removeItem("mcp_token");
       localStorage.removeItem("mcp_user");
-      const isOnline = window.location.hostname.endsWith('dreamclip.cn');
-      window.location.href = isOnline ? 'https://login.dreamclip.cn/' : '/login';
+      window.location.href = DreamClipAPI.auth.getLoginUrl('login');
     }
   },
 
@@ -106,20 +110,12 @@ function initUserSessionUI() {
   if (userJson) {
     try {
       const user = JSON.parse(userJson);
-      const colorMap = {
-        RED: { label: "烈焰开拓", color: "#ef4444" },
-        BLUE: { label: "静谧理性", color: "#3b82f6" },
-        YELLOW: { label: "璀璨治愈", color: "#eab308" },
-        GREEN: { label: "深林共情", color: "#22c55e" }
-      };
-      const colorInfo = colorMap[user.personality_color] || colorMap.BLUE;
-
       authContainer.innerHTML = `
-        <a href="/portal" class="btn btn-outline" style="padding:0.35rem 0.75rem; font-size:0.82rem; margin-right:6px;" title="进入 Apple 风格应用工作台">📱 平台桌面</a>
+        <a href="/portal" class="btn btn-outline" style="padding:0.35rem 0.75rem; font-size:0.82rem; margin-right:6px;" title="进入应用工作台">📱 平台桌面</a>
         <div class="user-badge" style="display:inline-flex; align-items:center; gap:0.4rem; background:rgba(255,255,255,0.06); padding:0.25rem 0.6rem; border-radius:20px; border:1px solid rgba(255,255,255,0.12);">
           <img class="user-avatar-mini" style="width:22px; height:22px; border-radius:50%;" src="${user.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + user.username}" alt="avatar">
           <span style="font-size:0.85rem; font-weight:600; color:#fff;">${user.real_name || user.username}</span>
-          <span style="font-size:0.7rem; color:${colorInfo.color}; background:rgba(255,255,255,0.08); padding:0.1rem 0.4rem; border-radius:6px;">${user.zodiac || colorInfo.label}</span>
+          <span style="font-size:0.7rem; color:#818cf8; background:rgba(99,102,241,0.15); border:1px solid rgba(99,102,241,0.3); padding:0.1rem 0.4rem; border-radius:6px;">会员</span>
         </div>
         <button class="btn btn-outline" style="padding:0.35rem 0.65rem; font-size:0.8rem; margin-left:6px;" onclick="DreamClipAPI.auth.logout()">退出</button>
       `;
@@ -128,10 +124,12 @@ function initUserSessionUI() {
       localStorage.removeItem("mcp_user");
     }
   } else {
+    const loginUrl = DreamClipAPI.auth.getLoginUrl('login');
+    const registerUrl = DreamClipAPI.auth.getLoginUrl('register');
     authContainer.innerHTML = `
       <a href="/portal" class="btn btn-outline" style="padding:0.35rem 0.75rem; font-size:0.82rem; margin-right:6px;">📱 平台桌面</a>
-      <button class="btn btn-outline" style="padding:0.35rem 0.75rem; font-size:0.82rem; margin-right:6px;" onclick="openAuthModal('login')">登录</button>
-      <button class="btn btn-primary" style="padding:0.35rem 0.75rem; font-size:0.82rem;" onclick="openAuthModal('register')">加入宇宙</button>
+      <a href="${loginUrl}" class="btn btn-outline" style="padding:0.35rem 0.75rem; font-size:0.82rem; margin-right:6px;">登录</a>
+      <a href="${registerUrl}" class="btn btn-primary" style="padding:0.35rem 0.75rem; font-size:0.82rem;">✨ 立即注册</a>
     `;
   }
 }

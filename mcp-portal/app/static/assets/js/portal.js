@@ -30,13 +30,14 @@ window.PortalOS = (function() {
     setTimeout(() => t.remove(), 3000);
   }
 
-  function getLoginUrl() {
+  function getLoginUrl(mode = 'login') {
     const isOnline = window.location.hostname.endsWith('dreamclip.cn');
-    return isOnline ? 'https://login.dreamclip.cn/' : '/login';
+    const ssoHost = isOnline ? 'https://login.dreamclip.cn/' : '/login';
+    return `${ssoHost}?mode=${mode}&redirect=${encodeURIComponent(window.location.href)}`;
   }
 
-  function goToLogin() {
-    window.location.href = getLoginUrl();
+  function goToLogin(mode = 'login') {
+    window.location.href = getLoginUrl(mode);
   }
 
   async function api(path, options = {}) {
@@ -106,8 +107,8 @@ window.PortalOS = (function() {
       const isOnline = window.location.hostname.endsWith('dreamclip.cn');
       authArea.innerHTML = `
         <span style="font-size:12px; color:var(--text-dim);">访客模式</span>
-        <button class="ios-capsule-btn" onclick="${isOnline ? 'PortalOS.goToLogin()' : "PortalOS.openAuthModal('login')"}" style="background:var(--ios-blue); border-color:transparent;">登 录</button>
-        <button class="ios-capsule-btn" onclick="PortalOS.openAuthModal('register')">注 册</button>
+        <button class="ios-capsule-btn" onclick="${isOnline ? "PortalOS.goToLogin('login')" : "PortalOS.openAuthModal('login')"}" style="background:var(--ios-blue); border-color:transparent;">登 录</button>
+        <button class="ios-capsule-btn" onclick="${isOnline ? "PortalOS.goToLogin('register')" : "PortalOS.openAuthModal('register')"}">✨ 注 册</button>
       `;
     }
   }
