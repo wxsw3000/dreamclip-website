@@ -110,26 +110,26 @@ async def forward_request(request: Request, target_url: str) -> Response:
 # ==================== Host 虚拟主机智能分流中间件 ====================
 @app.middleware("http")
 async def host_virtual_routing_middleware(request: Request, call_next):
-    raw_host = request.headers.get("host", "")
-    host = raw_host.split(":")[0].strip().lower()
     path = request.url.path
 
-    # 1. 独立子域名：base.dreamclip.cn / admin.dreamclip.cn -> 全量直达 MagicStar MCP 模块化配置底座
+    # 1. 优先放行所有后端 API 路由、静态资源及探活请求，统一由标准的反向代理和静态托管处理
+    if path.startswith("/api/") or path.startswith("/static/") or path == "/health":
+        return await call_next(request)
+
+    raw_host = request.headers.get("host", "")
+    host = raw_host.split(":")[0].strip().lower()
+
+    # 2. 独立子域名：base.dreamclip.cn / admin.dreamclip.cn -> 全量直达 MagicStar MCP 模块化配置底座
     if host in ["base.dreamclip.cn", "admin.dreamclip.cn"]:
         target_url = f"{settings.BASE_SERVICE_URL.rstrip('/')}{path}"
         return await forward_request(request, target_url)
 
-    # 2. 独立子域名：universe.dreamclip.cn -> 全量直达 角色宇宙与内容独立微服务
+    # 3. 独立子域名：universe.dreamclip.cn -> 角色宇宙主站页面 / 微服务
     if host in ["universe.dreamclip.cn"]:
-        if path in ["/", ""]:
-            path = "/docs"
+        if path in ["/", "", "/universe"]:
+            return FileResponse(os.path.join(static_dir, "universe.html"))
         target_url = f"{settings.UNIVERSE_SERVICE_URL.rstrip('/')}{path}"
         return await forward_request(request, target_url)
-
-    # 3. 针对所有子域名（包含 login.dreamclip.cn / portal.dreamclip.cn 等）：
-    # 优先放行所有后端 API 路由、静态资源及探活请求，避免被前端虚拟主机 HTML 页面兜底拦截
-    if path.startswith("/api/") or path.startswith("/static/") or path == "/health":
-        return await call_next(request)
 
     # 4. 独立统一单点登录与注册入口：login.dreamclip.cn / sso.dreamclip.cn / auth.dreamclip.cn
     if host in ["login.dreamclip.cn", "sso.dreamclip.cn", "auth.dreamclip.cn"]:
@@ -157,7 +157,7 @@ async def host_virtual_routing_middleware(request: Request, call_next):
                 return FileResponse(file_path)
         return await call_next(request)
 
-    # 7. 默认主站与统一网关
+    # 7. 默认主站与统一网关 (dreamclip.cn)
     return await call_next(request)
 
 @app.get("/health", summary="健康检查端点 (供底座心跳探测)")

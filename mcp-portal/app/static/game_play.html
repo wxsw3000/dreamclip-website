@@ -88,7 +88,7 @@
     </div>
   </footer>
 
-  <script src="/static/js/api.js"></script>
+  <script src="/static/js/api.js?v=20260920_v205"></script>
   <script>
     document.addEventListener("DOMContentLoaded", async () => {
       const pathParts = window.location.pathname.split('/');
@@ -103,9 +103,10 @@
           document.getElementById("game-meta").innerText = `章节 0${game.chapter_no} · ${game.worldview_title || '深空信箱'} · 主角：${game.character_name || '雷文'}`;
           
           // 传递 SSO 令牌与用户信息给游戏 iframe
-          const token = localStorage.getItem("dreamclip_token") || "";
+          const isOnline = window.location.hostname.endsWith('dreamclip.cn');
+          const token = isOnline ? getAuthCookie('mcp_token') : (sessionStorage.getItem("mcp_token") || localStorage.getItem("mcp_token") || localStorage.getItem("dreamclip_token") || "");
           const iframe = document.getElementById("game-iframe");
-          const urlWithAuth = `${game.game_url}?token=${encodeURIComponent(token)}`;
+          const urlWithAuth = `${game.game_url}?token=${encodeURIComponent(token || '')}`;
           iframe.src = urlWithAuth;
         }
       }
