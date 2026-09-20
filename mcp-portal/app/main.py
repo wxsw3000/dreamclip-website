@@ -182,19 +182,28 @@ async def proxy_to_universe(path: str, request: Request):
     target_url = f"{settings.UNIVERSE_SERVICE_URL.rstrip('/')}/api/v1/{path}"
     return await forward_request(request, target_url)
 
-# ==================== 路径模式反向代理：基座 SuperAdmin 控制台 (/admin) ====================
-@app.api_route("/admin", methods=["GET"])
-@app.api_route("/admin/", methods=["GET"])
-async def proxy_admin_root():
-    """管理后台首页直通"""
+# ==================== DreamClip Studio 梦之厅内容工坊与站务管理 (/studio & /admin) ====================
+@app.get("/studio", include_in_schema=False)
+@app.get("/studio/", include_in_schema=False)
+@app.get("/admin", include_in_schema=False)
+@app.get("/admin/", include_in_schema=False)
+def studio_page():
+    """DreamClip 主站专属内容工坊与运营中台"""
+    return serve_static_page("studio.html")
+
+# ==================== 微服务底座 SuperAdmin 治理控制台直通 (/base) ====================
+@app.api_route("/base", methods=["GET"])
+@app.api_route("/base/", methods=["GET"])
+async def proxy_base_root():
+    """底座服务治理控制台直通"""
     async with httpx.AsyncClient(timeout=10.0) as client:
         resp = await client.get(f"{settings.BASE_SERVICE_URL.rstrip('/')}/")
         return Response(content=resp.content, status_code=resp.status_code, media_type="text/html")
 
-@app.api_route("/admin/login", methods=["GET"])
-@app.api_route("/admin/login/", methods=["GET"])
-async def proxy_admin_login():
-    """管理后台登录页直通"""
+@app.api_route("/base/login", methods=["GET"])
+@app.api_route("/base/login/", methods=["GET"])
+async def proxy_base_login():
+    """底座服务治理登录页直通"""
     async with httpx.AsyncClient(timeout=10.0) as client:
         resp = await client.get(f"{settings.BASE_SERVICE_URL.rstrip('/')}/login")
         return Response(content=resp.content, status_code=resp.status_code, media_type="text/html")

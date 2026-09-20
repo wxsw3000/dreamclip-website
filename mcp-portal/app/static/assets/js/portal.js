@@ -234,7 +234,40 @@ window.PortalOS = (function() {
     }
 
     const businessApps = myApps.filter(a => !a.is_admin);
-    const adminApps = myApps.filter(a => a.is_admin);
+    let adminApps = myApps.filter(a => a.is_admin);
+
+    if (user && (user.is_superadmin || user.username === 'superadmin' || (user.roles && user.roles.includes('ROLE_SUPER_ADMIN')))) {
+      const isOnline = window.location.hostname.endsWith('dreamclip.cn');
+      const baseConsoleUrl = isOnline ? 'https://base.dreamclip.cn/' : 'http://localhost:8000/';
+      
+      const studioApp = {
+        id: 'app-dreamclip-studio',
+        service_code: 'dreamclip-studio',
+        name: '梦之厅内容工坊',
+        sub: 'DreamClip Studio',
+        icon: '🎨',
+        gradient: 'linear-gradient(135deg, #ec4899, #8b5cf6)',
+        url: '/studio',
+        is_admin: true,
+        description: '情绪胶囊、焦点图文、AVG 互动剧场与角色信使的专属创作与运营中台',
+        health_status: 'HEALTHY'
+      };
+
+      const baseApp = {
+        id: 'app-mcp-base',
+        service_code: 'mcp-base',
+        name: '微服务底座治理',
+        sub: 'Base Console',
+        icon: '⚙️',
+        gradient: 'linear-gradient(135deg, #6366f1, #3b82f6)',
+        url: baseConsoleUrl,
+        is_admin: true,
+        description: '微服务节点治理、心跳探活、租户分配与全局系统字典配置',
+        health_status: 'HEALTHY'
+      };
+
+      adminApps = [studioApp, baseApp];
+    }
 
     if (businessApps.length === 0 && adminApps.length === 0 && user) {
       appGrid.innerHTML = `

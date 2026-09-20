@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.models.universe import Character, Worldview
 from app.schemas.common import Result
-from app.schemas.universe import CharacterOut, CharacterCreate
+from app.schemas.universe import CharacterOut, CharacterCreate, CharacterUpdate
 
 router = APIRouter(prefix="/characters", tags=["02.角色档案管理"])
 
@@ -13,7 +13,7 @@ def list_characters(
     worldview_id: Optional[int] = Query(None, description="所属世界观ID"),
     personality_color: Optional[str] = Query(None, description="性格色彩过滤 (RED/BLUE/YELLOW/GREEN)"),
     zodiac: Optional[str] = Query(None, description="星座过滤"),
-    is_active: Optional[int] = Query(1, description="状态"),
+    is_active: Optional[int] = Query(None, description="状态"),
     db: Session = Depends(get_db)
 ):
     query = db.query(Character).filter(Character.is_deleted == 0)
@@ -64,3 +64,43 @@ def create_character(req: CharacterCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(c)
     return Result.ok(data=CharacterOut.from_orm(c), message="角色档案创建成功")
+
+@router.put("/{id}", response_model=Result[CharacterOut], summary="更新角色档案")
+def update_character(id: int, req: CharacterUpdate, db: Session = Depends(get_db)):
+    c = db.query(Character).filter(Character.id == id, Character.is_deleted == 0).first()
+    if not c:
+        return Result.fail("角色档案不存在", code=404)
+
+    update_data = req.dict(exclude_unset=True)
+    if "code" in update_data and update_data["code"] != c.code:
+        exist = db.query(Character).filter(Character.code == update_data["code"], Character.id != id, Character.is_deleted == 0).first()
+        if exist:
+            return Result.fail(f"角色代码 '{update_data['code']}' 已被占用", code=400)
+
+    for k, v in update_data.items():
+        setattr(c, k, v)
+
+    db.commit()
+    db.refresh(c)
+    return Result.ok(data=CharacterOut.from_orm(c), message="角色更新成功")
+
+@router.post("/{id}/toggle", response_model=Result[CharacterOut], summary="切换角色启用状态")
+def toggle_character_status(id: int, db: Session = Depends(get_db)):
+    c = db.query(Character).filter(Character.id == id, Character.is_deleted == 0).first()
+    if not c:
+        return Result.fail("角色档案不存在", code=404)
+    c.is_active = 0 if c.is_active == 1 else 1
+    db.commit()
+    db.refresh(c)
+    status_text = "已启用" if c.is_active == 1 else "已停用"
+    return Result.ok(data=CharacterOut.from_orm(c), message=f"状态切换为：{status_text}")
+
+@router.delete("/{id}", response_model=Result[bool], summary="删除角色档案")
+def delete_character(id: int, db: Session = Depends(get_db)):
+    c = db.query(Character).filter(Character.id == id, Character.is_deleted == 0).first()
+    if not c:
+        return Result.fail("角色档案不存在", code=404)
+    c.is_deleted = 1
+    db.commit()
+    return Result.ok(data=True, message="删除成功")
+

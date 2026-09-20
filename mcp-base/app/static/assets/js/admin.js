@@ -1197,6 +1197,12 @@ window.addEventListener('DOMContentLoaded', () => {
     redirectToLogin();
   });
 
+  const navLinkStudio = document.getElementById('navLinkStudio');
+  if (navLinkStudio) {
+    const isOnline = window.location.hostname.endsWith('dreamclip.cn');
+    navLinkStudio.href = isOnline ? 'https://dreamclip.cn/studio' : 'http://localhost:3000/studio';
+  }
+
   if (tabFromUrl && document.getElementById(tabFromUrl)) {
     const tabEl = Array.from(document.querySelectorAll('.nav-item')).find(el => el.getAttribute('onclick')?.includes(tabFromUrl));
     switchTab(tabFromUrl, tabEl);

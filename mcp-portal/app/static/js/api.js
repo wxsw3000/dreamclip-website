@@ -172,6 +172,32 @@ const DreamClipAPI = {
       return await DreamClipAPI.request(`/api/universe/characters?${query}`);
     },
 
+    async createCharacter(data) {
+      return await DreamClipAPI.request("/api/universe/characters", {
+        method: "POST",
+        body: JSON.stringify(data)
+      });
+    },
+
+    async updateCharacter(id, data) {
+      return await DreamClipAPI.request(`/api/universe/characters/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data)
+      });
+    },
+
+    async toggleCharacter(id) {
+      return await DreamClipAPI.request(`/api/universe/characters/${id}/toggle`, {
+        method: "POST"
+      });
+    },
+
+    async deleteCharacter(id) {
+      return await DreamClipAPI.request(`/api/universe/characters/${id}`, {
+        method: "DELETE"
+      });
+    },
+
     async getCapsules(params = {}) {
       const query = new URLSearchParams(params).toString();
       return await DreamClipAPI.request(`/api/universe/capsules?${query}`);
@@ -181,6 +207,32 @@ const DreamClipAPI = {
       return await DreamClipAPI.request(`/api/universe/capsules/${idOrSlug}`);
     },
 
+    async createCapsule(data) {
+      return await DreamClipAPI.request("/api/universe/capsules", {
+        method: "POST",
+        body: JSON.stringify(data)
+      });
+    },
+
+    async updateCapsule(id, data) {
+      return await DreamClipAPI.request(`/api/universe/capsules/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data)
+      });
+    },
+
+    async toggleCapsule(id) {
+      return await DreamClipAPI.request(`/api/universe/capsules/${id}/toggle`, {
+        method: "POST"
+      });
+    },
+
+    async deleteCapsule(id) {
+      return await DreamClipAPI.request(`/api/universe/capsules/${id}`, {
+        method: "DELETE"
+      });
+    },
+
     async likeCapsule(id) {
       return await DreamClipAPI.request(`/api/universe/capsules/${id}/like`, { method: "POST" });
     },
@@ -188,6 +240,32 @@ const DreamClipAPI = {
     async getAvgChapters(params = {}) {
       const query = new URLSearchParams(params).toString();
       return await DreamClipAPI.request(`/api/universe/avg/chapters?${query}`);
+    },
+
+    async createAvgChapter(data) {
+      return await DreamClipAPI.request("/api/universe/avg/chapters", {
+        method: "POST",
+        body: JSON.stringify(data)
+      });
+    },
+
+    async updateAvgChapter(id, data) {
+      return await DreamClipAPI.request(`/api/universe/avg/chapters/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data)
+      });
+    },
+
+    async toggleAvgChapter(id) {
+      return await DreamClipAPI.request(`/api/universe/avg/chapters/${id}/toggle`, {
+        method: "POST"
+      });
+    },
+
+    async deleteAvgChapter(id) {
+      return await DreamClipAPI.request(`/api/universe/avg/chapters/${id}`, {
+        method: "DELETE"
+      });
     }
   },
 
@@ -236,11 +314,13 @@ async function initUserSessionUI() {
     const displayName = u.real_name || u.username;
     const isOnline = window.location.hostname.endsWith('dreamclip.cn');
     const adminBaseUrl = isOnline ? 'https://base.dreamclip.cn/' : 'http://localhost:8000/';
-    const adminLinkHtml = isSuper ? `<a href="${adminBaseUrl}" class="btn btn-outline" style="padding:0.35rem 0.85rem; font-size:0.82rem; margin-right:6px; border-color:#818cf8; color:#c7d2fe;" title="进入 MagicStar 超管控制台">⚙️ 超管控制台</a>` : '';
+    const studioLinkHtml = isSuper ? `<a href="/studio" class="btn btn-primary" style="padding:0.35rem 0.85rem; font-size:0.82rem; margin-right:6px; background:linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%); border:none; box-shadow:0 2px 10px rgba(236,72,153,0.35);" title="进入 DreamClip 梦之厅专属内容工坊">🎨 内容工坊</a>` : '';
+    const baseAdminLinkHtml = isSuper ? `<a href="${adminBaseUrl}" class="btn btn-outline" style="padding:0.35rem 0.75rem; font-size:0.82rem; margin-right:6px; border-color:rgba(255,255,255,0.18); color:#cbd5e1;" title="进入 MagicStar 底座微服务治理" target="_blank">⚙️ 底座治理</a>` : '';
 
     authContainer.innerHTML = `
-      ${adminLinkHtml}
-      <a href="/portal" class="btn btn-primary" style="padding:0.35rem 0.85rem; font-size:0.82rem; margin-right:6px;" title="进入已授权的微服务应用桌面">📱 平台应用桌面</a>
+      ${studioLinkHtml}
+      <a href="/portal" class="btn btn-outline" style="padding:0.35rem 0.85rem; font-size:0.82rem; margin-right:6px;" title="进入已授权的微服务应用桌面">📱 平台桌面</a>
+      ${baseAdminLinkHtml}
       <div class="user-badge" style="display:inline-flex; align-items:center; gap:0.4rem; background:rgba(255,255,255,0.08); padding:0.25rem 0.65rem; border-radius:20px; border:1px solid rgba(255,255,255,0.15);">
         <img class="user-avatar-mini" style="width:22px; height:22px; border-radius:50%; border:1px solid rgba(255,255,255,0.2);" src="${avatarUrl}" alt="avatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👤</text></svg>'">
         <span style="font-size:0.85rem; font-weight:600; color:#fff;">${displayName}</span>

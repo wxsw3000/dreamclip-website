@@ -1,0 +1,1611 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DreamClip Studio - 梦之厅内容工坊 · 站务运营中台</title>
+  <meta name="description" content="DreamClip Studio 梦之厅内容工坊 —— 专注情绪胶囊、角色信使立绘、AVG 互动剧场与焦点跑马灯的一体化内容创作与运营管理系统。">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎨</text></svg>">
+  <style>
+    :root {
+      --studio-bg: #090d16;
+      --studio-surface: rgba(15, 23, 42, 0.78);
+      --studio-card-bg: rgba(22, 30, 49, 0.65);
+      --studio-border: rgba(255, 255, 255, 0.1);
+      --studio-primary: #6366f1;
+      --studio-primary-glow: rgba(99, 102, 241, 0.35);
+      --studio-cyan: #06b6d4;
+      --studio-pink: #ec4899;
+      --studio-emerald: #10b981;
+      --studio-amber: #f59e0b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--studio-bg);
+      background-image: 
+        radial-gradient(circle at 15% 10%, rgba(99, 102, 241, 0.18) 0%, transparent 40%),
+        radial-gradient(circle at 85% 20%, rgba(6, 182, 212, 0.14) 0%, transparent 45%),
+        radial-gradient(circle at 50% 80%, rgba(236, 72, 153, 0.12) 0%, transparent 50%);
+      background-attachment: fixed;
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* 侧边栏 */
+    .studio-sidebar {
+      width: 260px;
+      background: rgba(11, 15, 25, 0.88);
+      border-right: 1px solid var(--studio-border);
+      backdrop-filter: blur(24px);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      z-index: 50;
+    }
+
+    .sidebar-brand {
+      padding: 24px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--studio-border);
+    }
+
+    .brand-icon {
+      font-size: 26px;
+      filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.6));
+    }
+
+    .brand-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      background: linear-gradient(135deg, #ffffff 40%, #a5b4fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-tag {
+      font-size: 0.68rem;
+      padding: 2px 7px;
+      border-radius: 6px;
+      background: rgba(99, 102, 241, 0.25);
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      color: #c7d2fe;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 18px 12px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .nav-category-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      padding: 12px 12px 6px;
+    }
+
+    .sidebar-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      background: transparent;
+      border: 1px solid transparent;
+    }
+
+    .sidebar-btn:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .sidebar-btn.active {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.25) 0%, rgba(6, 182, 212, 0.15) 100%);
+      border-color: rgba(99, 102, 241, 0.4);
+      color: #ffffff;
+      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.2);
+    }
+
+    .sidebar-btn .nav-icon {
+      font-size: 1.15rem;
+    }
+
+    .sidebar-btn .badge-counter {
+      margin-left: auto;
+      font-size: 0.72rem;
+      padding: 1px 7px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-muted);
+    }
+
+    .sidebar-footer {
+      padding: 16px;
+      border-top: 1px solid var(--studio-border);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .btn-quick-link {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .btn-quick-link:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+    }
+
+    /* 主工作区 */
+    .studio-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    /* 顶部导航条 */
+    .studio-header {
+      height: 64px;
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--studio-border);
+      background: rgba(9, 13, 22, 0.75);
+      backdrop-filter: blur(20px);
+      position: sticky;
+      top: 0;
+      z-index: 40;
+    }
+
+    .header-breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.86rem;
+      color: var(--text-muted);
+    }
+
+    .header-breadcrumb .current {
+      color: #ffffff;
+      font-weight: 700;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .user-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 12px 4px 6px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--studio-border);
+      border-radius: 24px;
+      font-size: 0.82rem;
+    }
+
+    .user-pill-avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+    }
+
+    /* 内容容器 */
+    .studio-content {
+      padding: 32px;
+      flex: 1;
+    }
+
+    .tab-view {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .tab-view.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .page-hero {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .page-title {
+      font-size: 1.45rem;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .page-desc {
+      font-size: 0.86rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* 按钮规范 */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 18px;
+      border-radius: 10px;
+      font-size: 0.86rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      text-decoration: none;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
+    }
+
+    .btn-outline {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--studio-border);
+      color: var(--text-main);
+    }
+
+    .btn-outline:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #fca5a5;
+    }
+
+    .btn-danger:hover {
+      background: rgba(239, 68, 68, 0.25);
+      border-color: #ef4444;
+      color: #ffffff;
+    }
+
+    .btn-sm {
+      padding: 4px 10px;
+      font-size: 0.78rem;
+      border-radius: 8px;
+    }
+
+    /* 统计大盘卡片 */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .kpi-card {
+      background: var(--studio-card-bg);
+      border: 1px solid var(--studio-border);
+      border-radius: 16px;
+      padding: 18px 20px;
+      backdrop-filter: blur(16px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .kpi-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+
+    .kpi-val {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.5px;
+    }
+
+    .kpi-icon {
+      position: absolute;
+      right: 18px;
+      top: 18px;
+      font-size: 24px;
+      opacity: 0.6;
+    }
+
+    /* 表格容器 */
+    .studio-table-wrap {
+      background: var(--studio-card-bg);
+      border: 1px solid var(--studio-border);
+      border-radius: 16px;
+      overflow: hidden;
+      backdrop-filter: blur(16px);
+    }
+
+    .studio-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.86rem;
+    }
+
+    .studio-table th {
+      background: rgba(255, 255, 255, 0.03);
+      padding: 14px 18px;
+      font-weight: 700;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--studio-border);
+    }
+
+    .studio-table td {
+      padding: 14px 18px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      color: #e2e8f0;
+      vertical-align: middle;
+    }
+
+    .studio-table tr:hover td {
+      background: rgba(255, 255, 255, 0.025);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .badge-success { background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.4); color: #6ee7b7; }
+    .badge-warning { background: rgba(245, 158, 11, 0.2); border: 1px solid rgba(245, 158, 11, 0.4); color: #fcd34d; }
+    .badge-draft { background: rgba(148, 163, 184, 0.15); border: 1px solid rgba(148, 163, 184, 0.3); color: #cbd5e1; }
+
+    /* 弹窗与表单 */
+    .modal-backdrop {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-backdrop.show {
+      display: flex;
+    }
+
+    .studio-modal {
+      background: #0f172a;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 680px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85);
+      animation: modalPop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes modalPop {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--studio-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+    }
+
+    .modal-body {
+      padding: 24px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #cbd5e1;
+      margin-bottom: 6px;
+    }
+
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      padding: 10px 14px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--studio-border);
+      border-radius: 10px;
+      color: #ffffff;
+      font-size: 0.88rem;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color: var(--studio-primary);
+      box-shadow: 0 0 10px rgba(99, 102, 241, 0.25);
+    }
+
+    .form-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--studio-border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    /* Toast 提示 */
+    .toast-box {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .toast-item {
+      padding: 12px 20px;
+      border-radius: 12px;
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #ffffff;
+      font-size: 0.86rem;
+      font-weight: 600;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      animation: slideIn 0.25s ease;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 左侧工坊导航 -->
+  <aside class="studio-sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">🎨</div>
+      <div>
+        <div class="brand-title">DreamClip Studio</div>
+        <span class="brand-tag">梦之厅内容工坊</span>
+      </div>
+    </div>
+
+    <div class="sidebar-nav">
+      <div class="nav-category-title">站务与内容中台</div>
+      
+      <button class="sidebar-btn active" onclick="switchStudioTab('tab-overview', this)">
+        <span class="nav-icon">📊</span>
+        <span>工坊运营大盘</span>
+      </button>
+
+      <button class="sidebar-btn" onclick="switchStudioTab('tab-banners', this)">
+        <span class="nav-icon">✨</span>
+        <span>焦点图文与跑马灯</span>
+        <span class="badge-counter" id="bannerCountBadge">0</span>
+      </button>
+
+      <button class="sidebar-btn" onclick="switchStudioTab('tab-capsules', this)">
+        <span class="nav-icon">💊</span>
+        <span>情绪胶囊与图文</span>
+        <span class="badge-counter" id="capsuleCountBadge">0</span>
+      </button>
+
+      <button class="sidebar-btn" onclick="switchStudioTab('tab-characters', this)">
+        <span class="nav-icon">🌌</span>
+        <span>角色信使与档案</span>
+        <span class="badge-counter" id="characterCountBadge">0</span>
+      </button>
+
+      <button class="sidebar-btn" onclick="switchStudioTab('tab-games', this)">
+        <span class="nav-icon">🎮</span>
+        <span>AVG 互动剧场章节</span>
+        <span class="badge-counter" id="gameCountBadge">0</span>
+      </button>
+    </div>
+
+    <div class="sidebar-footer">
+      <a href="/" class="btn-quick-link" target="_blank">
+        <span>🏛️ 查看梦之厅前台</span>
+        <span>↗</span>
+      </a>
+      <a href="/portal" class="btn-quick-link">
+        <span>📱 PortalOS 平台桌面</span>
+      </a>
+      <a href="https://base.dreamclip.cn/" id="baseConsoleLink" class="btn-quick-link" target="_blank">
+        <span>⚙️ 微服务底座治理 (Base)</span>
+        <span>↗</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- 右侧主体工作区 -->
+  <main class="studio-main">
+    
+    <!-- 顶部状态栏 -->
+    <header class="studio-header">
+      <div class="header-breadcrumb">
+        <span>DreamClip</span>
+        <span>/</span>
+        <span class="current" id="headerBreadcrumbTitle">工坊运营大盘</span>
+      </div>
+
+      <div class="header-actions">
+        <div class="user-pill" id="studioUserPill">
+          <img class="user-pill-avatar" id="studioUserAvatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=admin" alt="avatar">
+          <span id="studioUserName">站务管理员</span>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="DreamClipAPI.auth.logout()">退出</button>
+      </div>
+    </header>
+
+    <!-- 主体容器 -->
+    <div class="studio-content">
+
+      <!-- ==================== 1. 工坊运营大盘 (Overview) ==================== -->
+      <section id="tab-overview" class="tab-view active">
+        <div class="page-hero">
+          <div>
+            <h1 class="page-title">📊 站务与内容中台总览</h1>
+            <p class="page-desc">实时监控情绪胶囊、角色信使、AVG 游戏章节及焦点图文的发布数据与前台打捞动态。</p>
+          </div>
+        </div>
+
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-label">已发布情绪胶囊</div>
+            <div class="kpi-val" id="kpiCapsules" style="color:#818cf8;">0</div>
+            <div class="kpi-icon">💊</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">焦点图文与跑马灯</div>
+            <div class="kpi-val" id="kpiBanners" style="color:#06b6d4;">0</div>
+            <div class="kpi-icon">✨</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">核心角色信使</div>
+            <div class="kpi-val" id="kpiCharacters" style="color:#ec4899;">0</div>
+            <div class="kpi-icon">🌌</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">AVG 互动剧场章节</div>
+            <div class="kpi-val" id="kpiGames" style="color:#10b981;">0</div>
+            <div class="kpi-icon">🎮</div>
+          </div>
+        </div>
+
+        <!-- 快捷操作入口 -->
+        <div class="page-hero" style="margin-top: 28px;">
+          <div>
+            <h2 style="font-size: 1.15rem; font-weight: 800;">⚡ 快速内容创作通道</h2>
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:16px;">
+          <div class="kpi-card" style="cursor:pointer;" onclick="openCreateBannerModal()">
+            <div style="font-size:1.1rem; font-weight:700; margin-bottom:4px;">✨ 新增焦点图文</div>
+            <p style="font-size:0.8rem; color:var(--text-muted);">配置梦之厅顶部 16:9 轮播巨幕与走马灯</p>
+          </div>
+          <div class="kpi-card" style="cursor:pointer;" onclick="openCreateCapsuleModal()">
+            <div style="font-size:1.1rem; font-weight:700; margin-bottom:4px;">💊 撰写情绪胶囊</div>
+            <p style="font-size:0.8rem; color:var(--text-muted);">创作 800~1500 字深度治愈短文与图文切片</p>
+          </div>
+          <div class="kpi-card" style="cursor:pointer;" onclick="openCreateCharacterModal()">
+            <div style="font-size:1.1rem; font-weight:700; margin-bottom:4px;">🌌 登记角色档案</div>
+            <p style="font-size:0.8rem; color:var(--text-muted);">录入宇宙信使、立绘、专属台词与羁绊设定</p>
+          </div>
+          <div class="kpi-card" style="cursor:pointer;" onclick="openCreateGameModal()">
+            <div style="font-size:1.1rem; font-weight:700; margin-bottom:4px;">🎮 编目 AVG 剧场</div>
+            <p style="font-size:0.8rem; color:var(--text-muted);">上架 HTML5 互动轻剧场游戏独立章节</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 2. 焦点图文与跑马灯 (Banners) ==================== -->
+      <section id="tab-banners" class="tab-view">
+        <div class="page-hero">
+          <div>
+            <h1 class="page-title">✨ 梦之厅焦点图文与跑马灯管理</h1>
+            <p class="page-desc">前台 16:9 电影巨幕放映机与走马灯胶带的实时运营中枢，支持自定义光晕配色与跳转链路。</p>
+          </div>
+          <button class="btn btn-primary" onclick="openCreateBannerModal()">+ 新增焦点胶片</button>
+        </div>
+
+        <div class="studio-table-wrap">
+          <table class="studio-table">
+            <thead>
+              <tr>
+                <th style="width:70px;">帧序</th>
+                <th style="width:120px;">封面画幅</th>
+                <th>焦点主标题 / 导语</th>
+                <th style="width:140px;">标牌与光晕色</th>
+                <th style="width:120px;">跳转链接</th>
+                <th style="width:90px;">状态</th>
+                <th style="width:140px; text-align:right;">操作</th>
+              </tr>
+            </thead>
+            <tbody id="bannersTableBody">
+              <!-- 动态加载 -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ==================== 3. 情绪胶囊与图文 (Capsules) ==================== -->
+      <section id="tab-capsules" class="tab-view">
+        <div class="page-hero">
+          <div>
+            <h1 class="page-title">💊 情绪胶囊与深度图文管理</h1>
+            <p class="page-desc">梦之厅编年时序切片流核心文学资产，支持 Markdown 编辑、阅读时长估算与共鸣统计。</p>
+          </div>
+          <button class="btn btn-primary" onclick="openCreateCapsuleModal()">+ 撰写新胶囊</button>
+        </div>
+
+        <div class="studio-table-wrap">
+          <table class="studio-table">
+            <thead>
+              <tr>
+                <th style="width:60px;">ID</th>
+                <th style="width:100px;">封面</th>
+                <th>文章标题 / 摘要</th>
+                <th style="width:110px;">情绪标签</th>
+                <th style="width:110px;">关联信使</th>
+                <th style="width:100px;">字数/阅读</th>
+                <th style="width:90px;">状态</th>
+                <th style="width:140px; text-align:right;">操作</th>
+              </tr>
+            </thead>
+            <tbody id="capsulesTableBody">
+              <!-- 动态加载 -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ==================== 4. 角色信使与档案 (Characters) ==================== -->
+      <section id="tab-characters" class="tab-view">
+        <div class="page-hero">
+          <div>
+            <h1 class="page-title">🌌 角色信使与立绘档案管理</h1>
+            <p class="page-desc">宇宙核心信使角色库，包含性格光谱、立绘、星座与经典语录。</p>
+          </div>
+          <button class="btn btn-primary" onclick="openCreateCharacterModal()">+ 登记新角色</button>
+        </div>
+
+        <div class="studio-table-wrap">
+          <table class="studio-table">
+            <thead>
+              <tr>
+                <th style="width:60px;">头像</th>
+                <th style="width:140px;">角色代码 / 名称</th>
+                <th>称号与经典名言</th>
+                <th style="width:120px;">性格色彩 / 星座</th>
+                <th style="width:90px;">状态</th>
+                <th style="width:140px; text-align:right;">操作</th>
+              </tr>
+            </thead>
+            <tbody id="charactersTableBody">
+              <!-- 动态加载 -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ==================== 5. AVG 互动剧场章节 (Games) ==================== -->
+      <section id="tab-games" class="tab-view">
+        <div class="page-hero">
+          <div>
+            <h1 class="page-title">🎮 AVG 互动剧场章节管理</h1>
+            <p class="page-desc">轻量化 HTML5 互动分支剧情章节编目与试玩配置。</p>
+          </div>
+          <button class="btn btn-primary" onclick="openCreateGameModal()">+ 编目新章节</button>
+        </div>
+
+        <div class="studio-table-wrap">
+          <table class="studio-table">
+            <thead>
+              <tr>
+                <th style="width:110px;">封面</th>
+                <th style="width:160px;">章节代码 / 序号</th>
+                <th>章节名称 / 剧情导语</th>
+                <th style="width:100px;">体验时长</th>
+                <th style="width:90px;">权限</th>
+                <th style="width:90px;">状态</th>
+                <th style="width:140px; text-align:right;">操作</th>
+              </tr>
+            </thead>
+            <tbody id="gamesTableBody">
+              <!-- 动态加载 -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- ==================== 模态弹窗系统 ==================== -->
+
+  <!-- 1. 焦点图文弹窗 -->
+  <div class="modal-backdrop" id="bannerModal">
+    <div class="studio-modal">
+      <div class="modal-header">
+        <h3 class="modal-title" id="bannerModalTitle">✨ 新增焦点图文</h3>
+        <button class="btn btn-outline btn-sm" onclick="closeModal('bannerModal')">✕</button>
+      </div>
+      <form id="bannerForm" onsubmit="handleSaveBanner(event)">
+        <input type="hidden" id="banner_id">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">焦点主标题 *</label>
+            <input class="form-input" id="banner_title" required placeholder="如：打捞星穹深处每一粒失落的情绪胶囊">
+          </div>
+          <div class="form-group">
+            <label class="form-label">副标题 / 剧情导语</label>
+            <textarea class="form-textarea" id="banner_subtitle" rows="3" placeholder="简述该焦点的内容亮点或哲学金句..."></textarea>
+          </div>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">提示徽章</label>
+              <input class="form-input" id="banner_badge_text" placeholder="✨ 梦之厅 · 焦点首发">
+            </div>
+            <div class="form-group">
+              <label class="form-label">光晕主题色</label>
+              <input type="color" class="form-input" style="height:42px; padding:2px 6px;" id="banner_theme_color" value="#6366f1">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">封面海报图片 URL (建议 16:9)</label>
+            <input class="form-input" id="banner_image_url" placeholder="https://images.unsplash.com/photo-...">
+          </div>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">跳转链接 URL</label>
+              <input class="form-input" id="banner_link_url" placeholder="#clips-stream 或 /games">
+            </div>
+            <div class="form-group">
+              <label class="form-label">排序权重 (数字越小越靠前)</label>
+              <input type="number" class="form-input" id="banner_sort_order" value="0">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">发布状态</label>
+            <select class="form-select" id="banner_is_active">
+              <option value="1">🟢 立即上线展示</option>
+              <option value="0">⚪ 草稿下线</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModal('bannerModal')">取消</button>
+          <button type="submit" class="btn btn-primary">保存焦点图文</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. 情绪胶囊弹窗 -->
+  <div class="modal-backdrop" id="capsuleModal">
+    <div class="studio-modal">
+      <div class="modal-header">
+        <h3 class="modal-title" id="capsuleModalTitle">💊 撰写情绪胶囊</h3>
+        <button class="btn btn-outline btn-sm" onclick="closeModal('capsuleModal')">✕</button>
+      </div>
+      <form id="capsuleForm" onsubmit="handleSaveCapsule(event)">
+        <input type="hidden" id="capsule_id">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">文章标题 *</label>
+            <input class="form-input" id="capsule_title" required placeholder="如：深空信标的最后一封回信">
+          </div>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">唯一 Slug (URL 路径) *</label>
+              <input class="form-input" id="capsule_slug" required placeholder="deep-space-beacon-letter">
+            </div>
+            <div class="form-group">
+              <label class="form-label">登场角色信使</label>
+              <select class="form-select" id="capsule_character_id">
+                <option value="1">雷文 (Raven)</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">情绪标签</label>
+              <input class="form-input" id="capsule_mood_tag" value="治愈" placeholder="治愈 / 孤独 / 勇气 / 释怀">
+            </div>
+            <div class="form-group">
+              <label class="form-label">情绪色彩</label>
+              <select class="form-select" id="capsule_mood_color">
+                <option value="BLUE">🔵 靛蓝 (BLUE)</option>
+                <option value="PURPLE">🟣 幽紫 (PURPLE)</option>
+                <option value="YELLOW">🟡 琥珀 (YELLOW)</option>
+                <option value="RED">🔴 绯红 (RED)</option>
+                <option value="GREEN">🟢 碧绿 (GREEN)</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">封面图片 URL</label>
+            <input class="form-input" id="capsule_cover_image" placeholder="https://images.unsplash.com/...">
+          </div>
+          <div class="form-group">
+            <label class="form-label">文章摘要导语 *</label>
+            <textarea class="form-textarea" id="capsule_summary" rows="2" required placeholder="100字以内的切片精辟摘要..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">正文内容 (Markdown 格式) *</label>
+            <textarea class="form-textarea" id="capsule_content_md" rows="8" required placeholder="在此输入胶囊的 Markdown 深度散文正文..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">发布状态</label>
+            <select class="form-select" id="capsule_is_published">
+              <option value="1">🟢 立即公开发布</option>
+              <option value="0">⚪ 存为草稿</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModal('capsuleModal')">取消</button>
+          <button type="submit" class="btn btn-primary">保存发布</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. 角色信使弹窗 -->
+  <div class="modal-backdrop" id="characterModal">
+    <div class="studio-modal">
+      <div class="modal-header">
+        <h3 class="modal-title" id="characterModalTitle">🌌 登记角色信使档案</h3>
+        <button class="btn btn-outline btn-sm" onclick="closeModal('characterModal')">✕</button>
+      </div>
+      <form id="characterForm" onsubmit="handleSaveCharacter(event)">
+        <input type="hidden" id="character_id_input">
+        <div class="modal-body">
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">角色代码 *</label>
+              <input class="form-input" id="char_code" required placeholder="如：raven">
+            </div>
+            <div class="form-group">
+              <label class="form-label">角色名称 *</label>
+              <input class="form-input" id="char_name" required placeholder="如：雷文 (Raven)">
+            </div>
+          </div>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">角色称号</label>
+              <input class="form-input" id="char_title" placeholder="如：深夜情绪修补师">
+            </div>
+            <div class="form-group">
+              <label class="form-label">星座归属</label>
+              <input class="form-input" id="char_zodiac" placeholder="如：天蝎座 · 蛇夫座">
+            </div>
+          </div>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">性格色彩</label>
+              <select class="form-select" id="char_personality_color">
+                <option value="BLUE">🔵 深空蓝 (BLUE)</option>
+                <option value="PURPLE">🟣 幻梦紫 (PURPLE)</option>
+                <option value="RED">🔴 炽热红 (RED)</option>
+                <option value="YELLOW">🟡 温暖金 (YELLOW)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">头像 URL</label>
+              <input class="form-input" id="char_avatar_url" placeholder="https://api.dicebear.com/...">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">经典台词语录</label>
+            <input class="form-input" id="char_tagline" placeholder="“每一个未曾寄出的愿望，都是宇宙的一颗暗星。”">
+          </div>
+          <div class="form-group">
+            <label class="form-label">角色身世档案背景 *</label>
+            <textarea class="form-textarea" id="char_bio" rows="4" required placeholder="角色的性格设定与身世故事..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModal('characterModal')">取消</button>
+          <button type="submit" class="btn btn-primary">保存角色</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 4. AVG 剧场章节弹窗 -->
+  <div class="modal-backdrop" id="gameModal">
+    <div class="studio-modal">
+      <div class="modal-header">
+        <h3 class="modal-title" id="gameModalTitle">🎮 编目 AVG 剧场章节</h3>
+        <button class="btn btn-outline btn-sm" onclick="closeModal('gameModal')">✕</button>
+      </div>
+      <form id="gameForm" onsubmit="handleSaveGame(event)">
+        <input type="hidden" id="game_id">
+        <div class="modal-body">
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">章节代码 *</label>
+              <input class="form-input" id="game_code" required placeholder="如：chapter-01">
+            </div>
+            <div class="form-group">
+              <label class="form-label">章节序号</label>
+              <input type="number" class="form-input" id="game_no" value="1">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">章节标题 *</label>
+            <input class="form-input" id="game_name" required placeholder="如：第一章 · 失落的深空信标">
+          </div>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">体验时长 (分钟)</label>
+              <input type="number" class="form-input" id="game_playtime" value="15">
+            </div>
+            <div class="form-group">
+              <label class="form-label">游戏入口 URL *</label>
+              <input class="form-input" id="game_url" required value="/games/demo-avg/index.html">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">封面海报 URL</label>
+            <input class="form-input" id="game_cover" placeholder="https://images.unsplash.com/...">
+          </div>
+          <div class="form-group">
+            <label class="form-label">剧情概要导语</label>
+            <textarea class="form-textarea" id="game_summary" rows="3" placeholder="本章节分支剧情的核心悬念与前瞻..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModal('gameModal')">取消</button>
+          <button type="submit" class="btn btn-primary">保存章节</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast 容器 -->
+  <div class="toast-box" id="toastBox"></div>
+
+  <script src="/static/js/api.js?v=20260920_studio"></script>
+  <script>
+    // ==================== 全局状态与数据缓存 ====================
+    let rawBanners = [];
+    let rawCapsules = [];
+    let rawCharacters = [];
+    let rawGames = [];
+
+    function showToast(msg) {
+      const box = document.getElementById('toastBox');
+      const item = document.createElement('div');
+      item.className = 'toast-item';
+      item.innerText = msg;
+      box.appendChild(item);
+      setTimeout(() => item.remove(), 3000);
+    }
+
+    function openModal(id) {
+      document.getElementById(id).classList.add('show');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('show');
+    }
+
+    function switchStudioTab(tabId, btnEl) {
+      document.querySelectorAll('.tab-view').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.remove('active'));
+      const target = document.getElementById(tabId);
+      if (target) target.classList.add('active');
+      if (btnEl) btnEl.classList.add('active');
+
+      const titleMap = {
+        'tab-overview': '工坊运营大盘',
+        'tab-banners': '焦点图文与跑马灯',
+        'tab-capsules': '情绪胶囊与图文',
+        'tab-characters': '角色信使与档案',
+        'tab-games': 'AVG 互动剧场章节'
+      };
+      document.getElementById('headerBreadcrumbTitle').innerText = titleMap[tabId] || '工坊运营中台';
+    }
+
+    // ==================== 1. 加载全量数据 ====================
+    async function loadAllStudioData() {
+      // 1. 焦点图文
+      try {
+        const resBanners = await DreamClipAPI.hall.getBanners(true);
+        if (resBanners && resBanners.code === 200 && resBanners.data) {
+          rawBanners = resBanners.data;
+          renderBannersTable(rawBanners);
+          document.getElementById('bannerCountBadge').innerText = rawBanners.length;
+          document.getElementById('kpiBanners').innerText = rawBanners.length;
+        }
+      } catch (e) { console.error(e); }
+
+      // 2. 情绪胶囊
+      try {
+        const resCapsules = await DreamClipAPI.universe.getCapsules({ page: 1, page_size: 50 });
+        if (resCapsules && resCapsules.code === 200 && resCapsules.data) {
+          rawCapsules = resCapsules.data.items || [];
+          renderCapsulesTable(rawCapsules);
+          document.getElementById('capsuleCountBadge').innerText = resCapsules.data.total || rawCapsules.length;
+          document.getElementById('kpiCapsules').innerText = resCapsules.data.total || rawCapsules.length;
+        }
+      } catch (e) { console.error(e); }
+
+      // 3. 角色信使
+      try {
+        const resChars = await DreamClipAPI.universe.getCharacters();
+        if (resChars && resChars.code === 200 && resChars.data) {
+          rawCharacters = resChars.data;
+          renderCharactersTable(rawCharacters);
+          document.getElementById('characterCountBadge').innerText = rawCharacters.length;
+          document.getElementById('kpiCharacters').innerText = rawCharacters.length;
+          populateCharacterSelect(rawCharacters);
+        }
+      } catch (e) { console.error(e); }
+
+      // 4. AVG 章节
+      try {
+        const resGames = await DreamClipAPI.universe.getAvgChapters();
+        if (resGames && resGames.code === 200 && resGames.data) {
+          rawGames = resGames.data;
+          renderGamesTable(rawGames);
+          document.getElementById('gameCountBadge').innerText = rawGames.length;
+          document.getElementById('kpiGames').innerText = rawGames.length;
+        }
+      } catch (e) { console.error(e); }
+    }
+
+    function populateCharacterSelect(chars) {
+      const sel = document.getElementById('capsule_character_id');
+      if (!sel) return;
+      sel.innerHTML = chars.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+    }
+
+    // ==================== 2. 渲染焦点图文表格 ====================
+    function renderBannersTable(list) {
+      const tbody = document.getElementById('bannersTableBody');
+      if (!tbody) return;
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:2rem; color:var(--text-muted);">暂无焦点图文，请点击右上角新增</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = list.map((b, idx) => {
+        const frameNo = String(idx + 1).padStart(2, '0');
+        const isActive = b.is_active === 1;
+        return `
+          <tr>
+            <td><strong style="font-family:monospace; color:#818cf8;">#${frameNo}</strong></td>
+            <td>
+              <img src="${b.image_url || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=200'}" style="width:90px; height:50px; object-fit:cover; border-radius:6px; border:1px solid rgba(255,255,255,0.15);" alt="banner">
+            </td>
+            <td>
+              <div style="font-weight:700; color:#fff; margin-bottom:4px;">${b.title}</div>
+              <div style="font-size:0.78rem; color:var(--text-muted); line-height:1.4;">${b.subtitle || '—'}</div>
+            </td>
+            <td>
+              <span class="badge" style="background:${b.theme_color || '#6366f1'}25; color:${b.theme_color || '#6366f1'}; border:1px solid ${b.theme_color || '#6366f1'}50;">
+                ${b.badge_text || '✨ 梦之焦点'}
+              </span>
+              <div style="font-size:0.7rem; color:var(--text-dim); margin-top:3px; font-family:monospace;">${b.theme_color}</div>
+            </td>
+            <td><code style="font-size:0.75rem; color:#93c5fd;">${b.link_url}</code></td>
+            <td>
+              <span class="badge ${isActive ? 'badge-success' : 'badge-draft'}" style="cursor:pointer;" onclick="toggleBannerStatus(${b.id})" title="点击一键切换上下线">
+                ${isActive ? '🟢 上线展示' : '⚪ 已下线'}
+              </span>
+            </td>
+            <td style="text-align:right;">
+              <button class="btn btn-outline btn-sm" onclick="openEditBannerModal(${b.id})">✏️ 编辑</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteBannerItem(${b.id})">🗑️</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function openCreateBannerModal() {
+      document.getElementById('bannerModalTitle').innerText = "✨ 新增梦之厅焦点胶片";
+      document.getElementById('bannerForm').reset();
+      document.getElementById('banner_id').value = "";
+      document.getElementById('banner_theme_color').value = "#6366f1";
+      openModal('bannerModal');
+    }
+
+    function openEditBannerModal(id) {
+      const b = rawBanners.find(item => item.id === id);
+      if (!b) return;
+      document.getElementById('bannerModalTitle').innerText = "✏️ 编辑梦之厅焦点胶片";
+      document.getElementById('banner_id').value = b.id;
+      document.getElementById('banner_title').value = b.title;
+      document.getElementById('banner_subtitle').value = b.subtitle || "";
+      document.getElementById('banner_badge_text').value = b.badge_text || "";
+      document.getElementById('banner_image_url').value = b.image_url || "";
+      document.getElementById('banner_link_url').value = b.link_url || "";
+      document.getElementById('banner_theme_color').value = b.theme_color || "#6366f1";
+      document.getElementById('banner_sort_order').value = b.sort_order || 0;
+      document.getElementById('banner_is_active').value = b.is_active;
+      openModal('bannerModal');
+    }
+
+    async function handleSaveBanner(e) {
+      e.preventDefault();
+      const id = document.getElementById('banner_id').value;
+      const payload = {
+        title: document.getElementById('banner_title').value,
+        subtitle: document.getElementById('banner_subtitle').value,
+        badge_text: document.getElementById('banner_badge_text').value,
+        image_url: document.getElementById('banner_image_url').value,
+        link_url: document.getElementById('banner_link_url').value,
+        theme_color: document.getElementById('banner_theme_color').value,
+        sort_order: parseInt(document.getElementById('banner_sort_order').value || '0'),
+        is_active: parseInt(document.getElementById('banner_is_active').value)
+      };
+
+      let res;
+      if (id) {
+        res = await DreamClipAPI.hall.updateBanner(id, payload);
+      } else {
+        res = await DreamClipAPI.hall.createBanner(payload);
+      }
+
+      if (res && res.code === 200) {
+        showToast(id ? "焦点图文已更新" : "焦点图文新增成功");
+        closeModal('bannerModal');
+        loadAllStudioData();
+      } else {
+        alert(res.message || "保存失败");
+      }
+    }
+
+    async function toggleBannerStatus(id) {
+      const res = await DreamClipAPI.hall.toggleBanner(id);
+      if (res && res.code === 200) {
+        showToast("已切换展示状态");
+        loadAllStudioData();
+      }
+    }
+
+    async function deleteBannerItem(id) {
+      if (!confirm("确定要删除该焦点图文吗？")) return;
+      const res = await DreamClipAPI.hall.deleteBanner(id);
+      if (res && res.code === 200) {
+        showToast("删除成功");
+        loadAllStudioData();
+      }
+    }
+
+    // ==================== 3. 渲染情绪胶囊表格 ====================
+    function renderCapsulesTable(list) {
+      const tbody = document.getElementById('capsulesTableBody');
+      if (!tbody) return;
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:2rem; color:var(--text-muted);">暂无情绪胶囊</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = list.map(c => {
+        const isPub = c.is_published === 1;
+        return `
+          <tr>
+            <td><strong style="color:#94a3b8;">#${c.id}</strong></td>
+            <td>
+              <img src="${c.cover_image || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=200'}" style="width:75px; height:45px; object-fit:cover; border-radius:6px; border:1px solid rgba(255,255,255,0.15);" alt="cover">
+            </td>
+            <td>
+              <div style="font-weight:700; color:#fff; margin-bottom:3px;">${c.title}</div>
+              <div style="font-size:0.75rem; color:var(--text-muted); line-height:1.4; display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden;">${c.summary}</div>
+            </td>
+            <td><span class="badge" style="background:rgba(99,102,241,0.2); color:#c7d2fe; border:1px solid rgba(99,102,241,0.4);">${c.mood_tag}</span></td>
+            <td><span style="font-size:0.8rem; font-weight:600;">${c.character_name || '雷文'}</span></td>
+            <td><span style="font-size:0.78rem; color:var(--text-muted);">${c.word_count || 1200} 字 · ${c.reading_time_mins || 3}m</span></td>
+            <td>
+              <span class="badge ${isPub ? 'badge-success' : 'badge-draft'}" style="cursor:pointer;" onclick="toggleCapsuleStatus(${c.id})">
+                ${isPub ? '🟢 已发布' : '⚪ 草稿'}
+              </span>
+            </td>
+            <td style="text-align:right;">
+              <button class="btn btn-outline btn-sm" onclick="openEditCapsuleModal(${c.id})">✏️ 编辑</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteCapsuleItem(${c.id})">🗑️</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function openCreateCapsuleModal() {
+      document.getElementById('capsuleModalTitle').innerText = "💊 撰写情绪胶囊";
+      document.getElementById('capsuleForm').reset();
+      document.getElementById('capsule_id').value = "";
+      openModal('capsuleModal');
+    }
+
+    async function openEditCapsuleModal(id) {
+      const res = await DreamClipAPI.universe.getCapsuleDetail(id);
+      if (!res || res.code !== 200) return;
+      const c = res.data;
+      document.getElementById('capsuleModalTitle').innerText = "✏️ 编辑情绪胶囊";
+      document.getElementById('capsule_id').value = c.id;
+      document.getElementById('capsule_title').value = c.title;
+      document.getElementById('capsule_slug').value = c.slug;
+      document.getElementById('capsule_character_id').value = c.character_id || 1;
+      document.getElementById('capsule_mood_tag').value = c.mood_tag || '治愈';
+      document.getElementById('capsule_mood_color').value = c.mood_color || 'BLUE';
+      document.getElementById('capsule_cover_image').value = c.cover_image || "";
+      document.getElementById('capsule_summary').value = c.summary || "";
+      document.getElementById('capsule_content_md').value = c.content_md || "";
+      document.getElementById('capsule_is_published').value = c.is_published;
+      openModal('capsuleModal');
+    }
+
+    async function handleSaveCapsule(e) {
+      e.preventDefault();
+      const id = document.getElementById('capsule_id').value;
+      const payload = {
+        worldview_id: 1,
+        character_id: parseInt(document.getElementById('capsule_character_id').value || '1'),
+        title: document.getElementById('capsule_title').value,
+        slug: document.getElementById('capsule_slug').value,
+        cover_image: document.getElementById('capsule_cover_image').value,
+        summary: document.getElementById('capsule_summary').value,
+        content_md: document.getElementById('capsule_content_md').value,
+        mood_tag: document.getElementById('capsule_mood_tag').value,
+        mood_color: document.getElementById('capsule_mood_color').value,
+        is_published: parseInt(document.getElementById('capsule_is_published').value)
+      };
+
+      let res;
+      if (id) {
+        res = await DreamClipAPI.universe.updateCapsule(id, payload);
+      } else {
+        res = await DreamClipAPI.universe.createCapsule(payload);
+      }
+
+      if (res && res.code === 200) {
+        showToast(id ? "情绪胶囊已更新" : "情绪胶囊发布成功");
+        closeModal('capsuleModal');
+        loadAllStudioData();
+      } else {
+        alert(res.message || "保存失败");
+      }
+    }
+
+    async function toggleCapsuleStatus(id) {
+      const res = await DreamClipAPI.universe.toggleCapsule(id);
+      if (res && res.code === 200) {
+        showToast("已切换发布状态");
+        loadAllStudioData();
+      }
+    }
+
+    async function deleteCapsuleItem(id) {
+      if (!confirm("确定要删除该情绪胶囊吗？")) return;
+      const res = await DreamClipAPI.universe.deleteCapsule(id);
+      if (res && res.code === 200) {
+        showToast("删除成功");
+        loadAllStudioData();
+      }
+    }
+
+    // ==================== 4. 渲染角色信使表格 ====================
+    function renderCharactersTable(list) {
+      const tbody = document.getElementById('charactersTableBody');
+      if (!tbody) return;
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:2rem; color:var(--text-muted);">暂无角色档案</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = list.map(c => `
+        <tr>
+          <td><img src="${c.avatar_url}" style="width:36px; height:36px; border-radius:50%; border:1px solid rgba(255,255,255,0.2);" alt="avatar"></td>
+          <td>
+            <div style="font-weight:700; color:#fff;">${c.name}</div>
+            <code style="font-size:0.72rem; color:#818cf8;">${c.code}</code>
+          </td>
+          <td>
+            <div style="font-size:0.82rem; font-weight:600; color:#93c5fd; margin-bottom:2px;">${c.title || '核心信使'}</div>
+            <div style="font-size:0.75rem; color:var(--text-muted); font-style:italic;">${c.tagline || '“……”'}</div>
+          </td>
+          <td>
+            <span class="badge" style="background:rgba(255,255,255,0.08);">${c.personality_color} · ${c.zodiac || '星穹座'}</span>
+          </td>
+          <td>
+            <span class="badge ${c.is_active === 1 ? 'badge-success' : 'badge-draft'}" style="cursor:pointer;" onclick="toggleCharacterStatus(${c.id})">
+              ${c.is_active === 1 ? '🟢 启用' : '⚪ 停用'}
+            </span>
+          </td>
+          <td style="text-align:right;">
+            <button class="btn btn-outline btn-sm" onclick="openEditCharacterModal(${c.id})">✏️ 编辑</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteCharacterItem(${c.id})">🗑️</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function openCreateCharacterModal() {
+      document.getElementById('characterModalTitle').innerText = "🌌 登记角色信使档案";
+      document.getElementById('characterForm').reset();
+      document.getElementById('character_id_input').value = "";
+      openModal('characterModal');
+    }
+
+    function openEditCharacterModal(id) {
+      const c = rawCharacters.find(item => item.id === id);
+      if (!c) return;
+      document.getElementById('characterModalTitle').innerText = "✏️ 编辑角色档案";
+      document.getElementById('character_id_input').value = c.id;
+      document.getElementById('char_code').value = c.code;
+      document.getElementById('char_name').value = c.name;
+      document.getElementById('char_title').value = c.title || "";
+      document.getElementById('char_zodiac').value = c.zodiac || "";
+      document.getElementById('char_personality_color').value = c.personality_color || "BLUE";
+      document.getElementById('char_avatar_url').value = c.avatar_url || "";
+      document.getElementById('char_tagline').value = c.tagline || "";
+      document.getElementById('char_bio').value = c.bio || "";
+      openModal('characterModal');
+    }
+
+    async function handleSaveCharacter(e) {
+      e.preventDefault();
+      const id = document.getElementById('character_id_input').value;
+      const payload = {
+        worldview_id: 1,
+        code: document.getElementById('char_code').value,
+        name: document.getElementById('char_name').value,
+        title: document.getElementById('char_title').value,
+        zodiac: document.getElementById('char_zodiac').value,
+        personality_color: document.getElementById('char_personality_color').value,
+        avatar_url: document.getElementById('char_avatar_url').value,
+        tagline: document.getElementById('char_tagline').value,
+        bio: document.getElementById('char_bio').value
+      };
+
+      let res;
+      if (id) {
+        res = await DreamClipAPI.universe.updateCharacter(id, payload);
+      } else {
+        res = await DreamClipAPI.universe.createCharacter(payload);
+      }
+
+      if (res && res.code === 200) {
+        showToast(id ? "角色档案已更新" : "角色档案创建成功");
+        closeModal('characterModal');
+        loadAllStudioData();
+      } else {
+        alert(res.message || "保存失败");
+      }
+    }
+
+    async function toggleCharacterStatus(id) {
+      const res = await DreamClipAPI.universe.toggleCharacter(id);
+      if (res && res.code === 200) {
+        showToast("已切换角色状态");
+        loadAllStudioData();
+      }
+    }
+
+    async function deleteCharacterItem(id) {
+      if (!confirm("确定要删除该角色档案吗？")) return;
+      const res = await DreamClipAPI.universe.deleteCharacter(id);
+      if (res && res.code === 200) {
+        showToast("删除成功");
+        loadAllStudioData();
+      }
+    }
+
+    // ==================== 5. 渲染 AVG 游戏章节表格 ====================
+    function renderGamesTable(list) {
+      const tbody = document.getElementById('gamesTableBody');
+      if (!tbody) return;
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:2rem; color:var(--text-muted);">暂无 AVG 章节</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = list.map(g => `
+        <tr>
+          <td><img src="${g.cover_image || 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=200'}" style="width:80px; height:45px; object-fit:cover; border-radius:6px;" alt="cover"></td>
+          <td>
+            <div style="font-weight:700; color:#fff;">第 ${g.chapter_no || 1} 章</div>
+            <code style="font-size:0.72rem; color:#818cf8;">${g.chapter_code}</code>
+          </td>
+          <td>
+            <div style="font-weight:700; color:#93c5fd; margin-bottom:2px;">${g.chapter_name}</div>
+            <div style="font-size:0.75rem; color:var(--text-muted);">${g.summary || '—'}</div>
+          </td>
+          <td><span style="font-size:0.8rem; color:var(--text-muted);">⏱️ ${g.playtime_mins || 15} 分钟</span></td>
+          <td><span class="badge ${g.is_free ? 'badge-success' : 'badge-warning'}">${g.is_free ? '免费试玩' : '需解锁'}</span></td>
+          <td>
+            <span class="badge ${g.is_published === 1 ? 'badge-success' : 'badge-draft'}" style="cursor:pointer;" onclick="toggleGameStatus(${g.id})">
+              ${g.is_published === 1 ? '🟢 已上线' : '⚪ 已下线'}
+            </span>
+          </td>
+          <td style="text-align:right;">
+            <button class="btn btn-outline btn-sm" onclick="openEditGameModal(${g.id})">✏️ 编辑</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteGameItem(${g.id})">🗑️</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function openCreateGameModal() {
+      document.getElementById('gameModalTitle').innerText = "🎮 编目 AVG 剧场章节";
+      document.getElementById('gameForm').reset();
+      document.getElementById('game_id').value = "";
+      openModal('gameModal');
+    }
+
+    function openEditGameModal(id) {
+      const g = rawGames.find(item => item.id === id);
+      if (!g) return;
+      document.getElementById('gameModalTitle').innerText = "✏️ 编辑 AVG 章节";
+      document.getElementById('game_id').value = g.id;
+      document.getElementById('game_code').value = g.chapter_code;
+      document.getElementById('game_no').value = g.chapter_no || 1;
+      document.getElementById('game_name').value = g.chapter_name;
+      document.getElementById('game_playtime').value = g.playtime_mins || 15;
+      document.getElementById('game_url').value = g.game_url || "/games/demo-avg/index.html";
+      document.getElementById('game_cover').value = g.cover_image || "";
+      document.getElementById('game_summary').value = g.summary || "";
+      openModal('gameModal');
+    }
+
+    async function handleSaveGame(e) {
+      e.preventDefault();
+      const id = document.getElementById('game_id').value;
+      const payload = {
+        worldview_id: 1,
+        chapter_code: document.getElementById('game_code').value,
+        chapter_no: parseInt(document.getElementById('game_no').value || '1'),
+        chapter_name: document.getElementById('game_name').value,
+        playtime_mins: parseInt(document.getElementById('game_playtime').value || '15'),
+        game_url: document.getElementById('game_url').value,
+        cover_image: document.getElementById('game_cover').value,
+        summary: document.getElementById('game_summary').value
+      };
+
+      let res;
+      if (id) {
+        res = await DreamClipAPI.universe.updateAvgChapter(id, payload);
+      } else {
+        res = await DreamClipAPI.universe.createAvgChapter(payload);
+      }
+
+      if (res && res.code === 200) {
+        showToast(id ? "AVG 章节已更新" : "AVG 章节编目成功");
+        closeModal('gameModal');
+        loadAllStudioData();
+      } else {
+        alert(res.message || "保存失败");
+      }
+    }
+
+    async function toggleGameStatus(id) {
+      const res = await DreamClipAPI.universe.toggleAvgChapter(id);
+      if (res && res.code === 200) {
+        showToast("已切换章节上线状态");
+        loadAllStudioData();
+      }
+    }
+
+    async function deleteGameItem(id) {
+      if (!confirm("确定要删除该 AVG 章节吗？")) return;
+      const res = await DreamClipAPI.universe.deleteAvgChapter(id);
+      if (res && res.code === 200) {
+        showToast("删除成功");
+        loadAllStudioData();
+      }
+    }
+
+    // ==================== 初始化与权限安全校验 ====================
+    document.addEventListener("DOMContentLoaded", async () => {
+      // 检查底座链接
+      const isOnline = window.location.hostname.endsWith('dreamclip.cn');
+      const baseConsoleLink = document.getElementById('baseConsoleLink');
+      if (baseConsoleLink) {
+        baseConsoleLink.href = isOnline ? 'https://base.dreamclip.cn/' : 'http://localhost:8000/';
+      }
+
+      const user = getStoredUser();
+      if (user) {
+        document.getElementById('studioUserName').innerText = user.real_name || user.username;
+        if (user.avatar) document.getElementById('studioUserAvatar').src = user.avatar;
+      }
+
+      loadAllStudioData();
+    });
+  </script>
+</body>
+</html>

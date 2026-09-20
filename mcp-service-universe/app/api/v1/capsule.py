@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.models.universe import EmotionCapsule, Character, Worldview
 from app.schemas.common import Result, PageResult
-from app.schemas.universe import EmotionCapsuleOut, EmotionCapsuleCreate
+from app.schemas.universe import EmotionCapsuleOut, EmotionCapsuleCreate, EmotionCapsuleUpdate
 
 router = APIRouter(prefix="/capsules", tags=["03.情绪胶囊图文"])
 
@@ -17,7 +17,7 @@ def list_capsules(
     mood_tag: Optional[str] = Query(None, description="情绪标签 (治愈/孤独/勇气等)"),
     mood_color: Optional[str] = Query(None, description="情绪色彩 (RED/BLUE/YELLOW/GREEN)"),
     is_featured: Optional[int] = Query(None, description="是否精选推荐"),
-    is_published: Optional[int] = Query(1, description="发布状态"),
+    is_published: Optional[int] = Query(None, description="发布状态"),
     db: Session = Depends(get_db)
 ):
     query = db.query(EmotionCapsule).filter(EmotionCapsule.is_deleted == 0)
@@ -98,7 +98,7 @@ def create_capsule(req: EmotionCapsuleCreate, db: Session = Depends(get_db)):
         return Result.fail(f"文章Slug '{req.slug}' 已被占用", code=400)
 
     # 计算字数与阅读时长
-    word_count = len(req.content_md)
+    word_count = len(req.content_md) if req.content_md else 0
     reading_time = max(1, word_count // 300)
 
     c = EmotionCapsule(**req.dict())
@@ -108,3 +108,47 @@ def create_capsule(req: EmotionCapsuleCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(c)
     return Result.ok(data=EmotionCapsuleOut.from_orm(c), message="情绪胶囊发布成功")
+
+@router.put("/{id}", response_model=Result[EmotionCapsuleOut], summary="更新情绪胶囊")
+def update_capsule(id: int, req: EmotionCapsuleUpdate, db: Session = Depends(get_db)):
+    c = db.query(EmotionCapsule).filter(EmotionCapsule.id == id, EmotionCapsule.is_deleted == 0).first()
+    if not c:
+        return Result.fail("情绪胶囊不存在", code=404)
+
+    update_data = req.dict(exclude_unset=True)
+    if "slug" in update_data and update_data["slug"] != c.slug:
+        exist = db.query(EmotionCapsule).filter(EmotionCapsule.slug == update_data["slug"], EmotionCapsule.id != id, EmotionCapsule.is_deleted == 0).first()
+        if exist:
+            return Result.fail(f"Slug '{update_data['slug']}' 已被占用", code=400)
+
+    if "content_md" in update_data and update_data["content_md"]:
+        update_data["word_count"] = len(update_data["content_md"])
+        update_data["reading_time_mins"] = max(1, update_data["word_count"] // 300)
+
+    for k, v in update_data.items():
+        setattr(c, k, v)
+
+    db.commit()
+    db.refresh(c)
+    return Result.ok(data=EmotionCapsuleOut.from_orm(c), message="更新成功")
+
+@router.post("/{id}/toggle", response_model=Result[EmotionCapsuleOut], summary="切换发布/草稿状态")
+def toggle_capsule_status(id: int, db: Session = Depends(get_db)):
+    c = db.query(EmotionCapsule).filter(EmotionCapsule.id == id, EmotionCapsule.is_deleted == 0).first()
+    if not c:
+        return Result.fail("情绪胶囊不存在", code=404)
+    c.is_published = 0 if c.is_published == 1 else 1
+    db.commit()
+    db.refresh(c)
+    status_text = "已发布上线" if c.is_published == 1 else "已转为草稿"
+    return Result.ok(data=EmotionCapsuleOut.from_orm(c), message=f"状态切换为：{status_text}")
+
+@router.delete("/{id}", response_model=Result[bool], summary="删除情绪胶囊")
+def delete_capsule(id: int, db: Session = Depends(get_db)):
+    c = db.query(EmotionCapsule).filter(EmotionCapsule.id == id, EmotionCapsule.is_deleted == 0).first()
+    if not c:
+        return Result.fail("情绪胶囊不存在", code=404)
+    c.is_deleted = 1
+    db.commit()
+    return Result.ok(data=True, message="删除成功")
+

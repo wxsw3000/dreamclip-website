@@ -142,6 +142,50 @@ class HallBannerUpdate(BaseModel):
     sort_order: Optional[int] = None
     is_active: Optional[int] = None
 
+class EmotionCapsuleUpdate(BaseModel):
+    worldview_id: Optional[int] = None
+    character_id: Optional[int] = None
+    title: Optional[str] = None
+    slug: Optional[str] = None
+    cover_image: Optional[str] = None
+    summary: Optional[str] = None
+    content_md: Optional[str] = None
+    mood_tag: Optional[str] = None
+    mood_color: Optional[str] = None
+    reading_time_mins: Optional[int] = None
+    is_featured: Optional[int] = None
+    is_published: Optional[int] = None
+
+class CharacterUpdate(BaseModel):
+    worldview_id: Optional[int] = None
+    code: Optional[str] = None
+    name: Optional[str] = None
+    title: Optional[str] = None
+    tagline: Optional[str] = None
+    personality_color: Optional[str] = None
+    zodiac: Optional[str] = None
+    avatar_url: Optional[str] = None
+    illustration_url: Optional[str] = None
+    bio: Optional[str] = None
+    personality_desc: Optional[str] = None
+    appearance_desc: Optional[str] = None
+    sort_order: Optional[int] = None
+    is_active: Optional[int] = None
+
+class AvgChapterUpdate(BaseModel):
+    worldview_id: Optional[int] = None
+    character_id: Optional[int] = None
+    chapter_code: Optional[str] = None
+    chapter_name: Optional[str] = None
+    chapter_no: Optional[int] = None
+    cover_image: Optional[str] = None
+    summary: Optional[str] = None
+    game_url: Optional[str] = None
+    playtime_mins: Optional[int] = None
+    is_free: Optional[int] = None
+    is_published: Optional[int] = None
+    sort_order: Optional[int] = None
+
 class HallBannerOut(HallBannerBase):
     id: int
     created_at: datetime
@@ -149,3 +193,4 @@ class HallBannerOut(HallBannerBase):
 
     class Config:
         from_attributes = True
+
