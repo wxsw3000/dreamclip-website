@@ -285,18 +285,16 @@ def get_my_permitted_apps(
         is_base_app = (svc.category == "BASE" or svc.service_code == "mcp-base")
 
         # 权限校验：
-        # 1. 超级管理员：可访问全部微服务应用
-        # 2. 底座治理类应用：仅当角色拥有 mcp-base 等对应权限时可见
-        # 3. 业务类微服务应用：有角色权限或默认公开业务应用对用户可见
+        # 1. 超级管理员：天生拥有全量应用权限
+        # 2. 登录用户：严格取决于该用户所属角色是否具有该应用的权限 (service_code in allowed_service_codes)
+        # 3. 未登录访客：展示默认公开业务应用
         if is_superadmin:
             has_permission = True
-        elif is_base_app:
+        elif user is not None:
             has_permission = (svc.service_code in allowed_service_codes)
         else:
-            if len(allowed_service_codes) > 0:
-                has_permission = (svc.service_code in allowed_service_codes)
-            else:
-                has_permission = True
+            # 未登录访客
+            has_permission = (not is_base_app)
 
         if not has_permission:
             continue

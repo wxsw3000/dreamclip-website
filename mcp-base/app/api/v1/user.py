@@ -330,18 +330,23 @@ def assign_role_permissions(
     role = db.query(SysRole).filter(SysRole.id == role_id, SysRole.is_deleted == 0).first()
     if not role:
         return Result.fail("角色不存在", code=404)
+    if role.role_code in ["ROLE_SUPER_ADMIN", "ROLE_SUPERADMIN"] or role.role_level == 1:
+        return Result.fail("超级管理员天生拥有全量应用权限，无需单独赋权", code=400)
 
     all_selected_menu_ids = set(req.menu_ids or [])
     
+    # 强制包含基础门户应用权限 (mcp-portal 为所有角色必备且不可取消)
+    selected_service_codes = set(req.service_codes or [])
+    selected_service_codes.add("mcp-portal")
+
     # 自动关联所勾选微服务对应的应用权限点
-    if req.service_codes:
-        app_menus = db.query(SysMenu).filter(
-            SysMenu.service_code.in_(req.service_codes),
-            SysMenu.menu_type == "APP",
-            SysMenu.is_deleted == 0
-        ).all()
-        for am in app_menus:
-            all_selected_menu_ids.add(am.id)
+    app_menus = db.query(SysMenu).filter(
+        SysMenu.service_code.in_(list(selected_service_codes)),
+        SysMenu.menu_type == "APP",
+        SysMenu.is_deleted == 0
+    ).all()
+    for am in app_menus:
+        all_selected_menu_ids.add(am.id)
 
     menus = db.query(SysMenu).filter(SysMenu.id.in_(list(all_selected_menu_ids)), SysMenu.is_deleted == 0).all()
     role.menus = menus

@@ -166,8 +166,9 @@ window.PortalOS = (function() {
       console.warn("Failed to fetch my-apps:", e);
     }
 
-    // 兜底默认应用列表 (1 微服务 = 1 应用)
-    if (myApps.length === 0) {
+    const user = getUser();
+    // 只有在未登录访客且接口异常时才使用兜底业务应用
+    if (myApps.length === 0 && !user) {
       myApps = [
         {
           id: 'app-mcp-service-universe',
@@ -182,36 +183,30 @@ window.PortalOS = (function() {
           health_status: 'HEALTHY'
         }
       ];
-      const user = getUser();
-      if (user && (user.is_superadmin || (user.roles && user.roles.includes('ROLE_SUPER_ADMIN')))) {
-        myApps.push({
-          id: 'app-mcp-base',
-          service_code: 'mcp-base',
-          name: 'MagicStar MCP 配置治理底座',
-          sub: 'mcp-base',
-          icon: '⭐',
-          gradient: 'linear-gradient(135deg, #6366f1, #3b82f6)',
-          url: 'https://base.dreamclip.cn/',
-          is_admin: true,
-          description: '通用用户中心、多租户管理、微服务生命周期治理、20秒健康心跳巡检与统一SSO鉴权',
-          health_status: 'HEALTHY'
-        });
-      }
     }
 
     const businessApps = myApps.filter(a => !a.is_admin);
     const adminApps = myApps.filter(a => a.is_admin);
 
-    appGrid.innerHTML = businessApps.map(app => `
-      <div class="app-item" onclick="PortalOS.launchApp('${app.url}')" title="${app.description || app.name}">
-        <div class="squircle-icon" style="background:${app.gradient || 'linear-gradient(135deg, #4f46e5, #06b6d4)'};">
-          ${app.icon || '📱'}
-          <span class="app-status-badge" style="background:${app.health_status === 'HEALTHY' ? '#10b981' : '#f59e0b'};" title="微服务状态: ${app.health_status || 'HEALTHY'}"></span>
+    if (businessApps.length === 0 && adminApps.length === 0 && user) {
+      appGrid.innerHTML = `
+        <div style="grid-column: 1 / -1; padding: 48px 20px; text-align: center; color: rgba(255,255,255,0.7); font-size: 14px; background: rgba(255,255,255,0.06); border-radius: 18px; border: 1px dashed rgba(255,255,255,0.2);">
+          📭 当前角色暂未分配微服务应用权限<br>
+          <span style="font-size: 12px; color: rgba(255,255,255,0.45); margin-top: 6px; display: inline-block;">请联系超级管理员在底座控制台为您的角色赋予应用访问权限</span>
         </div>
-        <div class="app-label">${app.name}</div>
-        <div class="app-sublabel">${app.sub || app.service_code || ''}</div>
-      </div>
-    `).join('');
+      `;
+    } else {
+      appGrid.innerHTML = businessApps.map(app => `
+        <div class="app-item" onclick="PortalOS.launchApp('${app.url}')" title="${app.description || app.name}">
+          <div class="squircle-icon" style="background:${app.gradient || 'linear-gradient(135deg, #4f46e5, #06b6d4)'};">
+            ${app.icon || '📱'}
+            <span class="app-status-badge" style="background:${app.health_status === 'HEALTHY' ? '#10b981' : '#f59e0b'};" title="微服务状态: ${app.health_status || 'HEALTHY'}"></span>
+          </div>
+          <div class="app-label">${app.name}</div>
+          <div class="app-sublabel">${app.sub || app.service_code || ''}</div>
+        </div>
+      `).join('');
+    }
 
     if (adminGridSection && adminAppGrid) {
       if (adminApps.length > 0) {

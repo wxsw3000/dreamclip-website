@@ -173,6 +173,28 @@ def init_db_and_seed_data():
             db.commit()
             logger.info("Initialized core microservice registration: mcp-service-universe (Port 8081)")
 
+        # 9. 确保各核心微服务对应的 APP 权限菜单节点已生成
+        app_menus_config = [
+            ("mcp-portal", "MagicStar 统一应用门户与网关", "📱", "/portal", 1),
+            ("mcp-base", "MagicStar MCP 配置治理底座", "⭐", "/base", 2),
+            ("mcp-service-universe", "DreamClip 角色宇宙", "🌌", "/universe", 3)
+        ]
+        for code, name, icon, path, sort in app_menus_config:
+            m = db.query(SysMenu).filter(SysMenu.service_code == code, SysMenu.menu_type == "APP", SysMenu.is_deleted == 0).first()
+            if not m:
+                m = SysMenu(
+                    parent_id=0,
+                    menu_name=name,
+                    menu_type="APP",
+                    path=path,
+                    icon=icon,
+                    service_code=code,
+                    sort_order=sort,
+                    is_visible=1
+                )
+                db.add(m)
+        db.commit()
+
     finally:
         db.close()
 

@@ -493,8 +493,11 @@ async function loadRoles() {
   cachedRolesList = res.data;
 
   tbody.innerHTML = res.data.map(r => {
+    const isSuperAdminRole = (r.role_code === 'ROLE_SUPER_ADMIN' || r.role_code === 'ROLE_SUPERADMIN' || r.role_level === 1);
     let appBadges = '';
-    if (r.assigned_apps && r.assigned_apps.length > 0) {
+    if (isSuperAdminRole) {
+      appBadges = '<span class="badge" style="background:#e0e7ff; color:#4338ca; font-weight:700; font-size:12px; padding:3px 8px; border-radius:6px;">👑 天生拥有全量应用权限</span>';
+    } else if (r.assigned_apps && r.assigned_apps.length > 0) {
       appBadges = r.assigned_apps.map(app => `<span class="badge badge-tenant" style="margin:2px 3px 2px 0; font-size:11.5px; display:inline-block;">📱 ${app}</span>`).join(' ');
     } else if (r.menus && r.menus.length > 0) {
       appBadges = r.menus.map(m => `<span class="badge badge-tenant" style="margin:2px 3px 2px 0; font-size:11.5px; display:inline-block;">${m.icon || '📱'} ${m.menu_name}</span>`).join(' ');
@@ -510,9 +513,9 @@ async function loadRoles() {
         <td style="max-width:320px;">${appBadges}</td>
         <td><span class="badge ${r.status === 'ACTIVE' ? 'badge-success' : 'badge-danger'}">${r.status}</span></td>
         <td style="white-space:nowrap;">
-          <button class="btn btn-primary btn-sm" onclick="openRolePermissionsModal(${r.id})">🔑 赋予应用权限</button>
+          ${!isSuperAdminRole ? `<button class="btn btn-primary btn-sm" onclick="openRolePermissionsModal(${r.id})">🔑 赋予应用权限</button>` : ''}
           <button class="btn btn-outline btn-sm" onclick="openEditRoleModal(${r.id})">✏️ 编辑</button>
-          ${!['ROLE_SUPER_ADMIN', 'ROLE_SUPERADMIN', 'ROLE_OPERATOR'].includes(r.role_code) ? `<button class="btn btn-outline btn-sm" style="color:var(--danger)" onclick="deleteRole(${r.id})">🗑️ 删除</button>` : ''}
+          ${!isSuperAdminRole && !['ROLE_SUPER_ADMIN', 'ROLE_SUPERADMIN', 'ROLE_OPERATOR'].includes(r.role_code) ? `<button class="btn btn-outline btn-sm" style="color:var(--danger)" onclick="deleteRole(${r.id})">🗑️ 删除</button>` : ''}
         </td>
       </tr>
     `;
@@ -567,16 +570,16 @@ async function saveRole(e) {
   }
 
   if (res && res.code === 200) {
-    showToast(roleId ? "平台角色修改成功" : "平台角色创建成功！", "success");
+    showToast(roleId ? "角色已更新" : "角色创建成功", "success");
     closeModal('roleModal');
     loadRoles();
   } else {
-    showToast(res ? res.message : "保存失败", "danger");
+    showToast(res ? res.message : "操作失败", "danger");
   }
 }
 
 async function deleteRole(roleId) {
-  if (!confirm("确定要删除该平台角色吗？")) return;
+  if (!confirm("确定要删除该角色吗？")) return;
   const res = await api(`/system/roles/${roleId}`, { method: 'DELETE' });
   if (res && res.code === 200) {
     showToast("角色已删除", "success");
@@ -587,7 +590,7 @@ async function deleteRole(roleId) {
 }
 
 function toggleAppCardHighlight(checkbox) {
-  const card = checkbox.closest('.app-perm-card');
+  const card = document.getElementById(`app_perm_card_${checkbox.value}`);
   if (!card) return;
   if (checkbox.checked) {
     card.style.background = '#f0fdf4';
@@ -608,7 +611,8 @@ function selectAllApps(checked) {
 
 async function openRolePermissionsModal(roleId) {
   const role = cachedRolesList.find(r => r.id === roleId);
-  const roleName = role ? role.role_name : `ID: ${roleId}`;
+  if (!role) return;
+  const roleName = role.role_name || `ID: ${roleId}`;
 
   document.getElementById('perm_role_id').value = roleId;
   document.getElementById('permRoleModalTitle').innerText = `🔑 为角色 [${roleName}] 赋予微服务应用权限`;
@@ -637,17 +641,21 @@ async function openRolePermissionsModal(roleId) {
   }
 
   container.innerHTML = all_apps.map(app => {
-    const isChecked = (assigned_service_codes && assigned_service_codes.includes(app.service_code)) ||
+    const isPortalRequired = (app.service_code === 'mcp-portal');
+    const isChecked = isPortalRequired ||
+                      (assigned_service_codes && assigned_service_codes.includes(app.service_code)) ||
                       (assigned_menu_ids && assigned_menu_ids.includes(app.id));
     const bgStyle = isChecked ? 'background:#f0fdf4; border-color:#86efac;' : 'background:#ffffff; border-color:#e2e8f0;';
-    const statusBadge = app.health_status === 'HEALTHY' 
-      ? '<span class="badge badge-success" style="font-size:11px;">🟢 正常</span>'
-      : '<span class="badge badge-warning" style="font-size:11px;">🟡 ' + (app.health_status || 'UNKNOWN') + '</span>';
+    const statusBadge = isPortalRequired
+      ? '<span class="badge badge-info" style="font-size:11px; background:#e0e7ff; color:#4338ca; font-weight:600;">🔒 基础必备 (不可取消)</span>'
+      : (app.health_status === 'HEALTHY' 
+          ? '<span class="badge badge-success" style="font-size:11px;">🟢 正常</span>'
+          : '<span class="badge badge-warning" style="font-size:11px;">🟡 ' + (app.health_status || 'UNKNOWN') + '</span>');
 
     return `
       <div class="app-perm-card" id="app_perm_card_${app.service_code}" style="display:flex; align-items:flex-start; gap:12px; padding:12px 14px; border:1.5px solid #e2e8f0; border-radius:10px; transition:all 0.2s ease; ${bgStyle}">
-        <input type="checkbox" name="roleAppCheckbox" id="chk_app_${app.id}" value="${app.service_code}" data-menuid="${app.id}" ${isChecked ? 'checked' : ''} onchange="toggleAppCardHighlight(this)" style="margin-top:4px; width:18px; height:18px; cursor:pointer; accent-color:var(--primary);">
-        <label for="chk_app_${app.id}" style="flex:1; cursor:pointer; margin-bottom:0;">
+        <input type="checkbox" name="roleAppCheckbox" id="chk_app_${app.id}" value="${app.service_code}" data-menuid="${app.id}" ${isChecked ? 'checked' : ''} ${isPortalRequired ? 'disabled title="门户应用为平台基础入口，所有角色必须勾选且不可取消"' : ''} onchange="toggleAppCardHighlight(this)" style="margin-top:4px; width:18px; height:18px; cursor:${isPortalRequired ? 'not-allowed' : 'pointer'}; accent-color:var(--primary);">
+        <label for="chk_app_${app.id}" style="flex:1; cursor:${isPortalRequired ? 'default' : 'pointer'}; margin-bottom:0;">
           <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
             <div style="display:flex; align-items:center; gap:8px;">
               <span style="font-size:18px;">${app.icon || '📱'}</span>
@@ -687,6 +695,11 @@ async function saveRolePermissions(e) {
     const checkedBoxes = Array.from(document.querySelectorAll('input[name="roleAppCheckbox"]:checked'));
     const selectedServiceCodes = checkedBoxes.map(cb => cb.value);
     const selectedMenuIds = checkedBoxes.map(cb => parseInt(cb.dataset.menuid)).filter(Boolean);
+
+    // 门户应用每个角色都必须包含且不可取消
+    if (!selectedServiceCodes.includes('mcp-portal')) {
+      selectedServiceCodes.push('mcp-portal');
+    }
 
     const res = await api(`/system/roles/${roleId}/permissions`, {
       method: 'PUT',
