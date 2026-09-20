@@ -141,7 +141,7 @@ function refreshCurrentTab() {
 }
 
 function handleLogout() {
-  redirectToLogin();
+  redirectToLogin(true);
 }
 
 function openModal(id) {

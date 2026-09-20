@@ -93,8 +93,9 @@ function handleLogout() {
   localStorage.removeItem('mcp_user');
   localStorage.removeItem('dreamclip_token');
   localStorage.removeItem('dreamclip_user');
+  sessionStorage.clear();
   const isOnline = window.location.hostname.endsWith('dreamclip.cn');
-  window.location.href = isOnline ? 'https://login.dreamclip.cn/' : '/login';
+  window.location.href = isOnline ? 'https://login.dreamclip.cn/?logout=true' : '/login?logout=true';
 }
 
 function openModal(id) {
