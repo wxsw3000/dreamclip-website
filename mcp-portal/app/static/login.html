@@ -515,9 +515,9 @@
           <span id="btnText">登 录 统 一 身 份</span>
         </button>
 
-        <!-- 跳转至主站业务注册引导 -->
+        <!-- 注册引导 (直接通向主站通用注册地址) -->
         <div class="register-guide-bar">
-          还没有探索者账号？<a href="/register" id="toRegisterLink" class="register-link">前往角色宇宙主站注册 →</a>
+          还没有账号？<a href="/register" id="toRegisterLink" class="register-link">立即注册新账号 →</a>
         </div>
 
       </form>
@@ -539,7 +539,7 @@
     // ==================== 1. 动态校准主站注册跳转链接 ====================
     (function initLinks() {
       const isOnline = window.location.hostname.endsWith('dreamclip.cn');
-      const regUrl = isOnline ? 'https://universe.dreamclip.cn/register' : '/register';
+      const regUrl = isOnline ? 'https://dreamclip.cn/register' : '/register';
       const regLink = document.getElementById('toRegisterLink');
       if (regLink) regLink.href = regUrl;
 

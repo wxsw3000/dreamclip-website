@@ -134,7 +134,7 @@ async def host_virtual_routing_middleware(request: Request, call_next):
     # 4. 独立统一单点登录入口：login.dreamclip.cn / sso.dreamclip.cn / auth.dreamclip.cn -> 直达统一单点登录中心 (SSO)
     if host in ["login.dreamclip.cn", "sso.dreamclip.cn", "auth.dreamclip.cn"]:
         if path in ["/register", "/register.html"]:
-            return RedirectResponse(url="https://universe.dreamclip.cn/register")
+            return RedirectResponse(url="https://dreamclip.cn/register")
         if path in ["/", "", "/login", "/sso", "/auth"]:
             return FileResponse(os.path.join(static_dir, "login.html"))
         file_path = os.path.join(static_dir, path.lstrip("/"))

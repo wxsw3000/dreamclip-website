@@ -30,7 +30,7 @@ const DreamClipAPI = {
     getLoginUrl(mode = 'login') {
       const isOnline = window.location.hostname.endsWith('dreamclip.cn');
       if (mode === 'register') {
-        return isOnline ? 'https://universe.dreamclip.cn/register' : '/register';
+        return isOnline ? 'https://dreamclip.cn/register' : '/register';
       }
       const ssoHost = isOnline ? 'https://login.dreamclip.cn/' : '/login';
       const redirectParam = encodeURIComponent(window.location.href);
