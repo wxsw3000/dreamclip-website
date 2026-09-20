@@ -26,8 +26,10 @@ def register(req: RegisterRequest, db: Session = Depends(get_db)):
     if existing:
         return Result.fail(f"用户名 '{req.username}' 已被占用，请更换", code=400)
 
-    # 默认分配操作员/探索者角色
-    default_role = db.query(SysRole).filter(SysRole.role_code == "ROLE_OPERATOR").first()
+    # 默认分配平台标准注册会员角色 (ROLE_MEMBER)
+    default_role = db.query(SysRole).filter(SysRole.role_code == "ROLE_MEMBER", SysRole.is_deleted == 0).first()
+    if not default_role:
+        default_role = db.query(SysRole).filter(SysRole.role_code == "ROLE_OPERATOR", SysRole.is_deleted == 0).first()
     
     new_user = SysUser(
         username=req.username,

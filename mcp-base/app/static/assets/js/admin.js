@@ -446,7 +446,7 @@ async function openUserModal() {
   if (container) {
     container.innerHTML = cachedRolesList.map(r => `
       <label style="display:inline-flex; align-items:center; gap:6px; margin-right:14px; margin-bottom:6px; font-size:13px; font-weight:600; cursor:pointer;">
-        <input type="checkbox" name="newUserRole" value="${r.id}" ${r.role_code === 'ROLE_OPERATOR' ? 'checked' : ''}>
+        <input type="checkbox" name="newUserRole" value="${r.id}" ${r.role_code === 'ROLE_MEMBER' ? 'checked' : ''}>
         ${r.role_name} <span style="font-size:11px; color:#64748b; font-weight:normal;">(${r.role_code})</span>
       </label>
     `).join('');
@@ -494,6 +494,8 @@ async function loadRoles() {
 
   tbody.innerHTML = res.data.map(r => {
     const isSuperAdminRole = (r.role_code === 'ROLE_SUPER_ADMIN' || r.role_code === 'ROLE_SUPERADMIN' || r.role_level === 1);
+    const isSystemPresetRole = (r.is_system === 1 || ['ROLE_SUPER_ADMIN', 'ROLE_SUPERADMIN', 'ROLE_OPERATOR', 'ROLE_MEMBER'].includes(r.role_code));
+
     let appBadges = '';
     if (isSuperAdminRole) {
       appBadges = '<span class="badge" style="background:#e0e7ff; color:#4338ca; font-weight:700; font-size:12px; padding:3px 8px; border-radius:6px;">👑 天生拥有全量应用权限</span>';
@@ -505,17 +507,19 @@ async function loadRoles() {
       appBadges = '<span style="color:#94a3b8; font-size:12px;">未配置应用权限</span>';
     }
 
+    const systemTag = isSystemPresetRole ? '<span class="badge" style="background:#f1f5f9; color:#475569; font-size:11px; margin-left:6px; border:1px solid #cbd5e1;">🔒 内置</span>' : '';
+
     return `
       <tr>
         <td><code>${r.role_code}</code></td>
-        <td><strong>${r.role_name}</strong></td>
+        <td><strong>${r.role_name}</strong>${systemTag}</td>
         <td>${r.remark || '-'}</td>
         <td style="max-width:320px;">${appBadges}</td>
         <td><span class="badge ${r.status === 'ACTIVE' ? 'badge-success' : 'badge-danger'}">${r.status}</span></td>
         <td style="white-space:nowrap;">
           ${!isSuperAdminRole ? `<button class="btn btn-primary btn-sm" onclick="openRolePermissionsModal(${r.id})">🔑 赋予应用权限</button>` : ''}
           <button class="btn btn-outline btn-sm" onclick="openEditRoleModal(${r.id})">✏️ 编辑</button>
-          ${!isSuperAdminRole && !['ROLE_SUPER_ADMIN', 'ROLE_SUPERADMIN', 'ROLE_OPERATOR'].includes(r.role_code) ? `<button class="btn btn-outline btn-sm" style="color:var(--danger)" onclick="deleteRole(${r.id})">🗑️ 删除</button>` : ''}
+          ${!isSystemPresetRole ? `<button class="btn btn-outline btn-sm" style="color:var(--danger)" onclick="deleteRole(${r.id})">🗑️ 删除</button>` : `<span style="display:inline-block; font-size:12px; color:#94a3b8; margin-left:6px; user-select:none;">🔒 不可删除</span>`}
         </td>
       </tr>
     `;

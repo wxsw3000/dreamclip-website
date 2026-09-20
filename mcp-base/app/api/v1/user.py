@@ -63,8 +63,10 @@ def create_user(
         roles = db.query(SysRole).filter(SysRole.id.in_(req.role_ids), SysRole.is_deleted == 0).all()
         new_user.roles = roles
     else:
-        # 默认分配操作员角色
-        default_role = db.query(SysRole).filter(SysRole.role_code == "ROLE_OPERATOR", SysRole.is_deleted == 0).first()
+        # 默认分配平台标准注册会员角色
+        default_role = db.query(SysRole).filter(SysRole.role_code == "ROLE_MEMBER", SysRole.is_deleted == 0).first()
+        if not default_role:
+            default_role = db.query(SysRole).filter(SysRole.role_code == "ROLE_OPERATOR", SysRole.is_deleted == 0).first()
         if default_role:
             new_user.roles.append(default_role)
 
@@ -184,7 +186,7 @@ def list_roles(db: Session = Depends(get_db)):
         # 提取已赋权的应用名称清单
         assigned_apps = []
         for m in r.menus:
-            if m.menu_name and m.menu_name not in assigned_apps:
+            if m.menu_name and m.menu_name not in assigned_apps and m.is_deleted == 0:
                 assigned_apps.append(m.menu_name)
 
         role_outs.append(RoleOut(
@@ -192,6 +194,7 @@ def list_roles(db: Session = Depends(get_db)):
             role_code=r.role_code,
             role_name=r.role_name,
             role_level=r.role_level,
+            is_system=getattr(r, "is_system", 0),
             status=r.status,
             remark=r.remark,
             created_at=r.created_at,
@@ -235,6 +238,7 @@ def create_role(
         role_code=req.role_code,
         role_name=req.role_name,
         role_level=req.role_level,
+        is_system=0,
         status=req.status,
         remark=req.remark
     )
@@ -257,17 +261,18 @@ def create_role(
     db.commit()
     db.refresh(new_role)
     
-    assigned_apps = [m.menu_name for m in new_role.menus]
+    assigned_apps = [m.menu_name for m in new_role.menus if m.is_deleted == 0]
     return Result.ok(data=RoleOut(
         id=new_role.id,
         role_code=new_role.role_code,
         role_name=new_role.role_name,
         role_level=new_role.role_level,
+        is_system=0,
         status=new_role.status,
         remark=new_role.remark,
         created_at=new_role.created_at,
         assigned_apps=assigned_apps,
-        menus=[MenuSimple.model_validate(m) for m in new_role.menus]
+        menus=[MenuSimple.model_validate(m) for m in new_role.menus if m.is_deleted == 0]
     ), message="角色创建成功")
 
 @router.put("/roles/{role_id}", response_model=Result[RoleOut], summary="修改角色基础信息")
@@ -281,6 +286,10 @@ def update_role(
     if not role:
         return Result.fail("角色不存在", code=404)
 
+    # 如果是超级管理员，禁止停用状态
+    if (role.role_code in ["ROLE_SUPER_ADMIN", "ROLE_SUPERADMIN"] or role.role_level == 1) and req.status == "DISABLED":
+        return Result.fail("超级管理员角色必须保持启用状态", code=400)
+
     update_data = req.model_dump(exclude_unset=True)
     update_data.pop("service_codes", None)
     update_data.pop("menu_ids", None)
@@ -291,17 +300,18 @@ def update_role(
     db.commit()
     db.refresh(role)
     
-    assigned_apps = [m.menu_name for m in role.menus]
+    assigned_apps = [m.menu_name for m in role.menus if m.is_deleted == 0]
     return Result.ok(data=RoleOut(
         id=role.id,
         role_code=role.role_code,
         role_name=role.role_name,
         role_level=role.role_level,
+        is_system=getattr(role, "is_system", 0),
         status=role.status,
         remark=role.remark,
         created_at=role.created_at,
         assigned_apps=assigned_apps,
-        menus=[MenuSimple.model_validate(m) for m in role.menus]
+        menus=[MenuSimple.model_validate(m) for m in role.menus if m.is_deleted == 0]
     ), message="角色修改成功")
 
 @router.delete("/roles/{role_id}", response_model=Result[bool], summary="删除角色")
@@ -313,12 +323,15 @@ def delete_role(
     role = db.query(SysRole).filter(SysRole.id == role_id, SysRole.is_deleted == 0).first()
     if not role:
         return Result.fail("角色不存在", code=404)
-    if role.role_code in ["ROLE_SUPER_ADMIN", "ROLE_SUPERADMIN", "ROLE_OPERATOR"]:
-        return Result.fail(f"系统内置角色 {role.role_code} 不允许删除", code=400)
+
+    # 保护系统内置基础角色不可删除
+    protected_roles = ["ROLE_SUPER_ADMIN", "ROLE_SUPERADMIN", "ROLE_OPERATOR", "ROLE_MEMBER"]
+    if role.role_code in protected_roles or getattr(role, "is_system", 0) == 1:
+        return Result.fail(f"系统内置基础角色 '{role.role_name} ({role.role_code})' 受系统保护，不允许删除", code=400)
 
     role.is_deleted = 1
     db.commit()
-    return Result.ok(data=True, message="角色已删除")
+    return Result.ok(data=True, message=f"角色 '{role.role_name}' 已删除")
 
 @router.put("/roles/{role_id}/permissions", response_model=Result[bool], summary="为角色赋予应用清单与菜单权限")
 def assign_role_permissions(

@@ -6,6 +6,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, RedirectResponse
+from sqlalchemy import text
 
 from app.core.config import settings
 from app.core.database import engine, Base, SessionLocal
@@ -28,27 +29,79 @@ def init_db_and_seed_data():
     # 1. 自动创建所有数据表
     Base.metadata.create_all(bind=engine)
     
+    # 自动升级兼容 sys_role.is_system 字段
+    try:
+        with engine.connect() as conn:
+            try:
+                conn.execute(text("ALTER TABLE sys_role ADD COLUMN is_system SMALLINT DEFAULT 0"))
+                conn.commit()
+            except Exception:
+                pass
+    except Exception:
+        pass
+
     db = SessionLocal()
     try:
-        # 2. 检查并创建角色
+        # 2. 检查并创建/更新系统内置基础角色 (超管/运维/标准会员)
+        # 2.1 平台超级管理员
         admin_role = db.query(SysRole).filter(SysRole.role_code == "ROLE_SUPER_ADMIN").first()
         if not admin_role:
             admin_role = SysRole(
                 role_code="ROLE_SUPER_ADMIN",
                 role_name="平台超级管理员",
                 role_level=1,
-                remark="拥有制造能力平台底座所有管理权限"
+                is_system=1,
+                status="ACTIVE",
+                remark="拥有全量微服务与底座治理最高控制权限 (系统内置/不可删除/全量授权)"
             )
-            operator_role = SysRole(
-                role_code="ROLE_OPERATOR",
-                role_name="系统操作员",
-                role_level=10,
-                remark="微服务常规业务操作权限"
-            )
-            db.add_all([admin_role, operator_role])
+            db.add(admin_role)
             db.commit()
             db.refresh(admin_role)
-            logger.info("Initialized system roles: ROLE_SUPER_ADMIN, ROLE_OPERATOR")
+            logger.info("Initialized system role: ROLE_SUPER_ADMIN")
+        else:
+            if getattr(admin_role, "is_system", 0) != 1:
+                admin_role.is_system = 1
+                db.commit()
+
+        # 2.2 系统运维操作员
+        operator_role = db.query(SysRole).filter(SysRole.role_code == "ROLE_OPERATOR").first()
+        if not operator_role:
+            operator_role = SysRole(
+                role_code="ROLE_OPERATOR",
+                role_name="系统运维操作员",
+                role_level=10,
+                is_system=1,
+                status="ACTIVE",
+                remark="微服务与底座常规业务运维操作权限 (系统内置/不可删除)"
+            )
+            db.add(operator_role)
+            db.commit()
+            db.refresh(operator_role)
+            logger.info("Initialized system role: ROLE_OPERATOR")
+        else:
+            if getattr(operator_role, "is_system", 0) != 1:
+                operator_role.is_system = 1
+                db.commit()
+
+        # 2.3 平台标准注册会员 (所有注册用户默认角色模板)
+        member_role = db.query(SysRole).filter(SysRole.role_code == "ROLE_MEMBER").first()
+        if not member_role:
+            member_role = SysRole(
+                role_code="ROLE_MEMBER",
+                role_name="平台标准注册会员",
+                role_level=20,
+                is_system=1,
+                status="ACTIVE",
+                remark="平台默认注册用户角色，享有门户与公开业务微服务访问权限 (系统内置/不可删除)"
+            )
+            db.add(member_role)
+            db.commit()
+            db.refresh(member_role)
+            logger.info("Initialized system role: ROLE_MEMBER")
+        else:
+            if getattr(member_role, "is_system", 0) != 1:
+                member_role.is_system = 1
+                db.commit()
 
         # 3. 检查并创建内置 superadmin 账号
         superadmin = db.query(SysUser).filter(SysUser.username == settings.SUPERADMIN_USERNAME).first()
@@ -194,6 +247,23 @@ def init_db_and_seed_data():
                 )
                 db.add(m)
         db.commit()
+
+        # 10. 为系统内置角色赋予默认微服务应用权限 (若未配置)
+        portal_app = db.query(SysMenu).filter(SysMenu.service_code == "mcp-portal", SysMenu.menu_type == "APP", SysMenu.is_deleted == 0).first()
+        base_app = db.query(SysMenu).filter(SysMenu.service_code == "mcp-base", SysMenu.menu_type == "APP", SysMenu.is_deleted == 0).first()
+        universe_app = db.query(SysMenu).filter(SysMenu.service_code == "mcp-service-universe", SysMenu.menu_type == "APP", SysMenu.is_deleted == 0).first()
+
+        # 为 ROLE_OPERATOR 默认赋予 portal, base, universe
+        if operator_role and len(operator_role.menus) == 0:
+            operator_role.menus = [m for m in [portal_app, base_app, universe_app] if m]
+            db.commit()
+            logger.info("Initialized default app permissions for ROLE_OPERATOR (Portal, Base, Universe)")
+
+        # 为 ROLE_MEMBER 默认赋予 portal, universe (业务应用)
+        if member_role and len(member_role.menus) == 0:
+            member_role.menus = [m for m in [portal_app, universe_app] if m]
+            db.commit()
+            logger.info("Initialized default app permissions for ROLE_MEMBER (Portal, Universe)")
 
     finally:
         db.close()

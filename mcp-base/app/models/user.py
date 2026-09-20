@@ -42,7 +42,8 @@ class SysRole(BaseModel):
     
     role_code = Column(String(64), unique=True, nullable=False, index=True, comment="角色编码")
     role_name = Column(String(64), nullable=False, comment="角色名称")
-    role_level = Column(Integer, default=10, comment="角色等级 (1-超管, 5-租户管理员, 10-普通操作员)")
+    role_level = Column(Integer, default=10, comment="角色等级 (1-超管, 10-普通操作员, 20-注册会员)")
+    is_system = Column(SmallInteger, default=0, nullable=False, comment="是否系统内置角色 (1-是, 0-否)")
     status = Column(String(16), default="ACTIVE", nullable=False, comment="状态")
     remark = Column(String(255), nullable=True, comment="角色说明")
 

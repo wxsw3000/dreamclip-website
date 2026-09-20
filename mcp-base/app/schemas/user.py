@@ -55,6 +55,7 @@ class RoleOut(BaseModel):
     role_code: str
     role_name: str
     role_level: int
+    is_system: int = 0
     status: str
     remark: Optional[str] = None
     created_at: datetime
