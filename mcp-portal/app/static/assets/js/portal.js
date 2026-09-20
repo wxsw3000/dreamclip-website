@@ -27,10 +27,26 @@ window.PortalOS = (function() {
   }
 
   function getToken() {
-    return getAuthCookie('mcp_token') || localStorage.getItem('mcp_token') || localStorage.getItem('dreamclip_token');
+    const isOnline = window.location.hostname.endsWith('dreamclip.cn');
+    if (isOnline) {
+      const cookieToken = getAuthCookie('mcp_token');
+      if (!cookieToken) {
+        localStorage.removeItem('mcp_token');
+        localStorage.removeItem('mcp_user');
+        localStorage.removeItem('dreamclip_token');
+        localStorage.removeItem('dreamclip_user');
+        return null;
+      }
+      return cookieToken;
+    }
+    return localStorage.getItem('mcp_token') || localStorage.getItem('dreamclip_token');
   }
 
   function getUser() {
+    const isOnline = window.location.hostname.endsWith('dreamclip.cn');
+    if (isOnline && !getAuthCookie('mcp_token')) {
+      return null;
+    }
     try {
       const rawCookie = getAuthCookie('mcp_user');
       const raw = rawCookie || localStorage.getItem('mcp_user') || localStorage.getItem('dreamclip_user');

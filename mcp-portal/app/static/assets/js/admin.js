@@ -23,10 +23,27 @@ function clearAuthCookie(name) {
 }
 
 function getToken() {
-  return getAuthCookie('mcp_token') || localStorage.getItem('mcp_token') || localStorage.getItem('dreamclip_token');
+  const isOnline = window.location.hostname.endsWith('dreamclip.cn');
+  if (isOnline) {
+    const cookieToken = getAuthCookie('mcp_token');
+    if (!cookieToken) {
+      // 线上环境若主域 SSO Cookie 已被注销，彻底清理本地孤立缓存并视作未登录
+      localStorage.removeItem('mcp_token');
+      localStorage.removeItem('mcp_user');
+      localStorage.removeItem('dreamclip_token');
+      localStorage.removeItem('dreamclip_user');
+      return null;
+    }
+    return cookieToken;
+  }
+  return localStorage.getItem('mcp_token') || localStorage.getItem('dreamclip_token');
 }
 
 function getUser() {
+  const isOnline = window.location.hostname.endsWith('dreamclip.cn');
+  if (isOnline && !getAuthCookie('mcp_token')) {
+    return null;
+  }
   try {
     const rawCookie = getAuthCookie('mcp_user');
     const raw = rawCookie || localStorage.getItem('mcp_user') || localStorage.getItem('dreamclip_user');
@@ -952,16 +969,29 @@ window.addEventListener('DOMContentLoaded', () => {
     redirectToLogin();
     return;
   }
-  const user = getUser();
-  if (user) {
-    document.getElementById('userName').innerText = user.username || 'superadmin';
-    document.getElementById('avatarText').innerText = (user.username || 'SA').substring(0, 2).toUpperCase();
-    if (user.is_superadmin) {
+
+  // 严格调用 /auth/me 校验当前在线凭证的合法性
+  api('/auth/me').then(res => {
+    if (!res || res.code !== 200 || !res.data) {
+      redirectToLogin();
+      return;
+    }
+    const freshUser = res.data;
+    setAuthCookie('mcp_user', JSON.stringify(freshUser), 7);
+    setAuthCookie('dreamclip_user', JSON.stringify(freshUser), 7);
+    localStorage.setItem('mcp_user', JSON.stringify(freshUser));
+    localStorage.setItem('dreamclip_user', JSON.stringify(freshUser));
+
+    document.getElementById('userName').innerText = freshUser.username || 'superadmin';
+    document.getElementById('avatarText').innerText = (freshUser.username || 'SA').substring(0, 2).toUpperCase();
+    if (freshUser.is_superadmin) {
       document.getElementById('userRoleTag').innerText = "超级管理员";
     } else {
-      document.getElementById('userRoleTag').innerText = (user.roles && user.roles.length > 0) ? user.roles[0] : (user.role_name || "平台用户");
+      document.getElementById('userRoleTag').innerText = (freshUser.roles && freshUser.roles.length > 0) ? freshUser.roles[0] : (freshUser.role_name || "平台用户");
     }
-  }
+  }).catch(() => {
+    redirectToLogin();
+  });
 
   if (tabFromUrl && document.getElementById(tabFromUrl)) {
     const tabEl = Array.from(document.querySelectorAll('.nav-item')).find(el => el.getAttribute('onclick')?.includes(tabFromUrl));
