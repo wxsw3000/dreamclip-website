@@ -940,7 +940,8 @@
         if (res && res.code === 200 && res.data) {
           handleAuthSuccess(res.data.access_token, res.data.user_info, false);
         } else {
-          showToast(res ? res.message : "登录失败，请检查账号密码", "error");
+          const errMsg = (res && (res.message || res.detail)) || `登录失败 (HTTP ${resp.status})`;
+          showToast(errMsg, "error");
           card.classList.add('shake');
           setTimeout(() => card.classList.remove('shake'), 500);
           btn.disabled = false;
@@ -1018,7 +1019,8 @@
         if (res && res.code === 200 && res.data) {
           handleAuthSuccess(res.data.access_token, res.data.user_info, true);
         } else {
-          showToast(res ? res.message : "注册失败，请更换用户名重试", "error");
+          const errMsg = (res && (res.message || res.detail)) || `注册失败 (HTTP ${resp.status})`;
+          showToast(errMsg, "error");
           card.classList.add('shake');
           setTimeout(() => card.classList.remove('shake'), 500);
           btn.disabled = false;

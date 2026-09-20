@@ -1,3 +1,4 @@
+import logging
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
@@ -17,128 +18,149 @@ from app.schemas.auth import (
     MyAppItem
 )
 
+logger = logging.getLogger("mcp-base.auth")
 router = APIRouter(prefix="/auth", tags=["01.认证与身份中心"])
 
 @router.post("/register", response_model=Result[TokenResponse], summary="用户注册")
 def register(req: RegisterRequest, db: Session = Depends(get_db)):
-    # 检查用户名是否已存在
-    existing = db.query(SysUser).filter(SysUser.username == req.username, SysUser.is_deleted == 0).first()
-    if existing:
-        return Result.fail(f"用户名 '{req.username}' 已被占用，请更换", code=400)
+    try:
+        # 检查用户名是否已存在
+        existing = db.query(SysUser).filter(SysUser.username == req.username, SysUser.is_deleted == 0).first()
+        if existing:
+            return Result.fail(f"用户名 '{req.username}' 已被占用，请更换", code=400)
 
-    # 默认分配平台标准注册会员角色 (ROLE_MEMBER)
-    default_role = db.query(SysRole).filter(SysRole.role_code == "ROLE_MEMBER", SysRole.is_deleted == 0).first()
-    if not default_role:
-        default_role = db.query(SysRole).filter(SysRole.role_code == "ROLE_OPERATOR", SysRole.is_deleted == 0).first()
-    
-    new_user = SysUser(
-        username=req.username,
-        password_hash=get_password_hash(req.password),
-        real_name=req.real_name or req.username,
-        email=req.email,
-        avatar=req.avatar or f"https://api.dicebear.com/7.x/bottts/svg?seed={req.username}",
-        is_superadmin=0,
-        tenant_code="SYSTEM",
-        status="ACTIVE",
-        remark="自主注册用户"
-    )
-    if default_role:
-        new_user.roles.append(default_role)
+        # 默认分配平台标准注册会员角色 (ROLE_MEMBER)
+        default_role = db.query(SysRole).filter(SysRole.role_code == "ROLE_MEMBER", SysRole.is_deleted == 0).first()
+        if not default_role:
+            default_role = db.query(SysRole).filter(SysRole.role_code == "ROLE_OPERATOR", SysRole.is_deleted == 0).first()
+        
+        new_user = SysUser(
+            username=req.username,
+            password_hash=get_password_hash(req.password),
+            real_name=req.real_name or req.username,
+            email=req.email,
+            avatar=req.avatar or f"https://api.dicebear.com/7.x/bottts/svg?seed={req.username}",
+            is_superadmin=0,
+            tenant_code="SYSTEM",
+            status="ACTIVE",
+            remark="自主注册用户"
+        )
+        if default_role:
+            new_user.roles.append(default_role)
 
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
 
-    # 生成 Token
-    role_codes = [r.role_code for r in new_user.roles]
-    extra_data = {
-        "user_id": new_user.id,
-        "is_superadmin": False,
-        "roles": role_codes
-    }
-    access_token = create_access_token(subject=new_user.username, extra_data=extra_data)
+        # 生成 Token
+        role_codes = [r.role_code for r in new_user.roles] if new_user.roles else ["ROLE_MEMBER"]
+        extra_data = {
+            "user_id": new_user.id,
+            "is_superadmin": False,
+            "roles": role_codes
+        }
+        access_token = create_access_token(subject=new_user.username, extra_data=extra_data)
 
-    user_info = UserInfoResponse(
-        id=new_user.id,
-        username=new_user.username,
-        real_name=new_user.real_name,
-        email=new_user.email,
-        phone=new_user.phone,
-        avatar=new_user.avatar,
-        personality_color=req.personality_color or "BLUE",
-        zodiac=req.zodiac or "天秤座",
-        unlocked_data=None,
-        is_superadmin=False,
-        roles=role_codes,
-        permissions=[]
-    )
+        user_info = UserInfoResponse(
+            id=new_user.id,
+            username=new_user.username,
+            real_name=new_user.real_name,
+            email=new_user.email,
+            phone=new_user.phone,
+            avatar=new_user.avatar,
+            personality_color=req.personality_color or "BLUE",
+            zodiac=req.zodiac or "天秤座",
+            unlocked_data=None,
+            is_superadmin=False,
+            roles=role_codes,
+            permissions=[]
+        )
 
-    token_resp = TokenResponse(
-        access_token=access_token,
-        token_type="Bearer",
-        expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        user_info=user_info
-    )
-    return Result.ok(data=token_resp, message="注册成功，欢迎开启应用平台！")
+        token_resp = TokenResponse(
+            access_token=access_token,
+            token_type="Bearer",
+            expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+            user_info=user_info
+        )
+        logger.info("User registered successfully: %s (ID: %s, Role: %s)", new_user.username, new_user.id, role_codes)
+        return Result.ok(data=token_resp, message="注册成功，欢迎开启应用平台！")
+    except Exception as e:
+        db.rollback()
+        logger.error("User registration error for %s: %s", req.username, e, exc_info=True)
+        return Result.fail(f"注册处理失败: {str(e)}", code=500)
 
 @router.post("/login", response_model=Result[TokenResponse], summary="用户与管理员登录")
 def login(req: LoginRequest, db: Session = Depends(get_db)):
-    user = db.query(SysUser).filter(
-        SysUser.username == req.username,
-        SysUser.is_deleted == 0
-    ).first()
+    try:
+        user = db.query(SysUser).filter(
+            SysUser.username == req.username,
+            SysUser.is_deleted == 0
+        ).first()
 
-    if not user or not verify_password(req.password, user.password_hash):
-        db.add(SysLoginLog(username=req.username, status="FAIL", msg="用户名或密码错误"))
-        db.commit()
-        return Result.fail("用户名或密码错误", code=400)
+        if not user or not verify_password(req.password, user.password_hash):
+            try:
+                db.add(SysLoginLog(username=req.username, status="FAIL", msg="用户名或密码错误"))
+                db.commit()
+            except Exception:
+                db.rollback()
+            return Result.fail("用户名或密码错误", code=400)
 
-    if user.status != "ACTIVE":
-        db.add(SysLoginLog(username=req.username, status="FAIL", msg="账号已被停用"))
-        db.commit()
-        return Result.fail("该账号已被管理员停用，请联系超级管理员", code=403)
+        if user.status != "ACTIVE":
+            try:
+                db.add(SysLoginLog(username=req.username, status="FAIL", msg="账号已被停用"))
+                db.commit()
+            except Exception:
+                db.rollback()
+            return Result.fail("该账号已被管理员停用，请联系超级管理员", code=403)
 
-    # 收集角色与权限
-    role_codes = [r.role_code for r in user.roles if r.status == "ACTIVE"]
-    permissions = []
-    for r in user.roles:
-        for m in r.menus:
-            if m.permission and m.is_visible:
-                permissions.append(m.permission)
+        # 收集角色与权限
+        role_codes = [r.role_code for r in user.roles if r.status == "ACTIVE"]
+        permissions = []
+        for r in user.roles:
+            for m in r.menus:
+                if m.permission and m.is_visible:
+                    permissions.append(m.permission)
 
-    # 生成 Token 载荷
-    extra_data = {
-        "user_id": user.id,
-        "is_superadmin": bool(user.is_superadmin),
-        "roles": role_codes
-    }
-    access_token = create_access_token(subject=user.username, extra_data=extra_data)
+        # 生成 Token 载荷
+        extra_data = {
+            "user_id": user.id,
+            "is_superadmin": bool(user.is_superadmin),
+            "roles": role_codes
+        }
+        access_token = create_access_token(subject=user.username, extra_data=extra_data)
 
-    user_info = UserInfoResponse(
-        id=user.id,
-        username=user.username,
-        real_name=user.real_name,
-        email=user.email,
-        phone=user.phone,
-        avatar=user.avatar,
-        personality_color="BLUE",
-        zodiac=None,
-        unlocked_data=None,
-        is_superadmin=bool(user.is_superadmin),
-        roles=role_codes,
-        permissions=list(set(permissions))
-    )
+        user_info = UserInfoResponse(
+            id=user.id,
+            username=user.username,
+            real_name=user.real_name,
+            email=user.email,
+            phone=user.phone,
+            avatar=user.avatar,
+            personality_color="BLUE",
+            zodiac=None,
+            unlocked_data=None,
+            is_superadmin=bool(user.is_superadmin),
+            roles=role_codes,
+            permissions=list(set(permissions))
+        )
 
-    db.add(SysLoginLog(username=user.username, status="SUCCESS", msg="登录成功"))
-    db.commit()
+        try:
+            db.add(SysLoginLog(username=user.username, status="SUCCESS", msg="登录成功"))
+            db.commit()
+        except Exception:
+            db.rollback()
 
-    token_resp = TokenResponse(
-        access_token=access_token,
-        token_type="Bearer",
-        expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        user_info=user_info
-    )
-    return Result.ok(data=token_resp, message="登录成功")
+        token_resp = TokenResponse(
+            access_token=access_token,
+            token_type="Bearer",
+            expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+            user_info=user_info
+        )
+        return Result.ok(data=token_resp, message="登录成功")
+    except Exception as e:
+        db.rollback()
+        logger.error("Login error for %s: %s", req.username, e, exc_info=True)
+        return Result.fail(f"登录处理失败: {str(e)}", code=500)
 
 @router.get("/me", response_model=Result[UserInfoResponse], summary="获取当前登录用户信息与画像")
 def get_current_user_info(payload: dict = Depends(get_current_user_payload), db: Session = Depends(get_db)):

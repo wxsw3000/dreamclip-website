@@ -24,21 +24,50 @@ from app.api.v1.router import api_v1_router
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s - %(message)s")
 logger = logging.getLogger("mcp-base")
 
+def auto_migrate_db_columns():
+    """自动检测并补齐数据表中新增的字段 (兼容 MySQL 与 SQLite)"""
+    try:
+        from sqlalchemy import inspect
+        inspector = inspect(engine)
+        existing_tables = inspector.get_table_names()
+        
+        for table_name, table in Base.metadata.tables.items():
+            if table_name not in existing_tables:
+                continue
+            existing_cols = {col["name"] for col in inspector.get_columns(table_name)}
+            for col in table.columns:
+                if col.name not in existing_cols:
+                    col_type = col.type.compile(engine.dialect)
+                    default_clause = ""
+                    if col.default is not None and col.default.arg is not None:
+                        default_clause = f" DEFAULT {col.default.arg}"
+                    elif col.nullable:
+                        default_clause = " DEFAULT NULL"
+                    else:
+                        default_clause = " DEFAULT 0"
+                    
+                    is_sqlite = (engine.dialect.name == "sqlite")
+                    if is_sqlite:
+                        alter_sql = f"ALTER TABLE {table_name} ADD COLUMN {col.name} {col_type}{default_clause}"
+                    else:
+                        alter_sql = f"ALTER TABLE `{table_name}` ADD COLUMN `{col.name}` {col_type}{default_clause}"
+                    
+                    try:
+                        with engine.begin() as conn:
+                            conn.execute(text(alter_sql))
+                        logger.info("Auto-migrated missing column: %s.%s (%s)", table_name, col.name, col_type)
+                    except Exception as col_err:
+                        logger.warning("Could not auto-add column %s.%s: %s", table_name, col.name, col_err)
+    except Exception as e:
+        logger.warning("Auto-migration check encountered error: %s", e)
+
 def init_db_and_seed_data():
     """初始化数据库表并注入基础种子数据 (包含内置 superadmin 与预制数据)"""
     # 1. 自动创建所有数据表
     Base.metadata.create_all(bind=engine)
     
-    # 自动升级兼容 sys_role.is_system 字段
-    try:
-        with engine.connect() as conn:
-            try:
-                conn.execute(text("ALTER TABLE sys_role ADD COLUMN is_system SMALLINT DEFAULT 0"))
-                conn.commit()
-            except Exception:
-                pass
-    except Exception:
-        pass
+    # 2. 自动检测并升级已有表缺失的列字段
+    auto_migrate_db_columns()
 
     db = SessionLocal()
     try:
