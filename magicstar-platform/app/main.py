@@ -406,8 +406,14 @@ async def host_virtual_routing_middleware(request: Request, call_next):
             return FileResponse(os.path.join(static_dir, "index.html"))
         return await call_next(request)
 
-    # 5. 主站子域名：dreamclip.cn / universe.dreamclip.cn -> 转发至 dreamclip 业务节点
-    if host in ["universe.dreamclip.cn", "game.dreamclip.cn"]:
+    # 5. 主站子域名：dreamclip.cn / www.dreamclip.cn / universe.dreamclip.cn -> 转发至 dreamclip 业务节点
+    if host in ["dreamclip.cn", "www.dreamclip.cn", "universe.dreamclip.cn", "game.dreamclip.cn", "games.dreamclip.cn"]:
+        target_url = f"{settings.DREAMCLIP_SERVICE_URL.rstrip('/')}{path}"
+        return await forward_request(request, target_url)
+
+    # 6. 业务主站路径智能代理转发 (梦之厅、内容工坊、AVG游戏、胶囊阅读、合规页面)
+    business_prefixes = ["/studio", "/capsule", "/character", "/games", "/game", "/about", "/privacy", "/terms", "/contact", "/universe"]
+    if any(path == prefix or path.startswith(prefix + "/") or path.startswith(prefix) for prefix in business_prefixes):
         target_url = f"{settings.DREAMCLIP_SERVICE_URL.rstrip('/')}{path}"
         return await forward_request(request, target_url)
 

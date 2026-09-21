@@ -25,7 +25,7 @@ COPY . /app
 # 复制 supervisor 守护进程配置
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# 暴露平台底座端口 (8000) 与业务服务端口 (8081)
-EXPOSE 8000 8081
+# 暴露主网关总入口端口 (80) 以及内部微服务端口 (8000, 8081)
+EXPOSE 80 8000 8081
 
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
