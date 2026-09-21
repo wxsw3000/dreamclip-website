@@ -377,9 +377,18 @@ async def forward_request(request: Request, target_url: str) -> Response:
 async def host_virtual_routing_middleware(request: Request, call_next):
     path = request.url.path
 
-    # 1. 优先放行所有底座后端 API 路由、静态资源及探活请求
-    if path.startswith("/api/v1/") or path.startswith("/static/") or path == "/health" or path == "/docs" or path == "/openapi.json":
+    # 1. 优先放行所有底座后端 API 路由及探活请求
+    if path.startswith("/api/v1/") or path == "/health" or path == "/docs" or path == "/openapi.json":
         return await call_next(request)
+
+    # 1.1 静态资源智能处理：若底座自身存在则直出，否则反代至 dreamclip-service 业务静态目录
+    if path.startswith("/static/"):
+        rel_path = path[len("/static/"):].lstrip("/")
+        local_file = os.path.join(static_dir, rel_path)
+        if os.path.exists(local_file) and os.path.isfile(local_file):
+            return FileResponse(local_file)
+        target_url = f"{settings.DREAMCLIP_SERVICE_URL.rstrip('/')}{path}"
+        return await forward_request(request, target_url)
 
     raw_host = request.headers.get("host", "")
     host = raw_host.split(":")[0].strip().lower()
