@@ -3,35 +3,30 @@ chcp 65001 >nul
 cd /d "%~dp0"
 cls
 echo ================================================================================
-echo             DreamClip Microservice Platform Launcher (v1.0)
+echo             MagicStar & DreamClip 微服务平台一键启动 (v2.0)
 echo ================================================================================
 echo.
 
-echo [1/3] Starting DreamClip-Base (Port 8000)...
-start "DreamClip-Base [8000]" cmd /k "cd /d "%~dp0mcp-base" && python run_server.py"
+echo [1/2] 正在启动 MagicStarPlatform 平台底座 (Port 8000)...
+start "MagicStarPlatform [8000]" cmd /k "cd /d "%~dp0magicstar-platform" && python run_server.py"
 
 ping 127.0.0.1 -n 3 >nul
 
-echo [2/3] Starting DreamClip-Service-Universe (Port 8081)...
-start "DreamClip-Universe [8081]" cmd /k "cd /d "%~dp0mcp-service-universe" && python run_server.py"
-
-ping 127.0.0.1 -n 3 >nul
-
-echo [3/3] Starting DreamClip-Portal (Port 3000)...
-start "DreamClip-Portal [3000]" cmd /k "cd /d "%~dp0mcp-portal" && python run_server.py"
+echo [2/2] 正在启动 DreamClip 梦之厅业务微服务 (Port 8081)...
+start "DreamClip-Service [8081]" cmd /k "cd /d "%~dp0dreamclip" && python run_server.py"
 
 echo.
 echo ================================================================================
-echo   DreamClip Services Launched Successfully!
+echo   ✨ 全部核心服务已并发启动！
 echo.
-echo   [Portal Web]     http://127.0.0.1:3000
-echo   [Base Auth]      http://127.0.0.1:8000
-echo   [Universe API]   http://127.0.0.1:8081/docs
+echo   [梦之厅公众主站]   http://127.0.0.1:8081
+echo   [梦之厅内容工坊]   http://127.0.0.1:8081/studio
+echo   [PortalOS 平台桌面] http://127.0.0.1:8000/portal
+echo   [平台底座治理中心] http://127.0.0.1:8000/admin
+echo   [SSO 单点登录中心] http://127.0.0.1:8000/login
 echo.
-echo   [AdSense Pages]
-echo   * About Us:      http://127.0.0.1:3000/about
-echo   * Privacy:       http://127.0.0.1:3000/privacy
-echo   * Terms:         http://127.0.0.1:3000/terms
-echo   * Contact:       http://127.0.0.1:3000/contact
+echo   [Swagger 接口文档]
+echo   * 平台底座 API:    http://127.0.0.1:8000/docs
+echo   * 梦之厅业务 API:  http://127.0.0.1:8081/docs
 echo ================================================================================
 pause

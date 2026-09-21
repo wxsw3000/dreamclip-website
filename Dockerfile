@@ -14,11 +14,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # 复制并安装依赖
-COPY mcp-base/requirements.txt /app/req_base.txt
-COPY mcp-service-universe/requirements.txt /app/req_univ.txt
-COPY mcp-portal/requirements.txt /app/req_portal.txt
+COPY magicstar-platform/requirements.txt /app/req_platform.txt
+COPY dreamclip/requirements.txt /app/req_dreamclip.txt
 
-RUN pip install --no-cache-dir -r /app/req_base.txt -r /app/req_univ.txt -r /app/req_portal.txt
+RUN pip install --no-cache-dir -r /app/req_platform.txt -r /app/req_dreamclip.txt
 
 # 复制全部工程代码
 COPY . /app
@@ -26,7 +25,7 @@ COPY . /app
 # 复制 supervisor 守护进程配置
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# 暴露 80 端口 (对外门户主入口) 以及内部微服务端口
-EXPOSE 80 8000 8081
+# 暴露平台底座端口 (8000) 与业务服务端口 (8081)
+EXPOSE 8000 8081
 
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
