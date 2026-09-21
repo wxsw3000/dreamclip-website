@@ -45,3 +45,27 @@ MagicStarPlatform & DreamClip 架构重构与数据库规范日志 - 2026-09-21
 ================================================================================
 记录时间：2026-09-21 10:26
 ================================================================================
+
+三、规范化命名升级与全量数据迁移 (dreamclip-service & dreamclip_service_db) - 2026-09-21 11:30
+
+1. 模块与数据库规范对齐：
+   - 业务微服务目录与代码全面规范重命名为：`dreamclip-service`；
+   - 业务微服务数据库全面对齐为：`dreamclip_service.db` (SQLite) / `dreamclip_service_db` (MySQL)；
+   - 平台底座数据库保持为：`magicstar_platform.db` (SQLite) / `magicstar_platform_db` (MySQL)；
+   - 端口保持不变：平台底座 8000 (生产容器 80 作为主入口与网关)，业务微服务 8081。
+
+2. 全量 MySQL 数据迁移与历史库清理：
+   - 编写并执行自动化迁移脚本 `scripts/migrate_and_clean_dbs.py`；
+   - 从 `mcp_base_db` 完整迁移 3 位用户 (superadmin, test_editor_01, test_user_01)、4 大角色及对应权限、16 项字典、4 项配置、20 条登录日志至 `magicstar_platform_db`；
+   - 从 `dreamclip_db` / `mcp_universe_db` 完整迁移世界观、3 位角色、2 篇情绪胶囊、1 个 AVG 章节及 3 张焦点跑马灯至 `dreamclip_service_db`；
+   - 零数据丢失前提下，安全删除历史遗留废弃数据库：`mcp_base_db`, `mcp_universe_db`, `dreamclip_db`；
+   - 当前 MySQL 仅保留统一规范库：`magicstar_platform_db` 与 `dreamclip_service_db`。
+
+3. 运维、CI/CD 与启动脚本全量同步：
+   - `supervisord.conf`：更新微服务工作目录为 `/app/dreamclip-service`；
+   - `Dockerfile`：更新依赖复制为 `COPY dreamclip-service/requirements.txt`；
+   - `.github/workflows/deploy.yml`：CI 编译与安装依赖路径全面更新为 `dreamclip-service`；
+   - `tests/ci_smoke_test.py`：端到端自动化测试全部更新为 `dreamclip-service` 并 100% 验证通过；
+   - `start_dreamclip.bat` / `.ps1` / `.sh`：本地一键并发启动脚本全量同步。
+
+================================================================================

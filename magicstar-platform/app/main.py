@@ -217,14 +217,14 @@ def init_db_and_seed_data():
             platform_svc.base_url = f"http://127.0.0.1:{settings.SERVER_PORT}"
             db.commit()
 
-        # 5.2 注册第 1 业务节点 (dreamclip)
+        # 5.2 注册第 1 业务节点 (dreamclip-service)
         dreamclip_svc = db.query(SysMicroservice).filter(
-            SysMicroservice.service_code.in_(["dreamclip", "mcp-service-universe"])
+            SysMicroservice.service_code.in_(["dreamclip-service", "dreamclip", "mcp-service-universe"])
         ).first()
         if not dreamclip_svc:
             dreamclip_svc = SysMicroservice(
-                service_code="dreamclip",
-                service_name="DreamClip 梦之厅",
+                service_code="dreamclip-service",
+                service_name="DreamClip 梦之厅业务微服务 (dreamclip-service)",
                 tech_stack="PYTHON",
                 base_url=settings.DREAMCLIP_SERVICE_URL,
                 health_url="/health",
@@ -238,24 +238,26 @@ def init_db_and_seed_data():
             )
             db.add(dreamclip_svc)
             db.commit()
-            logger.info("Initialized core business registration: dreamclip (Port 8081)")
+            logger.info("Initialized core business registration: dreamclip-service (Port 8081)")
         else:
-            dreamclip_svc.service_code = "dreamclip"
-            dreamclip_svc.service_name = "DreamClip 梦之厅"
+            dreamclip_svc.service_code = "dreamclip-service"
+            dreamclip_svc.service_name = "DreamClip 梦之厅业务微服务 (dreamclip-service)"
             dreamclip_svc.base_url = settings.DREAMCLIP_SERVICE_URL
             dreamclip_svc.gateway_prefix = "/dreamclip"
             db.commit()
 
         # 清理多余的旧注册条目 (如 mcp-portal)
-        old_portal = db.query(SysMicroservice).filter(SysMicroservice.service_code == "mcp-portal").first()
-        if old_portal:
-            db.delete(old_portal)
-            db.commit()
+        for old_code in ["mcp-portal", "dreamclip", "mcp-service-universe"]:
+            if old_code != "dreamclip-service":
+                old_svc = db.query(SysMicroservice).filter(SysMicroservice.service_code == old_code).first()
+                if old_svc and old_svc.id != dreamclip_svc.id:
+                    db.delete(old_svc)
+                    db.commit()
 
         # 6. 生成 APP 权限菜单节点
         app_menus_config = [
             ("magicstar-platform", "MagicStarPlatform 平台底座", "⭐", "/admin", 1),
-            ("dreamclip", "DreamClip 梦之厅", "🌌", "http://127.0.0.1:8081/", 2)
+            ("dreamclip-service", "DreamClip 梦之厅", "🌌", "http://127.0.0.1:8081/", 2)
         ]
         for code, name, icon, path, sort in app_menus_config:
             m = db.query(SysMenu).filter(SysMenu.service_code == code, SysMenu.menu_type == "APP", SysMenu.is_deleted == 0).first()
@@ -279,14 +281,14 @@ def init_db_and_seed_data():
 
         # 7. 为系统角色赋予默认微服务应用权限
         platform_app = db.query(SysMenu).filter(SysMenu.service_code == "magicstar-platform", SysMenu.menu_type == "APP", SysMenu.is_deleted == 0).first()
-        dreamclip_app = db.query(SysMenu).filter(SysMenu.service_code == "dreamclip", SysMenu.menu_type == "APP", SysMenu.is_deleted == 0).first()
+        dreamclip_app = db.query(SysMenu).filter(SysMenu.service_code == "dreamclip-service", SysMenu.menu_type == "APP", SysMenu.is_deleted == 0).first()
 
         # 为 ROLE_OPERATOR 赋予底座治理与业务应用权限
         if operator_role:
             operator_role.menus = [m for m in [platform_app, dreamclip_app] if m]
             db.commit()
 
-        # 为 ROLE_MEMBER 赋予 dreamclip 业务应用权限
+        # 为 ROLE_MEMBER 赋予 dreamclip-service 业务应用权限
         if member_role:
             member_role.menus = [m for m in [dreamclip_app] if m]
             db.commit()

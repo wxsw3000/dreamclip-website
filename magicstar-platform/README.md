@@ -1,6 +1,6 @@
-# 制造能力平台 - 开放服务底座 (MCP-Base)
+# MagicStarPlatform - 开放服务底座 (平台治理与认证中心)
 
-专为工业制造打造的**轻量、高效、开放式微服务基础底座**。该底座由 **Python (FastAPI + SQLAlchemy 2.0)** 构建，支持预置 `superadmin` 集中管理、多租户分配、异构多语言微服务能力接入与异步健康心跳实时探测。
+专为微服务生态打造的**轻量、高效、开放式微服务基础底座**。该底座由 **Python (FastAPI + SQLAlchemy 2.0)** 构建，支持预置 `superadmin` 集中管理、多租户与 IAM 角色分配、微服务应用接入 (如 `dreamclip-service`) 与异步健康心跳实时探测。
 
 ---
 

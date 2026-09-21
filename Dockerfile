@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # 复制并安装依赖
 COPY magicstar-platform/requirements.txt /app/req_platform.txt
-COPY dreamclip/requirements.txt /app/req_dreamclip.txt
+COPY dreamclip-service/requirements.txt /app/req_dreamclip.txt
 
 RUN pip install --no-cache-dir -r /app/req_platform.txt -r /app/req_dreamclip.txt
 

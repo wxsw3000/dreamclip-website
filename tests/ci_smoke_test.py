@@ -49,7 +49,7 @@ class TestMagicStarAndDreamClip(unittest.TestCase):
             self.assertEqual(res_apps.status_code, 200, "获取已授权应用清单失败")
             app_codes = [a["service_code"] for a in res_apps.json().get("data", [])]
             self.assertIn("magicstar-platform", app_codes, "已授权应用中缺失 magicstar-platform")
-            self.assertIn("dreamclip", app_codes, "已授权应用中缺失 dreamclip")
+            self.assertTrue("dreamclip-service" in app_codes or "dreamclip" in app_codes, "已授权应用中缺失 dreamclip-service")
             print("[PASS] MagicStarPlatform (5 critical test assertions passed)")
 
     def test_02_dreamclip_service(self):
@@ -61,7 +61,7 @@ class TestMagicStarAndDreamClip(unittest.TestCase):
         if "magicstar-platform" in sys.path[0]:
             sys.path.pop(0)
             
-        sys.path.insert(0, os.path.abspath("dreamclip"))
+        sys.path.insert(0, os.path.abspath("dreamclip-service"))
         from app.main import app as dreamclip_app, init_seed_universe_data
         
         # 显式初始化数据库表与业务种子数据 (世界观/角色/胶囊/跑马灯)

@@ -15,7 +15,7 @@ from app.api.v1.hall import ensure_seed_banners
 from app.api.v1.router import api_v1_router
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s - %(message)s")
-logger = logging.getLogger("dreamclip")
+logger = logging.getLogger("dreamclip-service")
 
 def init_seed_universe_data():
     """初始化数据库表并注入基础的世界观与角色数据"""
@@ -230,7 +230,7 @@ app.include_router(api_v1_router, prefix=settings.API_V1_STR)
 
 @app.get("/health", tags=["00.健康检查"])
 def health():
-    return {"status": "UP", "service": "dreamclip", "platform": "MagicStarPlatform", "code": 200}
+    return {"status": "UP", "service": "dreamclip-service", "platform": "MagicStarPlatform", "code": 200}
 
 # 挂载静态 Web 资源
 static_dir = os.path.join(os.path.dirname(__file__), "static")

@@ -14,7 +14,7 @@ Start-Process cmd -ArgumentList "/k cd /d `"$root\magicstar-platform`" && python
 Start-Sleep -Seconds 2
 
 Write-Host "[2/2] 正在启动 DreamClip 梦之厅业务微服务 (Port 8081)..." -ForegroundColor Yellow
-Start-Process cmd -ArgumentList "/k cd /d `"$root\dreamclip`" && python run_server.py"
+Start-Process cmd -ArgumentList "/k cd /d `"$root\dreamclip-service`" && python run_server.py"
 Start-Sleep -Seconds 1
 
 Write-Host ""

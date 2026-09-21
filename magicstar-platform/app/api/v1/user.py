@@ -359,9 +359,9 @@ def assign_role_permissions(
 
     all_selected_menu_ids = set(req.menu_ids or [])
     
-    # 强制包含基础门户应用权限 (mcp-portal 为所有角色必备且不可取消)
+    # 强制包含基础门户应用权限 (magicstar-platform 为所有角色必备且不可取消)
     selected_service_codes = set(req.service_codes or [])
-    selected_service_codes.add("mcp-portal")
+    selected_service_codes.add("magicstar-platform")
 
     # 自动关联所勾选微服务对应的应用权限点
     app_menus = db.query(SysMenu).filter(

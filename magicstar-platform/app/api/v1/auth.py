@@ -315,6 +315,7 @@ def get_my_permitted_apps(
     # 应用图标与渐变映射
     icon_map = {
         "magicstar-platform": "⭐",
+        "dreamclip-service": "🌌",
         "dreamclip": "🌌",
         "mcp-base": "⭐",
         "mcp-service-universe": "🌌",
@@ -326,6 +327,7 @@ def get_my_permitted_apps(
 
     gradient_map = {
         "magicstar-platform": "linear-gradient(135deg, #6366f1, #3b82f6)",
+        "dreamclip-service": "linear-gradient(135deg, #4f46e5, #06b6d4)",
         "dreamclip": "linear-gradient(135deg, #4f46e5, #06b6d4)",
         "mcp-base": "linear-gradient(135deg, #6366f1, #3b82f6)",
         "mcp-service-universe": "linear-gradient(135deg, #4f46e5, #06b6d4)",

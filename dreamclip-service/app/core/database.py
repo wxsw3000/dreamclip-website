@@ -5,7 +5,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 from app.core.config import settings
 
-logger = logging.getLogger("dreamclip.database")
+logger = logging.getLogger("dreamclip-service.database")
 
 def ensure_database_exists():
     """确保 MySQL 目标业务数据库存在"""
@@ -19,7 +19,7 @@ def ensure_database_exists():
             connect_timeout=3
         )
         with conn.cursor() as cursor:
-            # 1. 自动创建全新业务微服务数据库 dreamclip_db
+            # 1. 自动创建全新业务微服务数据库 dreamclip_service_db
             cursor.execute(
                 f"CREATE DATABASE IF NOT EXISTS `{settings.MYSQL_DB}` "
                 f"DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
@@ -35,7 +35,7 @@ ensure_database_exists()
 
 # 2. 获取正确的 SQLite 数据库文件绝对路径
 base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-sqlite_path = os.path.join(base_dir, "dreamclip.db")
+sqlite_path = os.path.join(base_dir, "dreamclip_service.db")
 
 # 3. 初始化数据库引擎
 try:

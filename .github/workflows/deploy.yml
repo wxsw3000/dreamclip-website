@@ -35,13 +35,13 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r magicstar-platform/requirements.txt
-          pip install -r dreamclip/requirements.txt
+          pip install -r dreamclip-service/requirements.txt
           pip install httpx fastapi pytest
 
       - name: 1. Python 全量语法编译与导入校验
         run: |
           echo "正在执行全工程代码编译检查..."
-          python -m py_compile $(find magicstar-platform dreamclip -name "*.py")
+          python -m py_compile $(find magicstar-platform dreamclip-service -name "*.py")
           echo "✅ 语法编译校验 100% 通过！"
 
       - name: 2. 执行端到端核心链路与接口健康探测

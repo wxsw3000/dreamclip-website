@@ -13,7 +13,7 @@ start "MagicStarPlatform [8000]" cmd /k "cd /d "%~dp0magicstar-platform" && pyth
 ping 127.0.0.1 -n 3 >nul
 
 echo [2/2] 正在启动 DreamClip 梦之厅业务微服务 (Port 8081)...
-start "DreamClip-Service [8081]" cmd /k "cd /d "%~dp0dreamclip" && python run_server.py"
+start "DreamClip-Service [8081]" cmd /k "cd /d "%~dp0dreamclip-service" && python run_server.py"
 
 echo.
 echo ================================================================================

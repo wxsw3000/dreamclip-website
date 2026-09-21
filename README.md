@@ -21,14 +21,14 @@
                               └──────────────────────┬───────────────────────┘
                                                      │ 代理转发 / SSO 联动 / 权限控制
                                                      ▼
-                              ┌──────────────────────────────────────────────┐
-                              │      DreamClip 梦之厅 (第 1 个业务微服务节点) │
-                              │   (Port: 8081 / 梦之厅官网 / Studio / AVG)    │
-                              │   数据库: dreamclip.db / MySQL 业务库        │
-                              └──────────────────────┬───────────────────────┘
-                                                     │ 可插拔扩展
-                                                     ▼
-                                      未来任意新业务微服务节点 (Game / AI / ...)
+                               ┌──────────────────────────────────────────────┐
+                               │      DreamClip 梦之厅 (第 1 个业务微服务节点) │
+                               │   (Port: 8081 / 梦之厅官网 / Studio / AVG)    │
+                               │ 数据库: dreamclip_service.db / MySQL 业务库  │
+                               └──────────────────────┬───────────────────────┘
+                                                      │ 可插拔扩展
+                                                      ▼
+                                       未来任意新业务微服务节点 (Game / AI / ...)
 ```
 
 ### 1. 平台底座：`MagicStarPlatform` (目录: `magicstar-platform`)
@@ -39,12 +39,12 @@
 - **微服务注册治理**：服务动态注册、20 秒心跳健康巡检；
 - **数据库**：`magicstar_platform.db`（SQLite） / `magicstar_platform_db`（MySQL）。
 
-### 2. 第一个业务服务节点：`dreamclip` (目录: `dreamclip`)
+### 2. 第一个业务服务节点：`dreamclip-service` (目录: `dreamclip-service`)
 - **梦之厅公众主站**：16:9 电影巨幕焦点轮播、双轨动能跑马灯、三维内容标签、编年时序切片流；
 - **DreamClip Studio**：专属站务与内容运营工坊（`/studio`），支持焦点图文、Markdown 情绪胶囊创作、角色信使立绘档案与 AVG 章节编目；
 - **独立 AVG 互动剧场**：HTML5 互动冒险游戏、剧情分支与存档；
 - **业务 API 与模型**：胶囊、角色、AVG 章节、焦点跑马灯数据引擎；
-- **数据库**：`dreamclip.db`（SQLite） / `dreamclip_db`（MySQL）。
+- **数据库**：`dreamclip_service.db`（SQLite） / `dreamclip_service_db`（MySQL）。
 
 ---
 
@@ -52,8 +52,8 @@
 
 | 模块名称 | 工程目录 | 对应数据库 | 运行端口 | 核心访问路径 |
 | :--- | :--- | :--- | :---: | :--- |
-| **MagicStarPlatform (平台底座)** | `magicstar-platform` | `magicstar_platform.db` | **8000** | • 平台桌面: `http://localhost:8000/portal`<br/>• 治理控制台: `http://localhost:8000/admin`<br/>• SSO 登录: `http://localhost:8000/login`<br/>• Swagger API: `http://localhost:8000/docs` |
-| **DreamClip (梦之厅业务微服务)** | `dreamclip` | `dreamclip.db` | **8081** | • 梦之厅主站: `http://localhost:8081/`<br/>• 内容工坊: `http://localhost:8081/studio`<br/>• AVG 剧场: `http://localhost:8081/games`<br/>• Swagger API: `http://localhost:8081/docs` |
+| **MagicStarPlatform (平台底座)** | `magicstar-platform` | `magicstar_platform.db` / `magicstar_platform_db` | **8000 (生产 80)** | • 平台桌面: `http://localhost:8000/portal`<br/>• 治理控制台: `http://localhost:8000/admin`<br/>• SSO 登录: `http://localhost:8000/login`<br/>• Swagger API: `http://localhost:8000/docs` |
+| **DreamClip (梦之厅业务微服务)** | `dreamclip-service` | `dreamclip_service.db` / `dreamclip_service_db` | **8081** | • 梦之厅主站: `http://localhost:8081/`<br/>• 内容工坊: `http://localhost:8081/studio`<br/>• AVG 剧场: `http://localhost:8081/games`<br/>• Swagger API: `http://localhost:8081/docs` |
 
 ---
 
