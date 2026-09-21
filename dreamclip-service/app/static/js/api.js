@@ -86,6 +86,14 @@ const DreamClipAPI = {
         const altEndpoint = endpoint.replace('/api/v1/', '/api/base/');
         resp = await fetch(altEndpoint, { ...options, headers });
       }
+      if (!resp.ok && resp.status === 404 && endpoint.startsWith('/api/universe/')) {
+        const altEndpoint = endpoint.replace('/api/universe/', '/api/v1/');
+        resp = await fetch(altEndpoint, { ...options, headers });
+      }
+      if (!resp.ok && resp.status === 404 && endpoint.startsWith('/api/dreamclip/')) {
+        const altEndpoint = endpoint.replace('/api/dreamclip/', '/api/v1/');
+        resp = await fetch(altEndpoint, { ...options, headers });
+      }
       if (resp.status === 401) {
         if (token) {
           if (isOnline) {

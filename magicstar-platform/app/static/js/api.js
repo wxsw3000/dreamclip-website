@@ -86,6 +86,14 @@ const DreamClipAPI = {
         const altEndpoint = endpoint.replace('/api/v1/', '/api/base/');
         resp = await fetch(altEndpoint, { ...options, headers });
       }
+      if (!resp.ok && resp.status === 404 && endpoint.startsWith('/api/universe/')) {
+        const altEndpoint = endpoint.replace('/api/universe/', '/api/v1/');
+        resp = await fetch(altEndpoint, { ...options, headers });
+      }
+      if (!resp.ok && resp.status === 404 && endpoint.startsWith('/api/dreamclip/')) {
+        const altEndpoint = endpoint.replace('/api/dreamclip/', '/api/v1/');
+        resp = await fetch(altEndpoint, { ...options, headers });
+      }
       if (resp.status === 401) {
         if (token) {
           if (isOnline) {
@@ -313,13 +321,14 @@ async function initUserSessionUI() {
     const avatarUrl = u.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${u.username}`;
     const displayName = u.real_name || u.username;
     const isOnline = window.location.hostname.endsWith('dreamclip.cn');
-    const adminBaseUrl = isOnline ? 'https://base.dreamclip.cn/' : 'http://localhost:8000/';
+    const adminBaseUrl = isOnline ? 'https://base.dreamclip.cn/' : 'http://localhost:8000/admin';
+    const portalBaseUrl = isOnline ? 'https://portal.dreamclip.cn/' : 'http://localhost:8000/portal';
     const studioLinkHtml = isSuper ? `<a href="/studio" class="btn btn-primary" style="padding:0.35rem 0.85rem; font-size:0.82rem; margin-right:6px; background:linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%); border:none; box-shadow:0 2px 10px rgba(236,72,153,0.35);" title="进入 DreamClip 梦之厅专属内容工坊">🎨 内容工坊</a>` : '';
-    const baseAdminLinkHtml = isSuper ? `<a href="${adminBaseUrl}" class="btn btn-outline" style="padding:0.35rem 0.75rem; font-size:0.82rem; margin-right:6px; border-color:rgba(255,255,255,0.18); color:#cbd5e1;" title="进入 MagicStar 底座微服务治理" target="_blank">⚙️ 底座治理</a>` : '';
+    const baseAdminLinkHtml = isSuper ? `<a href="${adminBaseUrl}" class="btn btn-outline" style="padding:0.35rem 0.75rem; font-size:0.82rem; margin-right:6px; border-color:rgba(255,255,255,0.18); color:#cbd5e1;" title="进入 MagicStar 平台底座治理" target="_blank">⚙️ 底座治理</a>` : '';
 
     authContainer.innerHTML = `
       ${studioLinkHtml}
-      <a href="/portal" class="btn btn-outline" style="padding:0.35rem 0.85rem; font-size:0.82rem; margin-right:6px;" title="进入已授权的微服务应用桌面">📱 平台桌面</a>
+      <a href="${portalBaseUrl}" class="btn btn-outline" style="padding:0.35rem 0.85rem; font-size:0.82rem; margin-right:6px;" title="进入已授权的微服务应用桌面">📱 平台桌面</a>
       ${baseAdminLinkHtml}
       <div class="user-badge" style="display:inline-flex; align-items:center; gap:0.4rem; background:rgba(255,255,255,0.08); padding:0.25rem 0.65rem; border-radius:20px; border:1px solid rgba(255,255,255,0.15);">
         <img class="user-avatar-mini" style="width:22px; height:22px; border-radius:50%; border:1px solid rgba(255,255,255,0.2);" src="${avatarUrl}" alt="avatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👤</text></svg>'">
@@ -331,7 +340,7 @@ async function initUserSessionUI() {
 
     if (heroCtaBtn) {
       heroCtaBtn.innerText = "📱 进入平台应用桌面 (已登录)";
-      heroCtaBtn.href = "/portal";
+      heroCtaBtn.href = portalBaseUrl;
     }
   }
 

@@ -225,8 +225,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 挂载 API V1 路由
+# 挂载 API V1 路由及兼容前缀 (/api/v1, /api/universe, /api/dreamclip)
 app.include_router(api_v1_router, prefix=settings.API_V1_STR)
+app.include_router(api_v1_router, prefix="/api/universe")
+app.include_router(api_v1_router, prefix="/api/dreamclip")
 
 @app.get("/health", tags=["00.健康检查"])
 def health():
