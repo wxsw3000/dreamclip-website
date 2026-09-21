@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>方案3：现代 WebP 极速压缩 + 渐进式模糊 (113KB) - DreamClip</title>
+  <meta name="description" content="方案3：现代 WebP 极速压缩 + 渐进式模糊底图 (LQIP)。原画画质无损保留，体积从 2.06MB 骤降至 113KB (-94.4%)，0 毫秒首屏直出。">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
+  <style>
+    :root {
+      --primary: #6366f1;
+      --cyan: #06b6d4;
+      --gold: #f59e0b;
+      --pink: #ec4899;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #05070e;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      user-select: none;
+    }
+
+    .scene-viewport {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #000;
+      overflow: hidden;
+    }
+
+    .scene-canvas {
+      width: 1920px;
+      height: 1080px;
+      position: relative;
+      flex-shrink: 0;
+      transform-origin: center center;
+      transition: transform 0.15s cubic-bezier(0.2, 0, 0, 1);
+      box-shadow: 0 0 80px rgba(0, 0, 0, 0.9);
+    }
+
+    /* 渐进式两层图片容器 */
+    .lqip-container {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      overflow: hidden;
+    }
+
+    /* 底层：Base64 极小模糊占位图 (0ms 直出) */
+    .lqip-placeholder {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      filter: blur(25px) scale(1.08);
+      transform-origin: center center;
+      transition: opacity 0.8s ease;
+      z-index: 1;
+    }
+
+    /* 顶层：113KB WebP 高清图 (加载完成后平滑淡入) */
+    .lqip-highres {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      filter: blur(10px);
+      transition: opacity 0.6s ease, filter 0.6s ease;
+      z-index: 2;
+    }
+
+    .lqip-highres.loaded {
+      opacity: 1;
+      filter: blur(0px);
+    }
+
+    /* 场景镶嵌部件层 */
+    .scene-layer {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .region-hotspot {
+      position: absolute;
+      pointer-events: auto;
+      transition: transform 0.25s ease;
+    }
+
+    /* 门楣跑马灯 */
+    .marquee-signboard {
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle, rgba(25, 20, 10, 0.9), rgba(5, 5, 5, 0.95));
+      border: 2.5px solid #fbbf24;
+      border-radius: 6px;
+      box-shadow: 0 0 25px rgba(245, 158, 11, 0.5), inset 0 0 15px rgba(245, 158, 11, 0.2);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+    }
+
+    .marquee-track {
+      display: flex;
+      white-space: nowrap;
+      animation: led-scroll 24s linear infinite;
+    }
+
+    .marquee-item-text {
+      font-size: 26px;
+      font-weight: 800;
+      color: #fde047;
+      text-shadow: 0 0 8px #f59e0b, 0 0 16px rgba(245, 158, 11, 0.7);
+      padding: 0 40px;
+      letter-spacing: 2px;
+      font-family: "Courier New", Courier, monospace, sans-serif;
+    }
+
+    @keyframes led-scroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    /* 海报橱窗 */
+    .poster-showcase {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      border: 4px solid rgba(255, 255, 255, 0.85);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.75), 0 0 25px rgba(99, 102, 241, 0.3);
+      background: #111827;
+      cursor: pointer;
+    }
+
+    .poster-slide {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+    }
+
+    .poster-slide img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+    }
+
+    .poster-overlay {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      padding: 20px 14px 10px;
+      background: linear-gradient(180deg, transparent 0%, rgba(10, 15, 30, 0.95) 80%);
+    }
+
+    .poster-tag {
+      display: inline-block;
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: var(--primary);
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .poster-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+    }
+
+    /* 检票大门 */
+    .ticket-btn {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.95), rgba(239, 68, 68, 0.95));
+      border: 3px solid #fff;
+      border-radius: 12px;
+      color: #fff;
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 8px 25px rgba(239, 68, 68, 0.55), 0 0 20px rgba(245, 158, 11, 0.4);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .ticket-btn:hover {
+      transform: translateY(-3px) scale(1.03);
+      box-shadow: 0 12px 35px rgba(239, 68, 68, 0.75);
+    }
+
+    /* 顶部 HUD */
+    .theater-hud {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 62px;
+      padding: 0 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(180deg, rgba(6, 8, 20, 0.92) 0%, rgba(6, 8, 20, 0) 100%);
+      backdrop-filter: blur(10px);
+      z-index: 100;
+    }
+
+    .hud-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .hud-logo {
+      font-size: 19px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #a5b4fc, #38bdf8, #f472b6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .scheme-badge {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #fbbf24;
+      background: rgba(251, 191, 36, 0.12);
+      border: 1px solid rgba(251, 191, 36, 0.4);
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+
+    .switcher-capsule {
+      display: flex;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 30px;
+      padding: 3px;
+      gap: 2px;
+      backdrop-filter: blur(12px);
+    }
+
+    .switcher-btn {
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .switcher-btn:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .switcher-btn.active {
+      color: #fff;
+      background: linear-gradient(135deg, #6366f1, #06b6d4);
+      box-shadow: 0 2px 10px rgba(99, 102, 241, 0.4);
+    }
+
+    .hud-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .hud-btn {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      backdrop-filter: blur(12px);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .hud-btn:hover { background: rgba(255, 255, 255, 0.18); transform: translateY(-1px); }
+
+    /* 压缩对比与性能监控 HUD 卡 */
+    .benchmark-card {
+      position: fixed;
+      bottom: 24px;
+      left: 28px;
+      background: rgba(10, 15, 30, 0.88);
+      border: 1px solid rgba(251, 191, 36, 0.4);
+      border-radius: 12px;
+      padding: 14px 18px;
+      font-size: 12.5px;
+      backdrop-filter: blur(14px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+      z-index: 90;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 280px;
+    }
+
+    .benchmark-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .progress-bar-bg {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      width: 94.4%;
+      background: linear-gradient(90deg, #34d399, #10b981);
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 顶部 HUD 导航 -->
+  <header class="theater-hud">
+    <div class="hud-brand">
+      <div class="hud-logo">
+        <span>🎭</span>
+        <span>DreamClip 梦之剧院</span>
+      </div>
+      <div class="scheme-badge">
+        <span>🚀 方案 3：现代 WebP 极速压缩 + 渐进式模糊</span>
+      </div>
+    </div>
+
+    <!-- 方案快速切换胶囊 -->
+    <nav class="switcher-capsule">
+      <a href="/theater-svg" class="switcher-btn" title="方案1：纯SVG代码拟物">1. 纯代码SVG (0KB)</a>
+      <a href="/theater-parallax" class="switcher-btn" title="方案2：2.5D多层景深视差">2. 2.5D视差景深</a>
+      <a href="/theater-webp" class="switcher-btn active" title="方案3：现代WebP+LQIP">3. WebP极速 (113KB)</a>
+      <a href="/theater-3d" class="switcher-btn" title="方案4：3D/WebGL全息交互">4. 3D WebGL全息</a>
+      <a href="/theater-video" class="switcher-btn" title="方案5：电影微动循环">5. 动态微动循环</a>
+      <a href="/theater-lab" class="switcher-btn" style="color: #fbbf24; font-weight: bold;" title="查看5套方案综合对比大厅">📊 方案对比评测</a>
+    </nav>
+
+    <div class="hud-actions">
+      <a href="/" class="hud-btn" title="返回梦之厅主站">🏛️ 返回梦之厅主站</a>
+    </div>
+  </header>
+
+  <!-- 场景视口 -->
+  <main class="scene-viewport" id="sceneViewport">
+    <div class="scene-canvas" id="sceneCanvas">
+      
+      <!-- 渐进式背景双层加载系统 -->
+      <div class="lqip-container">
+        <!-- 第 1 步：0ms Base64 超轻量模糊底图 (仅 1KB) -->
+        <img 
+          src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABQODxIPDRQSEBIXFRQYHjIhHhwcHj0sLiQySUBMS0dARkVQWnNiUFVtVkVGZIhlbXd7gYKBTmCNl4x9lnN+gXz/2wBDARUXFx4aHjshITt8U0ZTfHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHz/wAARCAASACADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDCjti5wSAa2NO0m0dSbmcI+eAQSD71HDCkcqkndg8jqetbKzRCYtFHJt4wFQcfhTqza0QU4q12Zeo6VaIga2nDsTyApAFZ0iRRW5iKqXJzvHUe1dHPNGzZlilKnOQQATWRJEjyZ+6fQ0UqjbswqQVromtlUyHIB/CtWBF2j5R+VFFZSLQTIpByo/Ks+5RVlGFA+goooiDP/9k=" 
+          class="lqip-placeholder" 
+          id="lqipPlaceholder" 
+          alt="Theater Background Placeholder"
+        >
+        <!-- 第 2 步：113KB 现代 WebP 高清图 (加载完成后柔和转为锐利) -->
+        <img 
+          src="/static/theater-entrance.webp" 
+          class="lqip-highres" 
+          id="lqipHighres" 
+          alt="Dream Theater Scene High-Res WebP" 
+          onload="LqipEngine.onHighResLoaded()"
+          onerror="this.src='/static/theater-entrance.png'"
+        >
+      </div>
+
+      <!-- 动态镶嵌部件覆盖层 -->
+      <div class="scene-layer" id="sceneLayer">
+        <!-- 门楣 LED 跑马灯 -->
+        <div class="region-hotspot" style="left: 28%; top: 13.8%; width: 44%; height: 6.2%;">
+          <div class="marquee-signboard">
+            <div class="marquee-track" id="marqueeTrack">
+              <span class="marquee-item-text">🚀 方案3演示：现代 WebP 极速压缩 + 渐进式模糊 🚀</span>
+              <span class="marquee-item-text">📦 体积减少 94.4% (从 2.06MB ➔ 113KB)，0ms 瞬开</span>
+              <span class="marquee-item-text">🎬 第一章《最初的遗失信件》现已上线，点击海报即可免费体验</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 橱窗海报墙 -->
+        <div class="region-hotspot" style="left: 7.5%; top: 32%; width: 23%; height: 31%;">
+          <div class="poster-showcase" onclick="window.location.href='/games'">
+            <div class="poster-slide">
+              <img src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=800&auto=format&fit=crop" alt="深空信箱：2099">
+              <div class="poster-overlay">
+                <span class="poster-tag">正在热映</span>
+                <div class="poster-title">深空信箱：2099</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 剧院检票大门 -->
+        <div class="region-hotspot" style="left: 69%; top: 44%; width: 19%; height: 16%;">
+          <a href="/games" class="ticket-btn">
+            <span style="font-size:24px;margin-bottom:2px;">🎟️</span>
+            <span style="font-size:18px;font-weight:800;">进入梦之剧院</span>
+            <span style="font-size:11px;opacity:0.9;">🎬 开启 AVG 沉浸互动剧场</span>
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- 性能对比指标看板 -->
+  <aside class="benchmark-card">
+    <div class="benchmark-row">
+      <span>📉 原始 PNG 体积：</span>
+      <span style="color: #f87171; font-weight: bold;">2,058 KB (2.06 MB)</span>
+    </div>
+    <div class="benchmark-row">
+      <span>⚡ 压缩 WebP 体积：</span>
+      <span style="color: #34d399; font-weight: bold;">113 KB (-94.4%)</span>
+    </div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill"></div>
+    </div>
+    <div class="benchmark-row" style="margin-top: 4px;">
+      <span>⏱️ Base64 占位耗时：</span>
+      <span style="color: #38bdf8;">0 ms (内联即现)</span>
+    </div>
+    <div class="benchmark-row">
+      <span>⏱️ WebP 高清载入：</span>
+      <span style="color: #fbbf24; font-weight: bold;" id="highResTime">加载中...</span>
+    </div>
+    <button class="hud-btn" onclick="LqipEngine.reloadTest()" style="margin-top: 6px; justify-content: center; font-size: 11px; padding: 4px 10px;">
+      🔄 重新测试加载过程
+    </button>
+  </aside>
+
+  <script>
+    const startTime = performance.now();
+
+    const LqipEngine = {
+      init() {
+        this.bindResize();
+      },
+
+      bindResize() {
+        const canvas = document.getElementById("sceneCanvas");
+        const resize = () => {
+          const vw = window.innerWidth;
+          const vh = window.innerHeight;
+          const scale = Math.min(vw / 1920, vh / 1080);
+          canvas.style.transform = `scale(${scale})`;
+        };
+        window.addEventListener("resize", resize);
+        resize();
+      },
+
+      onHighResLoaded() {
+        const elapsed = Math.round(performance.now() - startTime);
+        const img = document.getElementById("lqipHighres");
+        const timeEl = document.getElementById("highResTime");
+        if (img) img.classList.add("loaded");
+        if (timeEl) timeEl.innerText = `${elapsed} ms (极速)`;
+      },
+
+      reloadTest() {
+        const img = document.getElementById("lqipHighres");
+        const timeEl = document.getElementById("highResTime");
+        if (!img || !timeEl) return;
+        img.classList.remove("loaded");
+        timeEl.innerText = "加载中...";
+        const t0 = performance.now();
+        const newImg = new Image();
+        newImg.src = `/static/theater-entrance.webp?t=${Date.now()}`;
+        newImg.onload = () => {
+          img.src = newImg.src;
+          img.classList.add("loaded");
+          timeEl.innerText = `${Math.round(performance.now() - t0)} ms`;
+        };
+      }
+    };
+
+    document.addEventListener("DOMContentLoaded", () => LqipEngine.init());
+  </script>
+</body>
+</html>

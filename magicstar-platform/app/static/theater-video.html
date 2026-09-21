@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>方案5：无缝循环电影微动流光剧场 - DreamClip</title>
+  <meta name="description" content="方案5：无缝循环电影微动流光剧场。雨丝涟漪物理模拟、霓虹灯管通电频闪、体积光束探照与 21:9 电影宽银幕模式。">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎬</text></svg>">
+  <style>
+    :root {
+      --primary: #6366f1;
+      --cyan: #06b6d4;
+      --gold: #f59e0b;
+      --pink: #ec4899;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #020308;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      user-select: none;
+    }
+
+    /* 场景外层容器与电影遮幅 Letterbox */
+    .scene-viewport {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #000;
+      overflow: hidden;
+    }
+
+    .cinema-letterbox-top, .cinema-letterbox-bottom {
+      position: fixed;
+      left: 0; right: 0;
+      height: 0px;
+      background: #000;
+      z-index: 95;
+      transition: height 0.6s cubic-bezier(0.2, 0, 0, 1);
+      pointer-events: none;
+    }
+    .cinema-letterbox-top { top: 0; }
+    .cinema-letterbox-bottom { bottom: 0; }
+
+    .cinema-mode .cinema-letterbox-top,
+    .cinema-mode .cinema-letterbox-bottom {
+      height: 65px;
+    }
+
+    /* 1920x1080 核心画布 */
+    .scene-canvas {
+      width: 1920px;
+      height: 1080px;
+      position: relative;
+      flex-shrink: 0;
+      transform-origin: center center;
+      transition: transform 0.15s cubic-bezier(0.2, 0, 0, 1);
+      box-shadow: 0 0 100px rgba(0, 0, 0, 0.95);
+    }
+
+    /* 场景底层插画 */
+    .scene-bg-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      pointer-events: none;
+      filter: contrast(1.05) brightness(0.95);
+    }
+
+    /* 电影微动与光效 Canvas 层 */
+    #cinemaCanvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 6;
+      mix-blend-mode: screen;
+    }
+
+    /* 电影胶片暗角与颗粒 */
+    .cinematic-vignette {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: radial-gradient(circle at 50% 50%, transparent 60%, rgba(2, 4, 10, 0.8) 100%);
+      pointer-events: none;
+      z-index: 8;
+    }
+
+    /* 场景镶嵌部件层 */
+    .scene-layer {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .region-hotspot {
+      position: absolute;
+      pointer-events: auto;
+      transition: transform 0.25s ease;
+    }
+
+    /* 门楣跑马灯 */
+    .marquee-signboard {
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle, rgba(25, 20, 10, 0.92), rgba(5, 5, 5, 0.98));
+      border: 3px solid #fbbf24;
+      border-radius: 8px;
+      box-shadow: 0 0 30px rgba(245, 158, 11, 0.6), inset 0 0 20px rgba(245, 158, 11, 0.3);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      position: relative;
+    }
+
+    .marquee-track {
+      display: flex;
+      white-space: nowrap;
+      animation: led-scroll 24s linear infinite;
+    }
+
+    .marquee-item-text {
+      font-size: 26px;
+      font-weight: 800;
+      color: #fde047;
+      text-shadow: 0 0 10px #f59e0b, 0 0 20px rgba(245, 158, 11, 0.8);
+      padding: 0 40px;
+      letter-spacing: 2px;
+      font-family: "Courier New", Courier, monospace, sans-serif;
+    }
+
+    @keyframes led-scroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    /* 海报橱窗 */
+    .poster-showcase {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      border: 3px solid #38bdf8;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 0 35px rgba(56, 189, 248, 0.4);
+      background: #0b0f19;
+      cursor: pointer;
+    }
+
+    .poster-slide {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+    }
+
+    .poster-slide img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+    }
+
+    .poster-overlay {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      padding: 20px 14px 10px;
+      background: linear-gradient(180deg, transparent 0%, rgba(10, 15, 30, 0.95) 80%);
+    }
+
+    .poster-tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: var(--primary);
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .poster-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #fff;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+    }
+
+    /* 检票大门 */
+    .ticket-btn {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.95), rgba(245, 158, 11, 0.95));
+      border: 3px solid #fef08a;
+      border-radius: 12px;
+      color: #fff;
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 10px 30px rgba(239, 68, 68, 0.6), 0 0 25px rgba(245, 158, 11, 0.5);
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.2, 0, 0, 1);
+      padding: 10px;
+      text-align: center;
+    }
+
+    .ticket-btn:hover {
+      transform: translateY(-3px) scale(1.03);
+      box-shadow: 0 15px 40px rgba(239, 68, 68, 0.8);
+    }
+
+    /* 顶部 HUD */
+    .theater-hud {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 62px;
+      padding: 0 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(180deg, rgba(6, 8, 20, 0.92) 0%, rgba(6, 8, 20, 0) 100%);
+      backdrop-filter: blur(10px);
+      z-index: 100;
+    }
+
+    .hud-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .hud-logo {
+      font-size: 19px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #a5b4fc, #38bdf8, #f472b6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .scheme-badge {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #f43f5e;
+      background: rgba(244, 63, 94, 0.12);
+      border: 1px solid rgba(244, 63, 94, 0.4);
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+
+    .switcher-capsule {
+      display: flex;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 30px;
+      padding: 3px;
+      gap: 2px;
+      backdrop-filter: blur(12px);
+    }
+
+    .switcher-btn {
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .switcher-btn:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .switcher-btn.active {
+      color: #fff;
+      background: linear-gradient(135deg, #6366f1, #06b6d4);
+      box-shadow: 0 2px 10px rgba(99, 102, 241, 0.4);
+    }
+
+    .hud-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .hud-btn {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      backdrop-filter: blur(12px);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .hud-btn:hover { background: rgba(255, 255, 255, 0.18); transform: translateY(-1px); }
+
+    /* 电影氛围浮动控制卡 */
+    .ambient-controls-card {
+      position: fixed;
+      bottom: 24px;
+      right: 28px;
+      background: rgba(10, 15, 30, 0.85);
+      border: 1px solid rgba(244, 63, 94, 0.4);
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 12px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      z-index: 90;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* 性能 HUD */
+    .tech-metric-card {
+      position: fixed;
+      bottom: 24px;
+      left: 28px;
+      background: rgba(10, 15, 30, 0.85);
+      border: 1px solid rgba(244, 63, 94, 0.4);
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 12px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      z-index: 90;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .metric-row { display: flex; align-items: center; gap: 8px; }
+    .metric-val { font-weight: bold; color: #f43f5e; }
+  </style>
+</head>
+<body>
+
+  <div class="cinema-letterbox-top"></div>
+  <div class="cinema-letterbox-bottom"></div>
+
+  <!-- 顶部 HUD 导航 -->
+  <header class="theater-hud">
+    <div class="hud-brand">
+      <div class="hud-logo">
+        <span>🎭</span>
+        <span>DreamClip 梦之剧院</span>
+      </div>
+      <div class="scheme-badge">
+        <span>🎬 方案 5：无缝循环电影微动流光</span>
+      </div>
+    </div>
+
+    <!-- 方案快速切换胶囊 -->
+    <nav class="switcher-capsule">
+      <a href="/theater-svg" class="switcher-btn" title="方案1：纯SVG代码拟物">1. 纯代码SVG (0KB)</a>
+      <a href="/theater-parallax" class="switcher-btn" title="方案2：2.5D多层景深视差">2. 2.5D视差景深</a>
+      <a href="/theater-webp" class="switcher-btn" title="方案3：现代WebP+LQIP">3. WebP极速 (113KB)</a>
+      <a href="/theater-3d" class="switcher-btn" title="方案4：3D/WebGL全息交互">4. 3D WebGL全息</a>
+      <a href="/theater-video" class="switcher-btn active" title="方案5：电影微动循环">5. 动态微动循环</a>
+      <a href="/theater-lab" class="switcher-btn" style="color: #fbbf24; font-weight: bold;" title="查看5套方案综合对比大厅">📊 方案对比评测</a>
+    </nav>
+
+    <div class="hud-actions">
+      <a href="/" class="hud-btn" title="返回梦之厅主站">🏛️ 返回梦之厅主站</a>
+    </div>
+  </header>
+
+  <!-- 核心视口 -->
+  <main class="scene-viewport" id="sceneViewport">
+    <div class="scene-canvas" id="sceneCanvas">
+      
+      <!-- 高清底图 -->
+      <img src="/static/theater-entrance.webp" class="scene-bg-img" alt="Dream Theater Scene" onerror="this.src='/static/theater-entrance.png'">
+      
+      <!-- 电影微动与光效 Canvas (动态雨水、地面涟漪、探照体积光、霓虹通电呼吸) -->
+      <canvas id="cinemaCanvas"></canvas>
+
+      <!-- 电影胶片暗角 -->
+      <div class="cinematic-vignette"></div>
+
+      <!-- 动态镶嵌部件覆盖层 -->
+      <div class="scene-layer" id="sceneLayer">
+        <!-- 门楣 LED 跑马灯 -->
+        <div class="region-hotspot" style="left: 28%; top: 13.8%; width: 44%; height: 6.2%;">
+          <div class="marquee-signboard">
+            <div class="marquee-track" id="marqueeTrack">
+              <span class="marquee-item-text">🎬 方案5演示：电影微动流光剧场 🎬</span>
+              <span class="marquee-item-text">✨ 雨丝涟漪、探照体积光与霓虹频闪呼吸 ✨</span>
+              <span class="marquee-item-text">🌟 第一章《最初的遗失信件》现已上线，点击海报即可免费体验</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 橱窗海报墙 -->
+        <div class="region-hotspot" style="left: 7.5%; top: 32%; width: 23%; height: 31%;">
+          <div class="poster-showcase" onclick="window.location.href='/games'">
+            <div class="poster-slide">
+              <img src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=800&auto=format&fit=crop" alt="深空信箱：2099">
+              <div class="poster-overlay">
+                <span class="poster-tag">正在热映</span>
+                <div class="poster-title">深空信箱：2099</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 剧院检票大门 -->
+        <div class="region-hotspot" style="left: 69%; top: 44%; width: 19%; height: 16%;">
+          <a href="/games" class="ticket-btn">
+            <span style="font-size:24px;margin-bottom:2px;">🎟️</span>
+            <span style="font-size:18px;font-weight:800;">进入梦之剧院</span>
+            <span style="font-size:11px;opacity:0.9;">🎬 开启 AVG 沉浸互动剧场</span>
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- 电影氛围控制卡 -->
+  <div class="ambient-controls-card">
+    <span>🎥 电影模式：</span>
+    <button class="hud-btn" onclick="CinematicEngine.toggleLetterbox()" style="padding: 3px 10px; font-size: 11px;">
+      <span id="letterboxText">🎞️ 21:9 宽银幕遮幅</span>
+    </button>
+    <button class="hud-btn" onclick="CinematicEngine.toggleRainAudio()" style="padding: 3px 10px; font-size: 11px;">
+      <span id="audioText">🌧️ 雨夜音效</span>
+    </button>
+  </div>
+
+  <!-- 性能 HUD -->
+  <aside class="tech-metric-card">
+    <div class="metric-row">
+      <span>🎬 动态表现：</span>
+      <span class="metric-val">体积光束 + 雨丝反光微动</span>
+    </div>
+    <div class="metric-row">
+      <span>⚙️ 性能开销：</span>
+      <span class="metric-val">轻量 Canvas 流光 (极低 CPU 占用)</span>
+    </div>
+    <div class="metric-row">
+      <span>🎧 沉浸感：</span>
+      <span class="metric-val">Web Audio 拟真雨夜白噪音</span>
+    </div>
+  </aside>
+
+  <script>
+    const CinematicEngine = {
+      canvas: null,
+      ctx: null,
+      raindrops: [],
+      ripples: [],
+      lightBeams: [],
+      audioCtx: null,
+      rainGain: null,
+      isPlayingAudio: false,
+
+      init() {
+        this.bindResize();
+        this.initCanvas();
+        this.animate();
+      },
+
+      bindResize() {
+        const canvas = document.getElementById("sceneCanvas");
+        const resize = () => {
+          const vw = window.innerWidth;
+          const vh = window.innerHeight;
+          const scale = Math.min(vw / 1920, vh / 1080);
+          canvas.style.transform = `scale(${scale})`;
+        };
+        window.addEventListener("resize", resize);
+        resize();
+      },
+
+      toggleLetterbox() {
+        document.body.classList.toggle("cinema-mode");
+      },
+
+      toggleRainAudio() {
+        if (!this.audioCtx) {
+          this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          const bufferSize = this.audioCtx.sampleRate * 2;
+          const noiseBuffer = this.audioCtx.createBuffer(1, bufferSize, this.audioCtx.sampleRate);
+          const output = noiseBuffer.getChannelData(0);
+          for (let i = 0; i < bufferSize; i++) {
+            output[i] = Math.random() * 2 - 1;
+          }
+          const whiteNoise = this.audioCtx.createBufferSource();
+          whiteNoise.buffer = noiseBuffer;
+          whiteNoise.loop = true;
+
+          const filter = this.audioCtx.createBiquadFilter();
+          filter.type = 'bandpass';
+          filter.frequency.value = 1000;
+          filter.Q.value = 0.5;
+
+          this.rainGain = this.audioCtx.createGain();
+          this.rainGain.gain.value = 0.08;
+
+          whiteNoise.connect(filter);
+          filter.connect(this.rainGain);
+          this.rainGain.connect(this.audioCtx.destination);
+          whiteNoise.start(0);
+        }
+
+        this.isPlayingAudio = !this.isPlayingAudio;
+        if (this.rainGain) {
+          this.rainGain.gain.value = this.isPlayingAudio ? 0.08 : 0;
+        }
+        document.getElementById("audioText").innerText = this.isPlayingAudio ? "🔊 关闭音效" : "🌧️ 雨夜音效";
+      },
+
+      initCanvas() {
+        this.canvas = document.getElementById("cinemaCanvas");
+        this.canvas.width = 1920;
+        this.canvas.height = 1080;
+        this.ctx = this.canvas.getContext("2d");
+
+        // 雨滴池
+        this.raindrops = Array.from({ length: 90 }, () => ({
+          x: Math.random() * 1920,
+          y: Math.random() * 1080,
+          len: Math.random() * 25 + 15,
+          speed: Math.random() * 12 + 18,
+          alpha: Math.random() * 0.4 + 0.2
+        }));
+
+        // 探照体积光束
+        this.lightBeams = [
+          { x: 300, angle: 0.3, speed: 0.004, width: 140, color: "rgba(56, 189, 248, 0.08)" },
+          { x: 1600, angle: -0.4, speed: -0.003, width: 160, color: "rgba(245, 158, 11, 0.08)" }
+        ];
+      },
+
+      animate() {
+        requestAnimationFrame(() => this.animate());
+        this.ctx.clearRect(0, 0, 1920, 1080);
+
+        // 1. 绘制动态体积探照光束 (Volumetric Light Beams)
+        this.lightBeams.forEach(b => {
+          b.angle += b.speed;
+          if (b.angle > 0.6 || b.angle < -0.6) b.speed = -b.speed;
+
+          const grad = this.ctx.createRadialGradient(b.x, 0, 10, b.x + Math.sin(b.angle) * 700, 1080, b.width * 2);
+          grad.addColorStop(0, b.color);
+          grad.addColorStop(1, "transparent");
+
+          this.ctx.save();
+          this.ctx.fillStyle = grad;
+          this.ctx.beginPath();
+          this.ctx.moveTo(b.x - 20, 0);
+          this.ctx.lineTo(b.x + 20, 0);
+          this.ctx.lineTo(b.x + Math.sin(b.angle) * 900 + b.width, 1080);
+          this.ctx.lineTo(b.x + Math.sin(b.angle) * 900 - b.width, 1080);
+          this.ctx.closePath();
+          this.ctx.fill();
+          this.ctx.restore();
+        });
+
+        // 2. 绘制雨丝 (Rain Streaks)
+        this.ctx.save();
+        this.ctx.strokeStyle = "rgba(186, 230, 253, 0.35)";
+        this.ctx.lineWidth = 1.2;
+        this.ctx.beginPath();
+        this.raindrops.forEach(r => {
+          r.y += r.speed;
+          r.x += 2;
+          if (r.y > 1080) {
+            r.y = -30;
+            r.x = Math.random() * 1920;
+            // 地面积水涟漪
+            if (r.y > 780 && Math.random() > 0.6) {
+              this.ripples.push({ x: r.x, y: 780 + Math.random() * 280, r: 1, maxR: Math.random() * 18 + 8, alpha: 0.6 });
+            }
+          }
+          this.ctx.moveTo(r.x, r.y);
+          this.ctx.lineTo(r.x + 4, r.y + r.len);
+        });
+        this.ctx.stroke();
+        this.ctx.restore();
+
+        // 3. 绘制地面涟漪 (Puddle Ripples)
+        this.ctx.save();
+        for (let i = this.ripples.length - 1; i >= 0; i--) {
+          const rip = this.ripples[i];
+          rip.r += 0.6;
+          rip.alpha -= 0.02;
+          if (rip.alpha <= 0 || rip.r >= rip.maxR) {
+            this.ripples.splice(i, 1);
+            continue;
+          }
+          this.ctx.beginPath();
+          this.ctx.ellipse(rip.x, rip.y, rip.r * 2.2, rip.r * 0.7, 0, 0, Math.PI * 2);
+          this.ctx.strokeStyle = `rgba(56, 189, 248, ${rip.alpha * 0.45})`;
+          this.ctx.lineWidth = 1;
+          this.ctx.stroke();
+        }
+        this.ctx.restore();
+      }
+    };
+
+    document.addEventListener("DOMContentLoaded", () => CinematicEngine.init());
+  </script>
+</body>
+</html>

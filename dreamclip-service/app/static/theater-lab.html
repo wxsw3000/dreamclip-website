@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>梦之剧院 · 5 套形象表现方案实验室 - DreamClip</title>
+  <meta name="description" content="DreamClip 梦之剧院 5 套场景形象与性能优化方案综合对比实验室。">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔬</text></svg>">
+  <style>
+    :root {
+      --bg: #050711;
+      --card-bg: rgba(15, 23, 42, 0.75);
+      --border: rgba(255, 255, 255, 0.12);
+      --primary: #6366f1;
+      --cyan: #06b6d4;
+      --gold: #f59e0b;
+      --pink: #ec4899;
+      --green: #10b981;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: #f1f5f9;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+      min-height: 100vh;
+      padding-bottom: 60px;
+    }
+
+    /* 顶部导航 */
+    .lab-header {
+      background: rgba(10, 15, 30, 0.9);
+      border-bottom: 1px solid var(--border);
+      padding: 18px 36px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(12px);
+    }
+
+    .lab-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .lab-title h1 {
+      font-size: 22px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #a5b4fc, #38bdf8, #f472b6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .lab-badge {
+      font-size: 11.5px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      color: #a5b4fc;
+      font-weight: 600;
+    }
+
+    .btn {
+      padding: 8px 18px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid var(--border);
+      text-decoration: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #4f46e5, #06b6d4);
+      border-color: transparent;
+    }
+
+    /* 主体容器 */
+    .lab-container {
+      max-width: 1400px;
+      margin: 32px auto;
+      padding: 0 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 36px;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #93c5fd;
+    }
+
+    /* 5 方案卡片网格 */
+    .scheme-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+    }
+
+    .scheme-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      backdrop-filter: blur(10px);
+      transition: all 0.25s cubic-bezier(0.2, 0, 0, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .scheme-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(99, 102, 241, 0.5);
+      box-shadow: 0 16px 35px rgba(0, 0, 0, 0.5), 0 0 25px rgba(99, 102, 241, 0.2);
+    }
+
+    .scheme-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .scheme-icon {
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+
+    .scheme-name {
+      font-size: 17px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .scheme-desc {
+      font-size: 13px;
+      color: #94a3b8;
+      line-height: 1.5;
+      margin-bottom: 18px;
+    }
+
+    .scheme-metrics {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 12px;
+      background: rgba(0, 0, 0, 0.35);
+      border-radius: 10px;
+      font-size: 12px;
+      margin-bottom: 18px;
+    }
+
+    .metric-item {
+      display: flex;
+      justify-content: space-between;
+      color: #cbd5e1;
+    }
+
+    .metric-val {
+      font-weight: 700;
+    }
+
+    /* 实时全屏对比测试工作台 */
+    .preview-workspace {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 24px;
+      backdrop-filter: blur(10px);
+    }
+
+    .preview-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tab-btn {
+      padding: 8px 18px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #94a3b8;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      color: #fff;
+      background: linear-gradient(135deg, #4f46e5, #06b6d4);
+      border-color: transparent;
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+    }
+
+    .iframe-wrapper {
+      position: relative;
+      width: 100%;
+      height: 680px;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: #000;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+    }
+
+    .iframe-preview {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+
+    /* 方案综合对比表格 */
+    .table-container {
+      overflow-x: auto;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      backdrop-filter: blur(10px);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13.5px;
+    }
+
+    th, td {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background: rgba(255, 255, 255, 0.04);
+      color: #93c5fd;
+      font-weight: 700;
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 顶部导航 -->
+  <header class="lab-header">
+    <div class="lab-title">
+      <span style="font-size: 26px;">🔬</span>
+      <h1>梦之剧院 · 方案评测实验室</h1>
+      <span class="lab-badge">5 套技术方案全量就绪</span>
+    </div>
+
+    <div style="display: flex; gap: 12px;">
+      <a href="/" class="btn">🏛️ 返回梦之厅主站</a>
+      <a href="/theater" class="btn" title="查看原始 2MB PNG 原型">🎭 原始原型</a>
+    </div>
+  </header>
+
+  <div class="lab-container">
+
+    <!-- 1. 五套方案快速导航卡片 -->
+    <section>
+      <div class="section-title">
+        <span>🚀</span>
+        <span>5 套方案直达与核心指标</span>
+      </div>
+
+      <div class="scheme-grid">
+        
+        <!-- 方案 1 -->
+        <div class="scheme-card" style="border-top: 4px solid #10b981;">
+          <div>
+            <div class="scheme-icon">⚡</div>
+            <div class="scheme-name">方案 1：纯代码 SVG 矢量拟物</div>
+            <div class="scheme-desc">完全无需外部背景大图，0 KB 图片依赖。SVG 矢量门楼与实时通电闪烁灯管，无限高清。</div>
+          </div>
+          <div>
+            <div class="scheme-metrics">
+              <div class="metric-item"><span>📦 背景体积：</span><span class="metric-val" style="color:#10b981;">0 KB (纯代码)</span></div>
+              <div class="metric-item"><span>⚡ 首屏渲染：</span><span class="metric-val" style="color:#10b981;">~0 ms (瞬开)</span></div>
+              <div class="metric-item"><span>🎨 视觉风格：</span><span>赛博矢量拟物</span></div>
+            </div>
+            <a href="/theater-svg" class="btn btn-primary" style="width: 100%; justify-content: center;">进入全屏体验 ➔</a>
+          </div>
+        </div>
+
+        <!-- 方案 2 -->
+        <div class="scheme-card" style="border-top: 4px solid #38bdf8;">
+          <div>
+            <div class="scheme-icon">🌌</div>
+            <div class="scheme-name">方案 2：分层 2.5D 景深视差</div>
+            <div class="scheme-desc">4 层独立 3D 景深位移，鼠标晃动时远景浮空城、中景剧场与前景光斑错位跟随，极具 AVG 游戏感。</div>
+          </div>
+          <div>
+            <div class="scheme-metrics">
+              <div class="metric-item"><span>📦 背景体积：</span><span class="metric-val" style="color:#38bdf8;">~113 KB</span></div>
+              <div class="metric-item"><span>⚡ 空间层次：</span><span class="metric-val" style="color:#38bdf8;">4 层 3D 物理景深</span></div>
+              <div class="metric-item"><span>🎨 视觉风格：</span><span>AVG 交互视差</span></div>
+            </div>
+            <a href="/theater-parallax" class="btn btn-primary" style="width: 100%; justify-content: center; background: linear-gradient(135deg, #0284c7, #38bdf8);">进入全屏体验 ➔</a>
+          </div>
+        </div>
+
+        <!-- 方案 3 -->
+        <div class="scheme-card" style="border-top: 4px solid #fbbf24;">
+          <div>
+            <div class="scheme-icon">🚀</div>
+            <div class="scheme-name">方案 3：现代 WebP + 渐进式模糊</div>
+            <div class="scheme-desc">原画质无损保留，2.06MB 骤降至 113KB (-94.4%)。内联 1KB Base64 底图，0ms 瞬间亮屏。</div>
+          </div>
+          <div>
+            <div class="scheme-metrics">
+              <div class="metric-item"><span>📦 背景体积：</span><span class="metric-val" style="color:#fbbf24;">113 KB (-94.4%)</span></div>
+              <div class="metric-item"><span>⚡ 首屏亮屏：</span><span class="metric-val" style="color:#fbbf24;">0 ms (LQIP)</span></div>
+              <div class="metric-item"><span>🎨 视觉风格：</span><span>原汁原味写实原画</span></div>
+            </div>
+            <a href="/theater-webp" class="btn btn-primary" style="width: 100%; justify-content: center; background: linear-gradient(135deg, #d97706, #fbbf24);">进入全屏体验 ➔</a>
+          </div>
+        </div>
+
+        <!-- 方案 4 -->
+        <div class="scheme-card" style="border-top: 4px solid #c084fc;">
+          <div>
+            <div class="scheme-icon">🔮</div>
+            <div class="scheme-name">方案 4：3D / WebGL 全息剧场</div>
+            <div class="scheme-desc">Three.js 驱动的微型 3D 空间。支持 360° 鼠标拖拽漫游、发光赛博网格地面与 3D 全息浮空海报。</div>
+          </div>
+          <div>
+            <div class="scheme-metrics">
+              <div class="metric-item"><span>📦 渲染引擎：</span><span class="metric-val" style="color:#c084fc;">Three.js WebGL</span></div>
+              <div class="metric-item"><span>⚡ 交互自由度：</span><span class="metric-val" style="color:#c084fc;">360° 自由旋转</span></div>
+              <div class="metric-item"><span>🎨 视觉风格：</span><span>全 3D 赛博空间</span></div>
+            </div>
+            <a href="/theater-3d" class="btn btn-primary" style="width: 100%; justify-content: center; background: linear-gradient(135deg, #7c3aed, #c084fc);">进入全屏体验 ➔</a>
+          </div>
+        </div>
+
+        <!-- 方案 5 -->
+        <div class="scheme-card" style="border-top: 4px solid #f43f5e;">
+          <div>
+            <div class="scheme-icon">🎬</div>
+            <div class="scheme-name">方案 5：电影微动流光循环</div>
+            <div class="scheme-desc">雨丝物理涟漪、探照体积光束、21:9 宽银幕电影遮幅与拟真雨夜环境音效，电影级视听氛围。</div>
+          </div>
+          <div>
+            <div class="scheme-metrics">
+              <div class="metric-item"><span>📦 动态光效：</span><span class="metric-val" style="color:#f43f5e;">体积光 + 雨丝涟漪</span></div>
+              <div class="metric-item"><span>⚡ 沉浸视听：</span><span class="metric-val" style="color:#f43f5e;">21:9 + 雨夜音效</span></div>
+              <div class="metric-item"><span>🎨 视觉风格：</span><span>电影动态流光</span></div>
+            </div>
+            <a href="/theater-video" class="btn btn-primary" style="width: 100%; justify-content: center; background: linear-gradient(135deg, #e11d48, #f43f5e);">进入全屏体验 ➔</a>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 2. 工作台实时在线单页对比切换 -->
+    <section class="preview-workspace">
+      <div class="section-title" style="margin-bottom: 12px;">
+        <span>🖥️</span>
+        <span>实验室在线无缝切换预览窗口</span>
+      </div>
+
+      <div class="preview-tabs">
+        <button class="tab-btn active" onclick="switchPreview('/theater-svg', this)">⚡ 方案 1: 纯代码 SVG (0KB)</button>
+        <button class="tab-btn" onclick="switchPreview('/theater-parallax', this)">🌌 方案 2: 2.5D 视差景深</button>
+        <button class="tab-btn" onclick="switchPreview('/theater-webp', this)">🚀 方案 3: WebP 极速 (113KB)</button>
+        <button class="tab-btn" onclick="switchPreview('/theater-3d', this)">🔮 方案 4: 3D WebGL 全息</button>
+        <button class="tab-btn" onclick="switchPreview('/theater-video', this)">🎬 方案 5: 电影微动循环</button>
+        <button class="tab-btn" onclick="switchPreview('/theater', this)">🎭 原始 2MB 原型</button>
+      </div>
+
+      <div class="iframe-wrapper">
+        <iframe id="previewIframe" class="iframe-preview" src="/theater-svg"></iframe>
+      </div>
+    </section>
+
+    <!-- 3. 全方案横向对比总表 -->
+    <section class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>方案名称</th>
+            <th>背景体积</th>
+            <th>首屏亮屏</th>
+            <th>画面质感</th>
+            <th>核心优势</th>
+            <th>最佳适用场景</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>⚡ 方案 1：纯代码 SVG 矢量拟物</strong></td>
+            <td style="color:#10b981;font-weight:bold;">0 KB (代码仅15K)</td>
+            <td>0 ms (瞬开)</td>
+            <td>扁平赛博矢量风</td>
+            <td>完全零图片下载，4K/8K 永不模糊，霓虹灯管通电动态</td>
+            <td>追求极限秒开速度、弱网/移动端用户多</td>
+          </tr>
+          <tr>
+            <td><strong>🌌 方案 2：分层 2.5D 景深视差微动</strong></td>
+            <td style="color:#38bdf8;font-weight:bold;">~113 KB</td>
+            <td>&lt; 150 ms</td>
+            <td>立体 3D 景深</td>
+            <td>鼠标与陀螺仪平滑联动，AVG 游戏代入感极强</td>
+            <td>突出 AVG 游戏主题、追求场景层次与沉浸交互</td>
+          </tr>
+          <tr>
+            <td><strong>🚀 方案 3：现代 WebP 压缩 + LQIP</strong></td>
+            <td style="color:#fbbf24;font-weight:bold;">113 KB (-94.4%)</td>
+            <td>0 ms (Base64底图)</td>
+            <td>写实手绘插画原画</td>
+            <td>100% 还原当前插画美感，体积缩减 94%，改造改动最小</td>
+            <td>最省心、最稳妥，完美平衡画风与极速体验</td>
+          </tr>
+          <tr>
+            <td><strong>🔮 方案 4：3D / WebGL 全息交互</strong></td>
+            <td style="color:#c084fc;font-weight:bold;">~580 KB (含库)</td>
+            <td>&lt; 500 ms</td>
+            <td>全 3D 科技感</td>
+            <td>360° 自由旋转视角、3D 浮空海报与动感网格地面</td>
+            <td>科技感前沿发布会、吸引极客与硬核玩家</td>
+          </tr>
+          <tr>
+            <td><strong>🎬 方案 5：电影微动流光循环</strong></td>
+            <td style="color:#f43f5e;font-weight:bold;">~120 KB</td>
+            <td>&lt; 150 ms</td>
+            <td>电影级动态雨夜</td>
+            <td>探照光束、雨丝涟漪物理模拟、21:9 宽屏电影感</td>
+            <td>夜间模式、烘托故事悬疑或治愈系氛围</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+  </div>
+
+  <script>
+    function switchPreview(url, btn) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const iframe = document.getElementById('previewIframe');
+      iframe.src = url;
+    }
+  </script>
+</body>
+</html>

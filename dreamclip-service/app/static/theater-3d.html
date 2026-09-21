@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>方案4：3D / WebGL 全息交互剧场 - DreamClip</title>
+  <meta name="description" content="方案4：基于 Three.js WebGL 的轻量化 3D 全息交互剧场。支持 360° 旋转拖拽、赛博网格地面与 3D 浮空全息海报。">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔮</text></svg>">
+  <!-- Three.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <style>
+    :root {
+      --primary: #6366f1;
+      --cyan: #06b6d4;
+      --gold: #f59e0b;
+      --pink: #ec4899;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #05060f;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      user-select: none;
+    }
+
+    /* 3D WebGL 画布容器 */
+    #webglCanvasContainer {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1;
+      cursor: grab;
+    }
+
+    #webglCanvasContainer:active {
+      cursor: grabbing;
+    }
+
+    /* 顶部 HUD 导航条 */
+    .theater-hud {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 62px;
+      padding: 0 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(180deg, rgba(6, 8, 20, 0.92) 0%, rgba(6, 8, 20, 0) 100%);
+      backdrop-filter: blur(10px);
+      z-index: 100;
+    }
+
+    .hud-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .hud-logo {
+      font-size: 19px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #a5b4fc, #38bdf8, #f472b6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .scheme-badge {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #c084fc;
+      background: rgba(192, 132, 252, 0.12);
+      border: 1px solid rgba(192, 132, 252, 0.4);
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+
+    .switcher-capsule {
+      display: flex;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 30px;
+      padding: 3px;
+      gap: 2px;
+      backdrop-filter: blur(12px);
+    }
+
+    .switcher-btn {
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .switcher-btn:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .switcher-btn.active {
+      color: #fff;
+      background: linear-gradient(135deg, #6366f1, #06b6d4);
+      box-shadow: 0 2px 10px rgba(99, 102, 241, 0.4);
+    }
+
+    .hud-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .hud-btn {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      backdrop-filter: blur(12px);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .hud-btn:hover { background: rgba(255, 255, 255, 0.18); transform: translateY(-1px); }
+
+    /* 3D 交互浮动操作条 */
+    .controls-overlay {
+      position: fixed;
+      bottom: 24px;
+      right: 28px;
+      background: rgba(10, 15, 30, 0.85);
+      border: 1px solid rgba(192, 132, 252, 0.4);
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 12px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      z-index: 90;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* 性能 HUD */
+    .tech-metric-card {
+      position: fixed;
+      bottom: 24px;
+      left: 28px;
+      background: rgba(10, 15, 30, 0.85);
+      border: 1px solid rgba(192, 132, 252, 0.4);
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 12px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      z-index: 90;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .metric-row { display: flex; align-items: center; gap: 8px; }
+    .metric-val { font-weight: bold; color: #c084fc; }
+
+    /* 3D 浮动操作提示 */
+    .drag-hint {
+      position: fixed;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(20, 15, 35, 0.8);
+      border: 1px solid rgba(192, 132, 252, 0.3);
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      color: #e9d5ff;
+      z-index: 80;
+      pointer-events: none;
+      animation: fadeInOut 4s forwards;
+    }
+
+    @keyframes fadeInOut {
+      0% { opacity: 0; transform: translate(-50%, -10px); }
+      20% { opacity: 1; transform: translate(-50%, 0); }
+      80% { opacity: 1; }
+      100% { opacity: 0.3; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 顶部 HUD 导航 -->
+  <header class="theater-hud">
+    <div class="hud-brand">
+      <div class="hud-logo">
+        <span>🎭</span>
+        <span>DreamClip 梦之剧院</span>
+      </div>
+      <div class="scheme-badge">
+        <span>🔮 方案 4：3D / WebGL 全息交互剧场</span>
+      </div>
+    </div>
+
+    <!-- 方案快速切换胶囊 -->
+    <nav class="switcher-capsule">
+      <a href="/theater-svg" class="switcher-btn" title="方案1：纯SVG代码拟物">1. 纯代码SVG (0KB)</a>
+      <a href="/theater-parallax" class="switcher-btn" title="方案2：2.5D多层景深视差">2. 2.5D视差景深</a>
+      <a href="/theater-webp" class="switcher-btn" title="方案3：现代WebP+LQIP">3. WebP极速 (113KB)</a>
+      <a href="/theater-3d" class="switcher-btn active" title="方案4：3D/WebGL全息交互">4. 3D WebGL全息</a>
+      <a href="/theater-video" class="switcher-btn" title="方案5：电影微动循环">5. 动态微动循环</a>
+      <a href="/theater-lab" class="switcher-btn" style="color: #fbbf24; font-weight: bold;" title="查看5套方案综合对比大厅">📊 方案对比评测</a>
+    </nav>
+
+    <div class="hud-actions">
+      <a href="/" class="hud-btn" title="返回梦之厅主站">🏛️ 返回梦之厅主站</a>
+    </div>
+  </header>
+
+  <!-- 3D WebGL 视口容器 -->
+  <div id="webglCanvasContainer"></div>
+
+  <!-- 浮动操作提示 -->
+  <div class="drag-hint">
+    <span>🖱️ 按住鼠标左键拖拽可 360° 探索 3D 剧院大厅，滚轮缩放视角</span>
+  </div>
+
+  <!-- 3D 交互控制栏 -->
+  <div class="controls-overlay">
+    <span>🎥 视角控制：</span>
+    <button class="hud-btn" onclick="ThreeEngine.toggleAutoRotate()" style="padding: 3px 10px; font-size: 11px;">
+      <span id="autoRotateText">⏸️ 暂停自转</span>
+    </button>
+    <button class="hud-btn" onclick="ThreeEngine.resetCamera()" style="padding: 3px 10px; font-size: 11px;">
+      🔄 复位视角
+    </button>
+    <a href="/games" class="hud-btn" style="padding: 3px 12px; font-size: 11px; background: linear-gradient(135deg, #ec4899, #8b5cf6);">
+      🎬 进入 AVG 剧场
+    </a>
+  </div>
+
+  <!-- 性能 HUD -->
+  <aside class="tech-metric-card">
+    <div class="metric-row">
+      <span>🔮 渲染引擎：</span>
+      <span class="metric-val">Three.js / WebGL 硬件加速</span>
+    </div>
+    <div class="metric-row">
+      <span>📐 空间维度：</span>
+      <span class="metric-val">实时 3D 几何网格 + 发光着色器</span>
+    </div>
+    <div class="metric-row">
+      <span>⚡ 运行帧率：</span>
+      <span class="metric-val" id="fpsCounter">60 FPS</span>
+    </div>
+  </aside>
+
+  <script>
+    const ThreeEngine = {
+      scene: null,
+      camera: null,
+      renderer: null,
+      autoRotate: true,
+      marqueeMesh: null,
+      gridHelper: null,
+      particles: null,
+      isDragging: false,
+      prevMouse: { x: 0, y: 0 },
+      targetRotation: { x: 0, y: 0 },
+      curRotation: { x: 0, y: 0 },
+
+      init() {
+        const container = document.getElementById("webglCanvasContainer");
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+
+        // 1. 创建场景与相机
+        this.scene = new THREE.Scene();
+        this.scene.fog = new THREE.FogExp2(0x05060f, 0.035);
+
+        this.camera = new THREE.PerspectiveCamera(60, w / h, 0.1, 1000);
+        this.camera.position.set(0, 2.5, 11);
+
+        // 2. 创建渲染器
+        this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        this.renderer.setSize(w, h);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        container.appendChild(this.renderer.domElement);
+
+        // 3. 灯光体系
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+        this.scene.add(ambientLight);
+
+        const neonPointGold = new THREE.PointLight(0xfbbf24, 3, 25);
+        neonPointGold.position.set(0, 6, 2);
+        this.scene.add(neonPointGold);
+
+        const neonPointCyan = new THREE.PointLight(0x06b6d4, 2.5, 25);
+        neonPointCyan.position.set(-6, 2, 2);
+        this.scene.add(neonPointCyan);
+
+        const neonPointPink = new THREE.PointLight(0xec4899, 2.5, 25);
+        neonPointPink.position.set(6, 2, 2);
+        this.scene.add(neonPointPink);
+
+        // 4. 构建 3D 剧院模型结构
+        this.buildTheaterStructure();
+        this.buildCyberGrid();
+        this.buildParticles();
+
+        // 5. 事件绑定与动画循环
+        this.bindEvents();
+        this.animate();
+      },
+
+      buildTheaterStructure() {
+        const theaterGroup = new THREE.Group();
+
+        // 4.1 剧院大门拱顶
+        const archGeom = new THREE.TorusGeometry(4.5, 0.18, 16, 50, Math.PI);
+        const neonGoldMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24 });
+        const archMesh = new THREE.Mesh(archGeom, neonGoldMat);
+        archMesh.position.set(0, 2.5, 0);
+        theaterGroup.add(archMesh);
+
+        // 4.2 双侧赛博立柱
+        const pillarGeom = new THREE.CylinderGeometry(0.25, 0.35, 7, 16);
+        const pillarMat = new THREE.MeshStandardMaterial({ color: 0x1e1b4b, roughness: 0.2, metalness: 0.8 });
+        
+        const leftPillar = new THREE.Mesh(pillarGeom, pillarMat);
+        leftPillar.position.set(-4.5, 0, 0);
+        theaterGroup.add(leftPillar);
+
+        const rightPillar = new THREE.Mesh(pillarGeom, pillarMat);
+        rightPillar.position.set(4.5, 0, 0);
+        theaterGroup.add(rightPillar);
+
+        // 立柱霓虹灯带
+        const stripeGeom = new THREE.CylinderGeometry(0.27, 0.37, 7, 8);
+        const cyanMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, wireframe: true });
+        const leftStripe = new THREE.Mesh(stripeGeom, cyanMat);
+        leftStripe.position.set(-4.5, 0, 0);
+        theaterGroup.add(leftStripe);
+
+        const rightStripe = new THREE.Mesh(stripeGeom, cyanMat);
+        rightStripe.position.set(4.5, 0, 0);
+        theaterGroup.add(rightStripe);
+
+        // 4.3 3D 门楣走马灯牌匾
+        const marqueeGeom = new THREE.BoxGeometry(7, 1.2, 0.4);
+        const marqueeMat = new THREE.MeshStandardMaterial({ 
+          color: 0x0f172a, 
+          emissive: 0xf59e0b, 
+          emissiveIntensity: 0.3,
+          roughness: 0.1 
+        });
+        this.marqueeMesh = new THREE.Mesh(marqueeGeom, marqueeMat);
+        this.marqueeMesh.position.set(0, 3.8, 0.5);
+        theaterGroup.add(this.marqueeMesh);
+
+        // 4.4 3D 浮空全息海报屏
+        const posterGeom = new THREE.PlaneGeometry(2.6, 3.6);
+        // 加载海报贴图
+        const textureLoader = new THREE.TextureLoader();
+        const posterTex = textureLoader.load('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=600&auto=format&fit=crop');
+        const posterMat = new THREE.MeshBasicMaterial({ map: posterTex, side: THREE.DoubleSide });
+        const posterMesh = new THREE.Mesh(posterGeom, posterMat);
+        posterMesh.position.set(-2.2, 0.2, 0.8);
+        posterMesh.rotation.y = 0.25;
+        theaterGroup.add(posterMesh);
+
+        // 4.5 3D 检票大门入口门洞
+        const doorGeom = new THREE.PlaneGeometry(2.6, 3.6);
+        const doorMat = new THREE.MeshBasicMaterial({ color: 0xec4899, wireframe: true });
+        const doorMesh = new THREE.Mesh(doorGeom, doorMat);
+        doorMesh.position.set(2.2, 0.2, 0.8);
+        doorMesh.rotation.y = -0.25;
+        theaterGroup.add(doorMesh);
+
+        this.scene.add(theaterGroup);
+      },
+
+      buildCyberGrid() {
+        const gridHelper = new THREE.GridHelper(60, 60, 0xec4899, 0x1e293b);
+        gridHelper.position.y = -3.5;
+        this.scene.add(gridHelper);
+        this.gridHelper = gridHelper;
+      },
+
+      buildParticles() {
+        const particleCount = 450;
+        const geom = new THREE.BufferGeometry();
+        const positions = new Float32Array(particleCount * 3);
+
+        for (let i = 0; i < particleCount * 3; i += 3) {
+          positions[i] = (Math.random() - 0.5) * 35;
+          positions[i + 1] = Math.random() * 20 - 5;
+          positions[i + 2] = (Math.random() - 0.5) * 35;
+        }
+
+        geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        const mat = new THREE.PointsMaterial({
+          color: 0x38bdf8,
+          size: 0.12,
+          transparent: true,
+          opacity: 0.75
+        });
+
+        this.particles = new THREE.Points(geom, mat);
+        this.scene.add(this.particles);
+      },
+
+      bindEvents() {
+        window.addEventListener("resize", () => {
+          const w = window.innerWidth;
+          const h = window.innerHeight;
+          this.camera.aspect = w / h;
+          this.camera.updateProjectionMatrix();
+          this.renderer.setSize(w, h);
+        });
+
+        const dom = this.renderer.domElement;
+        dom.addEventListener("mousedown", (e) => {
+          this.isDragging = true;
+          this.prevMouse = { x: e.clientX, y: e.clientY };
+        });
+
+        window.addEventListener("mouseup", () => { this.isDragging = false; });
+
+        window.addEventListener("mousemove", (e) => {
+          if (!this.isDragging) return;
+          const deltaX = e.clientX - this.prevMouse.x;
+          const deltaY = e.clientY - this.prevMouse.y;
+          this.targetRotation.y += deltaX * 0.005;
+          this.targetRotation.x += deltaY * 0.005;
+          this.prevMouse = { x: e.clientX, y: e.clientY };
+        });
+
+        window.addEventListener("wheel", (e) => {
+          this.camera.position.z = Math.max(6, Math.min(18, this.camera.position.z + e.deltaY * 0.01));
+        });
+      },
+
+      toggleAutoRotate() {
+        this.autoRotate = !this.autoRotate;
+        const text = document.getElementById("autoRotateText");
+        if (text) text.innerText = this.autoRotate ? "⏸️ 暂停自转" : "▶️ 开启自转";
+      },
+
+      resetCamera() {
+        this.targetRotation = { x: 0, y: 0 };
+        this.camera.position.set(0, 2.5, 11);
+      },
+
+      animate() {
+        requestAnimationFrame(() => this.animate());
+
+        // 旋转平滑差值
+        if (this.autoRotate && !this.isDragging) {
+          this.targetRotation.y += 0.003;
+        }
+
+        this.curRotation.x += (this.targetRotation.x - this.curRotation.x) * 0.08;
+        this.curRotation.y += (this.targetRotation.y - this.curRotation.y) * 0.08;
+
+        this.camera.position.x = Math.sin(this.curRotation.y) * 11;
+        this.camera.position.z = Math.cos(this.curRotation.y) * 11;
+        this.camera.position.y = 2.5 + this.curRotation.x * 3;
+        this.camera.lookAt(0, 1.5, 0);
+
+        // 网格流光移动
+        if (this.gridHelper) {
+          this.gridHelper.position.z = (this.gridHelper.position.z + 0.03) % 2;
+        }
+
+        // 粒子下落
+        if (this.particles) {
+          const positions = this.particles.geometry.attributes.position.array;
+          for (let i = 1; i < positions.length; i += 3) {
+            positions[i] -= 0.04;
+            if (positions[i] < -5) positions[i] = 15;
+          }
+          this.particles.geometry.attributes.position.needsUpdate = true;
+        }
+
+        this.renderer.render(this.scene, this.camera);
+      }
+    };
+
+    document.addEventListener("DOMContentLoaded", () => ThreeEngine.init());
+  </script>
+</body>
+</html>

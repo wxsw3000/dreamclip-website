@@ -262,8 +262,51 @@ def universe_page(identifier: str = None):
 @app.get("/theater", include_in_schema=False)
 @app.get("/scene", include_in_schema=False)
 def theater_page():
-    """独立新实验页面：梦之剧院·场景化大厅 (theater.html)"""
+    """独立实验页面：梦之剧院·原始原型 (theater.html)"""
     return serve_static_page("theater.html")
+
+# 5 套剧场形象与性能替代方案独立访问路由
+@app.get("/theater-svg", include_in_schema=False)
+@app.get("/theater/svg", include_in_schema=False)
+@app.get("/theater-opt1", include_in_schema=False)
+def theater_svg_page():
+    """方案 1：纯代码 SVG & CSS 矢量拟物剧场 (0KB 图片)"""
+    return serve_static_page("theater-svg.html")
+
+@app.get("/theater-parallax", include_in_schema=False)
+@app.get("/theater/parallax", include_in_schema=False)
+@app.get("/theater-opt2", include_in_schema=False)
+def theater_parallax_page():
+    """方案 2：分层 2.5D 景深视差微动效剧场"""
+    return serve_static_page("theater-parallax.html")
+
+@app.get("/theater-webp", include_in_schema=False)
+@app.get("/theater/webp", include_in_schema=False)
+@app.get("/theater-opt3", include_in_schema=False)
+def theater_webp_page():
+    """方案 3：现代 WebP 极速压缩 + 渐进式模糊底图 (113KB)"""
+    return serve_static_page("theater-webp.html")
+
+@app.get("/theater-3d", include_in_schema=False)
+@app.get("/theater/3d", include_in_schema=False)
+@app.get("/theater-opt4", include_in_schema=False)
+def theater_3d_page():
+    """方案 4：3D / WebGL 全息交互剧场 (Three.js)"""
+    return serve_static_page("theater-3d.html")
+
+@app.get("/theater-video", include_in_schema=False)
+@app.get("/theater/video", include_in_schema=False)
+@app.get("/theater-opt5", include_in_schema=False)
+def theater_video_page():
+    """方案 5：无缝循环电影微动流光剧场"""
+    return serve_static_page("theater-video.html")
+
+@app.get("/theater-lab", include_in_schema=False)
+@app.get("/theater/lab", include_in_schema=False)
+@app.get("/theater-compare", include_in_schema=False)
+def theater_lab_page():
+    """5 套方案综合评测与横向对比实验室"""
+    return serve_static_page("theater-lab.html")
 
 @app.get("/studio", include_in_schema=False)
 @app.get("/studio/", include_in_schema=False)

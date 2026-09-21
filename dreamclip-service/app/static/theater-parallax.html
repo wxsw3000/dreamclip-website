@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>方案2：分层 2.5D 景深视差微动效剧场 - DreamClip</title>
+  <meta name="description" content="方案2：分层 2.5D 景深视差微动效剧场。通过多层空间深度与鼠标/陀螺仪联动，打造媲美《星穹铁道》AVG 的立体纵深感。">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌌</text></svg>">
+  <style>
+    :root {
+      --primary: #6366f1;
+      --cyan: #06b6d4;
+      --gold: #f59e0b;
+      --pink: #ec4899;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #03050c;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      user-select: none;
+      perspective: 1200px;
+    }
+
+    /* 场景外层容器 */
+    .scene-viewport {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #03050c;
+      overflow: hidden;
+    }
+
+    /* 1920x1080 3D 核心视差画布 */
+    .parallax-world {
+      width: 1920px;
+      height: 1080px;
+      position: relative;
+      flex-shrink: 0;
+      transform-style: preserve-3d;
+      transform-origin: center center;
+      will-change: transform;
+    }
+
+    /* 分层图层通用样式 */
+    .parallax-layer {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      will-change: transform;
+      pointer-events: none;
+    }
+
+    /* 图层 0: 深空远景与悬浮飞车 */
+    .layer-deep-sky {
+      background: radial-gradient(circle at 50% 30%, #171b38 0%, #060814 80%);
+      z-index: 1;
+    }
+
+    .sky-stars {
+      position: absolute;
+      width: 100%; height: 100%;
+      background-image: 
+        radial-gradient(1px 1px at 25% 20%, #fff, transparent),
+        radial-gradient(1.5px 1.5px at 65% 15%, #38bdf8, transparent),
+        radial-gradient(1px 1px at 85% 35%, #f472b6, transparent),
+        radial-gradient(2px 2px at 45% 28%, #fbbf24, transparent);
+      background-size: 550px 550px;
+      opacity: 0.85;
+    }
+
+    .flying-drone {
+      position: absolute;
+      top: 140px;
+      left: -100px;
+      width: 45px;
+      height: 14px;
+      background: #38bdf8;
+      border-radius: 10px;
+      box-shadow: 0 0 15px #38bdf8, -40px 0 25px rgba(56, 189, 248, 0.6);
+      animation: flyAcross 16s linear infinite;
+    }
+
+    @keyframes flyAcross {
+      0% { transform: translateX(0) translateY(0); opacity: 0; }
+      10% { opacity: 0.9; }
+      90% { opacity: 0.9; }
+      100% { transform: translateX(2200px) translateY(-50px); opacity: 0; }
+    }
+
+    /* 图层 1: 剧院建筑中景 (通过轻量优化切片渲染) */
+    .layer-theater-facade {
+      z-index: 2;
+      filter: drop-shadow(0 15px 35px rgba(0, 0, 0, 0.8));
+    }
+
+    .theater-bg-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      opacity: 0.96;
+    }
+
+    /* 图层 2: 交互式热区层 */
+    .layer-interactive {
+      z-index: 5;
+      pointer-events: auto;
+    }
+
+    .region-hotspot {
+      position: absolute;
+      pointer-events: auto;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    /* 门楣走马灯 */
+    .marquee-signboard {
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle, rgba(25, 20, 10, 0.92), rgba(5, 5, 5, 0.98));
+      border: 3px solid #fbbf24;
+      border-radius: 8px;
+      box-shadow: 0 0 30px rgba(245, 158, 11, 0.6), inset 0 0 20px rgba(245, 158, 11, 0.3);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      position: relative;
+    }
+
+    .marquee-track {
+      display: flex;
+      white-space: nowrap;
+      animation: led-scroll 24s linear infinite;
+    }
+
+    .marquee-item-text {
+      font-size: 26px;
+      font-weight: 800;
+      color: #fde047;
+      text-shadow: 0 0 10px #f59e0b, 0 0 20px rgba(245, 158, 11, 0.8);
+      padding: 0 40px;
+      letter-spacing: 2px;
+      font-family: "Courier New", Courier, monospace, sans-serif;
+    }
+
+    @keyframes led-scroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    /* 海报橱窗 */
+    .poster-showcase {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      border: 3px solid #38bdf8;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 0 35px rgba(56, 189, 248, 0.4);
+      background: #0b0f19;
+      cursor: pointer;
+    }
+
+    .poster-slide {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      opacity: 1;
+    }
+
+    .poster-slide img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .poster-overlay {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      padding: 20px 14px 10px;
+      background: linear-gradient(180deg, transparent 0%, rgba(10, 15, 30, 0.95) 80%);
+    }
+
+    .poster-tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: var(--primary);
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .poster-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #fff;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+    }
+
+    /* 检票大门 */
+    .ticket-btn {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.95), rgba(245, 158, 11, 0.95));
+      border: 3px solid #fef08a;
+      border-radius: 12px;
+      color: #fff;
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 10px 30px rgba(239, 68, 68, 0.6), 0 0 25px rgba(245, 158, 11, 0.5);
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.2, 0, 0, 1);
+      padding: 10px;
+      text-align: center;
+    }
+
+    .ticket-btn:hover {
+      transform: translateY(-3px) scale(1.03);
+      box-shadow: 0 15px 40px rgba(239, 68, 68, 0.8), 0 0 35px rgba(245, 158, 11, 0.7);
+    }
+
+    /* 图层 3: 前景景深粒子与环境反光 */
+    .layer-foreground {
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    #parallaxParticles {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+    }
+
+    /* 顶部 HUD 导航条 */
+    .theater-hud {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 62px;
+      padding: 0 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(180deg, rgba(6, 8, 20, 0.92) 0%, rgba(6, 8, 20, 0) 100%);
+      backdrop-filter: blur(10px);
+      z-index: 100;
+    }
+
+    .hud-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .hud-logo {
+      font-size: 19px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #a5b4fc, #38bdf8, #f472b6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .scheme-badge {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+
+    .switcher-capsule {
+      display: flex;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 30px;
+      padding: 3px;
+      gap: 2px;
+      backdrop-filter: blur(12px);
+    }
+
+    .switcher-btn {
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .switcher-btn:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .switcher-btn.active {
+      color: #fff;
+      background: linear-gradient(135deg, #6366f1, #06b6d4);
+      box-shadow: 0 2px 10px rgba(99, 102, 241, 0.4);
+    }
+
+    .hud-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .hud-btn {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      backdrop-filter: blur(12px);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .hud-btn:hover { background: rgba(255, 255, 255, 0.18); transform: translateY(-1px); }
+
+    /* 视差强度控制胶囊 */
+    .depth-slider-card {
+      position: fixed;
+      bottom: 24px;
+      right: 28px;
+      background: rgba(10, 15, 30, 0.85);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 12px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      z-index: 90;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* 性能与特性悬浮卡 */
+    .tech-metric-card {
+      position: fixed;
+      bottom: 24px;
+      left: 28px;
+      background: rgba(10, 15, 30, 0.85);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 12px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      z-index: 90;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .metric-row { display: flex; align-items: center; gap: 8px; }
+    .metric-val { font-weight: bold; color: #38bdf8; }
+  </style>
+</head>
+<body>
+
+  <!-- 顶部 HUD 导航 -->
+  <header class="theater-hud">
+    <div class="hud-brand">
+      <div class="hud-logo">
+        <span>🎭</span>
+        <span>DreamClip 梦之剧院</span>
+      </div>
+      <div class="scheme-badge">
+        <span>🌌 方案 2：分层 2.5D 景深视差微动效</span>
+      </div>
+    </div>
+
+    <!-- 方案快速切换胶囊 -->
+    <nav class="switcher-capsule">
+      <a href="/theater-svg" class="switcher-btn" title="方案1：纯SVG代码拟物">1. 纯代码SVG (0KB)</a>
+      <a href="/theater-parallax" class="switcher-btn active" title="方案2：2.5D多层景深视差">2. 2.5D视差景深</a>
+      <a href="/theater-webp" class="switcher-btn" title="方案3：现代WebP+LQIP">3. WebP极速 (113KB)</a>
+      <a href="/theater-3d" class="switcher-btn" title="方案4：3D/WebGL全息交互">4. 3D WebGL全息</a>
+      <a href="/theater-video" class="switcher-btn" title="方案5：电影微动循环">5. 动态微动循环</a>
+      <a href="/theater-lab" class="switcher-btn" style="color: #fbbf24; font-weight: bold;" title="查看5套方案综合对比大厅">📊 方案对比评测</a>
+    </nav>
+
+    <div class="hud-actions">
+      <a href="/" class="hud-btn" title="返回梦之厅主站">🏛️ 返回梦之厅主站</a>
+    </div>
+  </header>
+
+  <!-- 核心视口 -->
+  <main class="scene-viewport" id="sceneViewport">
+    <div class="parallax-world" id="parallaxWorld">
+      
+      <!-- 图层 0: 深空星穹与悬浮穿梭机 (Far Deep Sky) -->
+      <div class="parallax-layer layer-deep-sky" id="layerSky">
+        <div class="sky-stars"></div>
+        <div class="flying-drone"></div>
+      </div>
+
+      <!-- 图层 1: 剧院建筑中景切片 (Mid Ground Architecture) -->
+      <div class="parallax-layer layer-theater-facade" id="layerFacade">
+        <img src="/static/theater-entrance.webp" class="theater-bg-img" alt="Dream Theater Scene" onerror="this.src='/static/theater-entrance.png'">
+      </div>
+
+      <!-- 图层 2: 交互式热区层 (Interactive Hotspots) -->
+      <div class="parallax-layer layer-interactive" id="layerHotspots">
+        <!-- 门楣 LED 跑马灯 -->
+        <div class="region-hotspot" style="left: 28%; top: 13.8%; width: 44%; height: 6.2%;">
+          <div class="marquee-signboard">
+            <div class="marquee-track" id="marqueeTrack">
+              <span class="marquee-item-text">🌌 方案2演示：分层 2.5D 景深视差微动效 🌌</span>
+              <span class="marquee-item-text">✨ 晃动鼠标感受真实 3D 纵深与物理悬浮 ✨</span>
+              <span class="marquee-item-text">🎬 第一章《最初的遗失信件》现已上线，点击海报即可体验</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 橱窗海报墙 -->
+        <div class="region-hotspot" style="left: 7.5%; top: 32%; width: 23%; height: 31%;">
+          <div class="poster-showcase" onclick="window.location.href='/games'">
+            <div class="poster-slide">
+              <img src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=800&auto=format&fit=crop" alt="深空信箱：2099">
+              <div class="poster-overlay">
+                <span class="poster-tag">正在热映</span>
+                <div class="poster-title">深空信箱：2099</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 剧院检票大门 -->
+        <div class="region-hotspot" style="left: 69%; top: 44%; width: 19%; height: 16%;">
+          <a href="/games" class="ticket-btn">
+            <span style="font-size:24px;margin-bottom:2px;">🎟️</span>
+            <span style="font-size:18px;font-weight:800;">进入梦之剧院</span>
+            <span style="font-size:11px;opacity:0.9;">🎬 开启 AVG 沉浸互动剧场</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- 图层 3: 前景动态粒子与环境反光 (Foreground Layer) -->
+      <div class="parallax-layer layer-foreground" id="layerForeground">
+        <canvas id="parallaxParticles"></canvas>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- 视差深度增强调节器 -->
+  <div class="depth-slider-card">
+    <span>🎚️ 3D 视差强度：</span>
+    <button class="hud-btn" onclick="ParallaxEngine.setIntensity(1)" style="padding: 3px 8px; font-size: 11px;">标准</button>
+    <button class="hud-btn" onclick="ParallaxEngine.setIntensity(2)" style="padding: 3px 8px; font-size: 11px; color: #38bdf8;">高沉浸 (2X)</button>
+  </div>
+
+  <!-- 性能 HUD -->
+  <aside class="tech-metric-card">
+    <div class="metric-row">
+      <span>🌌 方案类型：</span>
+      <span class="metric-val">分层 2.5D 景深视差微动效</span>
+    </div>
+    <div class="metric-row">
+      <span>📐 空间层次：</span>
+      <span class="metric-val">4 层独立 3D 景深物理位移</span>
+    </div>
+    <div class="metric-row">
+      <span>🖱️ 交互特性：</span>
+      <span class="metric-val">鼠标 / 陀螺仪流畅平滑追踪</span>
+    </div>
+  </aside>
+
+  <!-- 视差动力学核心逻辑 -->
+  <script>
+    const ParallaxEngine = {
+      mouse: { x: 0, y: 0, targetX: 0, targetY: 0 },
+      intensity: 1.0,
+      scale: 1,
+
+      init() {
+        this.bindResize();
+        this.bindMouse();
+        this.initParticles();
+        this.renderLoop();
+      },
+
+      setIntensity(val) {
+        this.intensity = val;
+      },
+
+      bindResize() {
+        const world = document.getElementById("parallaxWorld");
+        const resize = () => {
+          const vw = window.innerWidth;
+          const vh = window.innerHeight;
+          this.scale = Math.min(vw / 1920, vh / 1080);
+          world.style.transform = `scale(${this.scale})`;
+        };
+        window.addEventListener("resize", resize);
+        resize();
+      },
+
+      bindMouse() {
+        window.addEventListener("mousemove", (e) => {
+          // 标准化 [-1, 1] 范围
+          const nx = (e.clientX / window.innerWidth - 0.5) * 2;
+          const ny = (e.clientY / window.innerHeight - 0.5) * 2;
+          this.mouse.targetX = nx;
+          this.mouse.targetY = ny;
+        });
+
+        // 移动端陀螺仪支持
+        if (window.DeviceOrientationEvent) {
+          window.addEventListener("deviceorientation", (e) => {
+            if (e.gamma !== null && e.beta !== null) {
+              this.mouse.targetX = Math.max(-1, Math.min(1, e.gamma / 30));
+              this.mouse.targetY = Math.max(-1, Math.min(1, (e.beta - 45) / 30));
+            }
+          });
+        }
+      },
+
+      renderLoop() {
+        // 物理弹性阻尼插值 (LERP)
+        this.mouse.x += (this.mouse.targetX - this.mouse.x) * 0.08;
+        this.mouse.y += (this.mouse.targetY - this.mouse.y) * 0.08;
+
+        const mx = this.mouse.x * this.intensity;
+        const my = this.mouse.y * this.intensity;
+
+        // 4 层各具不同速度与 3D 旋转角度
+        const sky = document.getElementById("layerSky");
+        const facade = document.getElementById("layerFacade");
+        const hotspots = document.getElementById("layerHotspots");
+        const fg = document.getElementById("layerForeground");
+        const world = document.getElementById("parallaxWorld");
+
+        if (world) {
+          world.style.transform = `scale(${this.scale}) rotateY(${mx * 3.5}deg) rotateX(${-my * 3.5}deg)`;
+        }
+        if (sky) {
+          sky.style.transform = `translate3d(${-mx * 15}px, ${-my * 10}px, -150px) scale(1.15)`;
+        }
+        if (facade) {
+          facade.style.transform = `translate3d(${-mx * 30}px, ${-my * 20}px, 0px)`;
+        }
+        if (hotspots) {
+          hotspots.style.transform = `translate3d(${-mx * 45}px, ${-my * 30}px, 60px)`;
+        }
+        if (fg) {
+          fg.style.transform = `translate3d(${-mx * 75}px, ${-my * 50}px, 120px)`;
+        }
+
+        requestAnimationFrame(() => this.renderLoop());
+      },
+
+      initParticles() {
+        const canvas = document.getElementById("parallaxParticles");
+        if (!canvas) return;
+        canvas.width = 1920;
+        canvas.height = 1080;
+        const ctx = canvas.getContext("2d");
+
+        const particles = Array.from({ length: 45 }, () => ({
+          x: Math.random() * 1920,
+          y: Math.random() * 1080,
+          radius: Math.random() * 2.5 + 1,
+          speedY: Math.random() * 0.8 + 0.3,
+          speedX: (Math.random() - 0.5) * 0.4,
+          alpha: Math.random() * 0.6 + 0.2,
+          color: Math.random() > 0.5 ? "#38bdf8" : "#fbbf24"
+        }));
+
+        const draw = () => {
+          ctx.clearRect(0, 0, 1920, 1080);
+          particles.forEach(p => {
+            p.y += p.speedY;
+            p.x += p.speedX;
+            if (p.y > 1080) p.y = 0;
+            if (p.x > 1920) p.x = 0;
+            if (p.x < 0) p.x = 1920;
+
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = p.alpha;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = p.color;
+            ctx.fill();
+          });
+          requestAnimationFrame(draw);
+        };
+        draw();
+      }
+    };
+
+    document.addEventListener("DOMContentLoaded", () => ParallaxEngine.init());
+  </script>
+</body>
+</html>
