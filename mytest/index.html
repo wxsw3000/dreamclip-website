@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>梦之剧院 - 场景化首页</title>
+<style>
+  /* ================= 基础重置 ================= */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { 
+    background: #0a0a1a; 
+    overflow: hidden; 
+    font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    color: #fff;
+  }
+
+  /* ================= 场景容器与缩放逻辑 ================= */
+  .scene-wrapper {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #000; /* 缩放时的留白背景 */
+  }
+  
+  .scene-canvas {
+    width: 1920px;
+    height: 1080px;
+    position: relative;
+    transform-origin: center center;
+    /* JS 会动态计算 scale */
+    box-shadow: 0 0 50px rgba(0,0,0,0.5);
+  }
+
+  .scene-bg {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* 保证图片铺满，如果选 contain 则会有留白 */
+    display: block;
+  }
+
+  .regions-layer {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none; /* 默认不拦截点击 */
+  }
+
+  /* 区域基础样式，开启 pointer-events 让内部元素可点击 */
+  .region {
+    position: absolute;
+    pointer-events: auto;
+    /* 坐标和尺寸由 JS 注入 */
+  }
+
+  /* ================= 组件样式：跑马灯 ================= */
+  .marquee-box {
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    border: 2px solid #ffcc00;
+    border-radius: 4px;
+    box-shadow: 0 0 15px rgba(255, 204, 0, 0.4), inset 0 0 10px rgba(255, 204, 0, 0.2);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+  }
+  .marquee-content {
+    display: flex;
+    white-space: nowrap;
+    animation: scroll-left var(--speed, 20s) linear infinite;
+  }
+  .marquee-text {
+    font-size: 28px;
+    font-weight: bold;
+    color: #ffcc00;
+    text-shadow: 0 0 10px #ffcc00;
+    padding: 0 50px;
+    letter-spacing: 2px;
+  }
+  @keyframes scroll-left {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  /* ================= 组件样式：轮播 ================= */
+  .carousel-box {
+    width: 100%; height: 100%;
+    position: relative;
+    overflow: hidden;
+    border: 6px solid #fff;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    background: #222;
+  }
+  .carousel-item {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+    cursor: pointer;
+  }
+  .carousel-item.active { opacity: 1; }
+  .carousel-item img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+  .carousel-title {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 15px;
+    background: linear-gradient(transparent, rgba(0,0,0,0.8));
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+  }
+  .carousel-dots {
+    position: absolute;
+    bottom: 10px; right: 10px;
+    display: flex; gap: 8px;
+    z-index: 10;
+  }
+  .carousel-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.5);
+    cursor: pointer;
+  }
+  .carousel-dot.active { background: #fff; }
+
+  /* ================= 组件样式：入口按钮 ================= */
+  .entry-btn-box {
+    width: 100%; height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .entry-btn {
+    padding: 15px 30px;
+    background: linear-gradient(135deg, #ff9900, #ff5500);
+    border: 3px solid #fff;
+    border-radius: 50px;
+    font-size: 24px;
+    font-weight: bold;
+    color: #fff;
+    text-decoration: none;
+    box-shadow: 0 5px 20px rgba(255, 85, 0, 0.6);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    text-align: center;
+  }
+  .entry-btn:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 8px 25px rgba(255, 85, 0, 0.8);
+  }
+
+  /* ================= 组件样式：时间线 ================= */
+  .timeline-box {
+    width: 100%; height: 100%;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 10px;
+    padding: 15px;
+    overflow-y: auto;
+  }
+  .timeline-box::-webkit-scrollbar { width: 6px; }
+  .timeline-box::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 3px; }
+  
+  .timeline-item {
+    display: flex;
+    margin-bottom: 15px;
+    cursor: pointer;
+    transition: background 0.2s;
+    padding: 8px;
+    border-radius: 6px;
+  }
+  .timeline-item:hover { background: rgba(255,255,255,0.1); }
+  .timeline-date {
+    font-size: 14px;
+    color: #ffcc00;
+    min-width: 90px;
+    padding-top: 2px;
+  }
+  .timeline-title {
+    font-size: 16px;
+    color: #fff;
+    line-height: 1.4;
+  }
+
+  /* ================= 调试标注模式 ================= */
+  .debug-mode .region {
+    border: 2px dashed #ff0000 !important;
+    background: rgba(255, 0, 0, 0.1) !important;
+  }
+  .debug-label {
+    position: absolute;
+    top: -25px; left: 0;
+    background: #ff0000;
+    color: #fff;
+    font-size: 14px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    z-index: 999;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+<div class="scene-wrapper">
+  <div class="scene-canvas" id="sceneCanvas">
+    <!-- 场景底图 -->
+    <img src="theater-entrance.png" class="scene-bg" alt="Theater Entrance" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyMCIgaGVpZ2h0PSIxMDgwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiMxYTFhMmEiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1zaXplPSI0MCIgZmlsbD0iIzY2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+6LaF5YWF6K+G5ZGoIHRoZWF0ZXItZW50cmFuY2UucG5nPC90ZXh0Pjwvc3ZnPg=='">
+    
+    <!-- 组件覆盖层 -->
+    <div class="regions-layer" id="regionsLayer"></div>
+  </div>
+</div>
+
+<script>
+  // ================= 1. JSON 配置数据 =================
+  const PAGE_CONFIG = {
+    "page": "theater-entrance",
+    "background": { "image": "theater-entrance.png", "width": 1920, "height": 1080 },
+    "regions": [
+      {
+        "id": "marquee", "name": "门楣 LED 屏", "type": "marquee",
+        "position": { "x": "30%", "y": "15%", "w": "40%", "h": "6%" },
+        "config": {
+          "speed": 40, // 滚动一圈的秒数
+          "items": ["✨ 欢迎来到梦之剧院 ✨", "🎬 新作《雨夜》已上线，点击海报墙查看", "💊 情绪胶囊征集中，写下你的心事"]
+        }
+      },
+      {
+        "id": "poster-wall", "name": "海报墙", "type": "carousel",
+        "position": { "x": "8%", "y": "33%", "w": "22%", "h": "30%" },
+        "config": {
+          "autoplay": true, "interval": 4000,
+          "items": [
+            { "title": "雨夜", "cover": "https://picsum.photos/400/600?random=1", "link": "/theater/work/rainy-night" },
+            { "title": "星轨", "cover": "https://picsum.photos/400/600?random=2", "link": "/theater/work/starlight" },
+            { "title": "梦境边缘", "cover": "https://picsum.photos/400/600?random=3", "link": "/theater/work/dream-edge" }
+          ]
+        }
+      },
+      {
+        "id": "ticket-booth", "name": "售票窗口", "type": "entry-button",
+        "position": { "x": "70%", "y": "45%", "w": "18%", "h": "15%" },
+        "config": { "label": "进入梦之剧院", "link": "/theater" }
+      },
+      {
+        "id": "notice-board", "name": "公告栏", "type": "timeline",
+        "position": { "x": "38%", "y": "58%", "w": "24%", "h": "20%" },
+        "config": {
+          "maxItems": 5,
+          "items": [
+            { "title": "《雨夜》第一章更新", "date": "2026-09-21", "link": "/theater/work/rainy-night/chapter/1" },
+            { "title": "周末放映厅：经典回顾", "date": "2026-09-20", "link": "/theater/events/weekend" },
+            { "title": "系统维护公告", "date": "2026-09-18", "link": "/notice/maintenance" },
+            { "title": "新增情绪胶囊功能", "date": "2026-09-15", "link": "/notice/capsule" }
+          ]
+        }
+      },
+      {
+        "id": "side-door", "name": "侧门", "type": "entry-button",
+        "position": { "x": "78%", "y": "70%", "w": "12%", "h": "10%" },
+        "config": { "label": "情绪胶囊", "link": "/capsule" }
+      }
+    ]
+  };
+
+  // 调试模式开关：设为 true 会在页面上显示红色标注框
+  const DEBUG_MODE = false; 
+
+  // ================= 2. 核心渲染逻辑 =================
+  const canvas = document.getElementById('sceneCanvas');
+  const layer = document.getElementById('regionsLayer');
+
+  if (DEBUG_MODE) canvas.classList.add('debug-mode');
+
+  function renderRegions() {
+    layer.innerHTML = '';
+    PAGE_CONFIG.regions.forEach(region => {
+      const el = document.createElement('div');
+      el.className = `region region-${region.type}`;
+      el.id = region.id;
+      
+      // 注入坐标和尺寸
+      const pos = region.position;
+      el.style.left = pos.x;
+      el.style.top = pos.y;
+      el.style.width = pos.w;
+      el.style.height = pos.h;
+
+      // 调试标签
+      if (DEBUG_MODE) {
+        const label = document.createElement('div');
+        label.className = 'debug-label';
+        label.innerText = `${region.name} (${pos.x}, ${pos.y}, ${pos.w}, ${pos.h})`;
+        el.appendChild(label);
+      }
+
+      // 根据类型渲染内容
+      switch(region.type) {
+        case 'marquee': renderMarquee(el, region.config); break;
+        case 'carousel': renderCarousel(el, region.config); break;
+        case 'entry-button': renderEntryButton(el, region.config); break;
+        case 'timeline': renderTimeline(el, region.config); break;
+      }
+
+      layer.appendChild(el);
+    });
+  }
+
+  // ================= 3. 组件渲染函数 =================
+  
+  // 跑马灯
+  function renderMarquee(container, config) {
+    const text = config.items.join('   ★   ');
+    container.innerHTML += `
+      <div class="marquee-box">
+        <div class="marquee-content" style="--speed: ${config.speed}s; animation-duration: ${config.speed}s;">
+          <span class="marquee-text">${text}</span>
+          <span class="marquee-text">${text}</span> <!-- 复制一份用于无缝滚动 -->
+        </div>
+      </div>
+    `;
+  }
+
+  // 轮播
+  function renderCarousel(container, config) {
+    let itemsHtml = config.items.map((item, index) => `
+      <div class="carousel-item ${index === 0 ? 'active' : ''}" data-link="${item.link}">
+        <img src="${item.cover}" alt="${item.title}" onerror="this.src='https://via.placeholder.com/400x600/333/999?text=${item.title}'">
+        <div class="carousel-title">${item.title}</div>
+      </div>
+    `).join('');
+
+    let dotsHtml = config.items.map((_, index) => `
+      <div class="carousel-dot ${index === 0 ? 'active' : ''}" data-index="${index}"></div>
+    `).join('');
+
+    container.innerHTML += `
+      <div class="carousel-box">
+        ${itemsHtml}
+        <div class="carousel-dots">${dotsHtml}</div>
+      </div>
+    `;
+
+    // 轮播交互逻辑
+    const items = container.querySelectorAll('.carousel-item');
+    const dots = container.querySelectorAll('.carousel-dot');
+    let current = 0;
+
+    function goTo(index) {
+      items[current].classList.remove('active');
+      dots[current].classList.remove('active');
+      current = index;
+      items[current].classList.add('active');
+      dots[current].classList.add('active');
+    }
+
+    dots.forEach(dot => {
+      dot.addEventListener('click', (e) => {
+        e.stopPropagation();
+        goTo(parseInt(dot.dataset.index));
+      });
+    });
+
+    items.forEach(item => {
+      item.addEventListener('click', () => {
+        // 实际项目中替换为 router.push 或 window.location.href
+        console.log('跳转到:', item.dataset.link); 
+        alert('跳转到: ' + item.dataset.link);
+      });
+    });
+
+    // 自动播放
+    if (config.autoplay) {
+      setInterval(() => {
+        goTo((current + 1) % config.items.length);
+      }, config.interval);
+    }
+  }
+
+  // 入口按钮
+  function renderEntryButton(container, config) {
+    container.innerHTML += `
+      <div class="entry-btn-box">
+        <a href="${config.link}" class="entry-btn" onclick="handleNav(event, '${config.link}')">
+          ${config.label}
+        </a>
+      </div>
+    `;
+  }
+
+  // 时间线
+  function renderTimeline(container, config) {
+    const items = config.items.slice(0, config.maxItems);
+    let itemsHtml = items.map(item => `
+      <div class="timeline-item" onclick="handleNav(event, '${item.link}')">
+        <div class="timeline-date">${item.date}</div>
+        <div class="timeline-title">${item.title}</div>
+      </div>
+    `).join('');
+
+    container.innerHTML += `<div class="timeline-box">${itemsHtml}</div>`;
+  }
+
+  // 全局路由拦截 (模拟)
+  function handleNav(event, link) {
+    event.preventDefault();
+    console.log('路由跳转:', link);
+    alert('前往页面: ' + link);
+    // 实际项目: window.location.href = link;
+  }
+
+  // ================= 4. 响应式缩放逻辑 =================
+  function resizeCanvas() {
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+    const canvasWidth = 1920;
+    const canvasHeight = 1080;
+
+    // 计算缩放比例，取宽高缩放比例中较小的一个，保证完整显示
+    const scale = Math.min(windowWidth / canvasWidth, windowHeight / canvasHeight);
+    
+    canvas.style.transform = `scale(${scale})`;
+  }
+
+  // ================= 5. 初始化 =================
+  window.addEventListener('resize', resizeCanvas);
+  
+  // 启动
+  renderRegions();
+  resizeCanvas();
+
+</script>
+</body>
+</html>

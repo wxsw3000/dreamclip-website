@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>DreamClip 梦之剧院 - 沉浸式 AVG 场景大厅</title>
+  <meta name="description" content="DreamClip 梦之剧院 —— 沉浸式游戏化场景大厅，将焦点走马灯、AVG 互动剧场海报与原创情绪胶囊切片流无缝镶嵌于剧院场景中。">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎭</text></svg>">
+  <style>
+    /* ==================== 1. 基础重置与场景画布 ==================== */
+    :root {
+      --primary: #6366f1;
+      --cyan: #06b6d4;
+      --gold: #f59e0b;
+      --pink: #ec4899;
+      --neon-glow: 0 0 18px rgba(99, 102, 241, 0.65);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #05070e;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      user-select: none;
+    }
+
+    /* 场景外层容器 */
+    .scene-viewport {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #000;
+      overflow: hidden;
+    }
+
+    /* 1920x1080 等比缩放核心画布 */
+    .scene-canvas {
+      width: 1920px;
+      height: 1080px;
+      position: relative;
+      flex-shrink: 0;
+      transform-origin: center center;
+      transition: transform 0.15s cubic-bezier(0.2, 0, 0, 1), filter 0.6s ease;
+      box-shadow: 0 0 80px rgba(0, 0, 0, 0.9);
+    }
+
+    .scene-canvas.zooming {
+      transform: scale(1.35) translateY(-40px) !important;
+      filter: blur(2px) brightness(1.2);
+    }
+
+    /* 场景底图 */
+    .scene-bg-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      pointer-events: none;
+    }
+
+    /* 粒子特效层 */
+    #ambientCanvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    /* 区域覆盖层 */
+    .scene-layer {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .region-hotspot {
+      position: absolute;
+      pointer-events: auto;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    /* ==================== 2. 顶部沉浸 HUD 导航条 ==================== */
+    .theater-hud {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 60px;
+      padding: 0 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(180deg, rgba(5, 8, 20, 0.85) 0%, rgba(5, 8, 20, 0) 100%);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+      pointer-events: auto;
+    }
+
+    .hud-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .hud-logo {
+      font-size: 20px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #a5b4fc, #38bdf8, #f472b6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      letter-spacing: 1px;
+    }
+
+    .hud-location-tag {
+      font-size: 11.5px;
+      color: rgba(255, 255, 255, 0.65);
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 3px 10px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pulse-indicator {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #34d399;
+      box-shadow: 0 0 8px #34d399;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.4); opacity: 0.6; }
+    }
+
+    .hud-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .hud-btn {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      backdrop-filter: blur(12px);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      transition: all 0.25s ease;
+    }
+
+    .hud-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      border-color: rgba(255, 255, 255, 0.35);
+      transform: translateY(-1px);
+    }
+
+    .hud-btn-primary {
+      background: linear-gradient(135deg, #4f46e5, #06b6d4);
+      border-color: transparent;
+      box-shadow: 0 4px 15px rgba(6, 182, 212, 0.35);
+    }
+
+    .hud-btn-primary:hover {
+      background: linear-gradient(135deg, #6366f1, #38bdf8);
+      box-shadow: 0 6px 20px rgba(6, 182, 212, 0.5);
+    }
+
+    /* ==================== 3. 场景镶嵌部件：门楣 LED 走马灯 ==================== */
+    .marquee-signboard {
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 50% 50%, rgba(20, 15, 5, 0.88), rgba(5, 5, 5, 0.95));
+      border: 2px solid #fbbf24;
+      border-radius: 6px;
+      box-shadow: 0 0 20px rgba(245, 158, 11, 0.45), inset 0 0 15px rgba(245, 158, 11, 0.2);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      position: relative;
+    }
+
+    .marquee-signboard::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.15) 0px, rgba(0, 0, 0, 0.15) 1px, transparent 1px, transparent 3px);
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .marquee-track {
+      display: flex;
+      white-space: nowrap;
+      animation: led-scroll 28s linear infinite;
+    }
+
+    .marquee-item-text {
+      font-size: 26px;
+      font-weight: 800;
+      color: #fde047;
+      text-shadow: 0 0 8px #f59e0b, 0 0 16px rgba(245, 158, 11, 0.6);
+      padding: 0 40px;
+      letter-spacing: 2px;
+      font-family: "Courier New", Courier, monospace, sans-serif;
+    }
+
+    @keyframes led-scroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    /* ==================== 4. 场景镶嵌部件：海报橱窗轮播 ==================== */
+    .poster-showcase {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      border: 4px solid rgba(255, 255, 255, 0.85);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.75), 0 0 25px rgba(99, 102, 241, 0.3);
+      background: #111827;
+      cursor: pointer;
+    }
+
+    .poster-showcase::after {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%; width: 60%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+      transform: skewX(-20deg);
+      transition: 0.7s;
+      pointer-events: none;
+    }
+
+    .poster-showcase:hover::after {
+      left: 140%;
+    }
+
+    .poster-slide {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      opacity: 0;
+      transition: opacity 0.8s ease, transform 0.8s ease;
+      transform: scale(1.03);
+    }
+
+    .poster-slide.active {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .poster-slide img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .poster-overlay {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      padding: 20px 14px 10px;
+      background: linear-gradient(180deg, transparent 0%, rgba(10, 15, 30, 0.95) 80%);
+    }
+
+    .poster-tag {
+      display: inline-block;
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: var(--primary);
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .poster-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+    }
+
+    .poster-dots {
+      position: absolute;
+      top: 10px; right: 10px;
+      display: flex; gap: 6px;
+      z-index: 10;
+    }
+
+    .poster-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.4);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .poster-dot.active {
+      background: #fff;
+      transform: scale(1.3);
+      box-shadow: 0 0 6px #fff;
+    }
+
+    /* ==================== 5. 场景镶嵌部件：售票窗口 / 快速入场 ==================== */
+    .ticket-portal-box {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .ticket-btn {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.95), rgba(239, 68, 68, 0.95));
+      border: 3px solid #fff;
+      border-radius: 12px;
+      color: #fff;
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 8px 25px rgba(239, 68, 68, 0.55), 0 0 20px rgba(245, 158, 11, 0.4);
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.2, 0, 0, 1);
+      padding: 10px;
+      text-align: center;
+    }
+
+    .ticket-btn:hover {
+      transform: translateY(-3px) scale(1.03);
+      box-shadow: 0 12px 35px rgba(239, 68, 68, 0.75), 0 0 30px rgba(245, 158, 11, 0.6);
+      background: linear-gradient(135deg, #fbbf24, #f43f5e);
+    }
+
+    .ticket-btn-icon {
+      font-size: 24px;
+      margin-bottom: 2px;
+    }
+
+    .ticket-btn-title {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 1px;
+    }
+
+    .ticket-btn-sub {
+      font-size: 11px;
+      opacity: 0.9;
+      margin-top: 2px;
+    }
+
+    /* ==================== 6. 场景镶嵌部件：公告栏 / 排期时间线 ==================== */
+    .bulletin-board {
+      width: 100%;
+      height: 100%;
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(8px);
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      border-radius: 8px;
+      padding: 12px;
+      overflow-y: auto;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), inset 0 0 15px rgba(255, 255, 255, 0.05);
+    }
+
+    .bulletin-board::-webkit-scrollbar { width: 5px; }
+    .bulletin-board::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.3); border-radius: 3px; }
+
+    .bulletin-header {
+      font-size: 13px;
+      font-weight: 700;
+      color: #93c5fd;
+      padding-bottom: 6px;
+      margin-bottom: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .bulletin-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 6px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
+      text-decoration: none;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+
+    .bulletin-item:hover {
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .bulletin-item-tag {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 3px;
+      background: rgba(56, 189, 248, 0.25);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      white-space: nowrap;
+      margin-top: 2px;
+    }
+
+    .bulletin-item-title {
+      font-size: 13.5px;
+      font-weight: 600;
+      line-height: 1.35;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    /* ==================== 7. 场景镶嵌部件：侧门 / 情绪信箱 ==================== */
+    .sidedoor-box {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .sidedoor-btn {
+      width: 100%;
+      height: 100%;
+      background: rgba(99, 102, 241, 0.85);
+      border: 2px solid #a5b4fc;
+      border-radius: 8px;
+      color: #fff;
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
+      cursor: pointer;
+      transition: all 0.25s ease;
+      padding: 6px;
+    }
+
+    .sidedoor-btn:hover {
+      background: rgba(99, 102, 241, 1);
+      transform: translateY(-2px) scale(1.04);
+      box-shadow: 0 8px 25px rgba(99, 102, 241, 0.7);
+    }
+
+    /* 调试标注模式 */
+    .debug-active .region-hotspot {
+      outline: 2px dashed #f43f5e !important;
+      background: rgba(244, 63, 94, 0.15) !important;
+    }
+
+    .debug-tag {
+      position: absolute;
+      top: -24px; left: 0;
+      background: #f43f5e;
+      color: #fff;
+      font-size: 11px;
+      font-weight: bold;
+      padding: 2px 6px;
+      border-radius: 3px;
+      white-space: nowrap;
+      pointer-events: none;
+      z-index: 999;
+      display: none;
+    }
+
+    .debug-active .debug-tag { display: block; }
+
+    /* 屏幕旋转与移动端适配提示 */
+    .mobile-rotate-hint {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 8px 16px;
+      border-radius: 30px;
+      font-size: 12px;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      z-index: 200;
+      backdrop-filter: blur(10px);
+    }
+
+    @media (max-aspect-ratio: 1/1) {
+      .mobile-rotate-hint { display: flex; }
+    }
+
+    /* SEO 与无障碍语义化内容隐藏容器 */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 1. 顶部沉浸 HUD -->
+  <header class="theater-hud">
+    <div class="hud-brand">
+      <div class="hud-logo">
+        <span>🎭</span>
+        <span>DreamClip 梦之剧院</span>
+      </div>
+      <div class="hud-location-tag">
+        <span class="pulse-indicator"></span>
+        <span>浮空城新安托利亚 · 记忆工坊</span>
+      </div>
+    </div>
+
+    <div class="hud-actions">
+      <button class="hud-btn" id="audioToggleBtn" onclick="TheaterEngine.toggleAmbientSound()" title="开启/关闭赛博环境白噪音">
+        <span id="audioIcon">🔈</span>
+        <span id="audioText">环境音效</span>
+      </button>
+
+      <button class="hud-btn" id="debugToggleBtn" onclick="TheaterEngine.toggleDebug()" title="开启/关闭坐标标注模式 (快捷键 D)">
+        <span>📐 坐标调试</span>
+      </button>
+
+      <a href="/universe" class="hud-btn hud-btn-primary" title="切换至传统卡片与瀑布流模式">
+        <span>📜 切换切片流大厅</span>
+      </a>
+
+      <div id="hudAuthCapsule" style="display: inline-flex;"></div>
+    </div>
+  </header>
+
+  <!-- 2. 核心场景视口 -->
+  <main class="scene-viewport" id="sceneViewport">
+    <div class="scene-canvas" id="sceneCanvas">
+      <!-- 场景大图 -->
+      <img src="/static/theater-entrance.png" class="scene-bg-img" alt="DreamClip Theater Entrance Scene" onerror="this.src='/static/images/theater-entrance.png'">
+      
+      <!-- 氛围粒子画布 -->
+      <canvas id="ambientCanvas"></canvas>
+
+      <!-- 动态镶嵌部件覆盖层 -->
+      <div class="scene-layer" id="sceneLayer"></div>
+    </div>
+  </main>
+
+  <!-- 3. 移动端横屏沉浸提示 -->
+  <div class="mobile-rotate-hint" id="rotateHint">
+    <span>📱</span>
+    <span>横屏旋转设备，可获得最佳剧院全景沉浸感</span>
+  </div>
+
+  <!-- 4. 语义化 SEO 与爬虫内容保障层 -->
+  <section class="sr-only">
+    <h1>DreamClip 梦之厅与 AVG 互动剧场</h1>
+    <p>欢迎来到 DreamClip 梦之剧院！在这里探索原创深度情绪图文胶囊、角色立绘档案与轻量化独立 HTML5 AVG 剧情游戏。</p>
+    <nav>
+      <a href="/games">AVG 互动剧场大厅</a>
+      <a href="/capsules">情绪胶囊图文切片流</a>
+      <a href="/studio">DreamClip 内容工坊</a>
+      <a href="/about">关于我们</a>
+      <a href="/privacy">隐私政策</a>
+      <a href="/terms">服务条款</a>
+      <a href="/contact">联系我们</a>
+    </nav>
+  </section>
+
+  <!-- ==================== 5. 核心场景交互引擎 JS ==================== -->
+  <script>
+    const THEATER_CONFIG = {
+      regions: [
+        {
+          id: "region-marquee",
+          name: "门楣 LED 走马灯",
+          type: "marquee",
+          position: { x: "28%", y: "13.8%", w: "44%", h: "6.2%" },
+          defaultItems: [
+            "✨ 欢迎光临 DreamClip 梦之剧院 ✨",
+            "🌌 第一章《最初的遗失信件》现已公开发布，点击海报即可免费体验",
+            "💊 情绪胶囊常态征集中：在深空边缘打捞被遗弃的心跳"
+          ]
+        },
+        {
+          id: "region-poster",
+          name: "橱窗海报墙",
+          type: "poster-carousel",
+          position: { x: "7.5%", y: "32%", w: "23%", h: "31%" },
+          autoplayInterval: 4500
+        },
+        {
+          id: "region-ticket",
+          name: "剧院检票大门",
+          type: "ticket-booth",
+          position: { x: "69%", y: "44%", w: "19%", h: "16%" },
+          label: "进入梦之剧院",
+          sub: "🎬 开启 AVG 沉浸互动剧场",
+          link: "/games"
+        },
+        {
+          id: "region-notice",
+          name: "排期公告栏",
+          type: "notice-board",
+          position: { x: "37%", y: "57%", w: "25.5%", h: "22%" },
+          title: "📌 剧院最新排期与情绪胶囊"
+        },
+        {
+          id: "region-sidedoor",
+          name: "情绪信箱入口",
+          type: "side-door",
+          position: { x: "77%", y: "68%", w: "13%", h: "12%" },
+          label: "📮 情绪信箱",
+          sub: "浏览图文切片流",
+          link: "/universe#capsules-stream"
+        }
+      ]
+    };
+
+    window.TheaterEngine = (function() {
+      let isDebug = false;
+      let audioCtx = null;
+      let isAudioPlaying = false;
+      let bannersData = [];
+      let capsulesData = [];
+      let chaptersData = [];
+
+      // 1. 初始化视口与响应式缩放
+      function resizeScene() {
+        const canvas = document.getElementById('sceneCanvas');
+        if (!canvas) return;
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        const targetW = 1920;
+        const targetH = 1080;
+        const scale = Math.min(w / targetW, h / targetH);
+        canvas.style.transform = `scale(${scale})`;
+      }
+
+      // 2. 动态拉取后端真实数据
+      async function fetchBackendData() {
+        try {
+          const [bannersRes, capsulesRes, chaptersRes] = await Promise.allSettled([
+            fetch('/api/v1/hall/banners').then(r => r.json()),
+            fetch('/api/v1/capsules?size=6').then(r => r.json()),
+            fetch('/api/v1/avg/chapters').then(r => r.json())
+          ]);
+
+          if (bannersRes.status === 'fulfilled' && bannersRes.value.data) {
+            bannersData = bannersRes.value.data;
+          }
+          if (capsulesRes.status === 'fulfilled' && capsulesRes.value.data) {
+            capsulesData = capsulesRes.value.data.records || capsulesRes.value.data || [];
+          }
+          if (chaptersRes.status === 'fulfilled' && chaptersRes.value.data) {
+            chaptersData = chaptersRes.value.data.records || chaptersRes.value.data || [];
+          }
+
+          renderAllRegions();
+        } catch (e) {
+          console.warn("Using fallback local data for theater scene:", e);
+          renderAllRegions();
+        }
+      }
+
+      // 3. 渲染场景中所有嵌入部件
+      function renderAllRegions() {
+        const layer = document.getElementById('sceneLayer');
+        if (!layer) return;
+        layer.innerHTML = '';
+
+        THEATER_CONFIG.regions.forEach(reg => {
+          const el = document.createElement('div');
+          el.className = `region-hotspot region-${reg.type}`;
+          el.id = reg.id;
+          el.style.left = reg.position.x;
+          el.style.top = reg.position.y;
+          el.style.width = reg.position.w;
+          el.style.height = reg.position.h;
+
+          // 调试标注标签
+          const dbg = document.createElement('div');
+          dbg.className = 'debug-tag';
+          dbg.innerText = `${reg.name} [${reg.position.x}, ${reg.position.y}]`;
+          el.appendChild(dbg);
+
+          switch (reg.type) {
+            case 'marquee':
+              renderMarquee(el, reg);
+              break;
+            case 'poster-carousel':
+              renderPosterCarousel(el, reg);
+              break;
+            case 'ticket-booth':
+              renderTicketBooth(el, reg);
+              break;
+            case 'notice-board':
+              renderNoticeBoard(el, reg);
+              break;
+            case 'side-door':
+              renderSideDoor(el, reg);
+              break;
+          }
+
+          layer.appendChild(el);
+        });
+      }
+
+      // 3.1 渲染门楣 LED
+      function renderMarquee(container, config) {
+        let items = config.defaultItems;
+        if (bannersData && bannersData.length > 0) {
+          items = bannersData.map(b => `${b.badge_text || '✨'} ${b.title} —— ${b.subtitle || ''}`);
+        }
+        const textJoined = items.join('   ★   ');
+
+        container.innerHTML += `
+          <div class="marquee-signboard">
+            <div class="marquee-track">
+              <span class="marquee-item-text">${textJoined}</span>
+              <span class="marquee-item-text">${textJoined}</span>
+            </div>
+          </div>
+        `;
+      }
+
+      // 3.2 渲染海报橱窗轮播
+      function renderPosterCarousel(container, config) {
+        let posterItems = [];
+        
+        // 优先将 AVG 章节作为海报
+        if (chaptersData && chaptersData.length > 0) {
+          chaptersData.forEach(ch => {
+            posterItems.push({
+              tag: `AVG 互动第 ${ch.chapter_no} 章`,
+              title: ch.chapter_name,
+              cover: ch.cover_image || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=800&auto=format&fit=crop',
+              link: ch.game_url || '/games'
+            });
+          });
+        }
+        
+        // 补充情绪胶囊封面
+        if (capsulesData && capsulesData.length > 0) {
+          capsulesData.forEach(c => {
+            posterItems.push({
+              tag: `情绪胶囊 · ${c.mood_tag}`,
+              title: c.title,
+              cover: c.cover_image || 'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=800&auto=format&fit=crop',
+              link: `/capsule/${c.slug}`
+            });
+          });
+        }
+
+        if (posterItems.length === 0) {
+          posterItems = [
+            { tag: "AVG 互动剧场", title: "第一章：失落的深空信标", cover: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=800&auto=format&fit=crop", link: "/games" },
+            { tag: "深度原创胶囊", title: "在霓虹雨夜，打捞一颗失落的心跳", cover: "https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=800&auto=format&fit=crop", link: "/capsules" }
+          ];
+        }
+
+        const slidesHtml = posterItems.map((item, idx) => `
+          <div class="poster-slide ${idx === 0 ? 'active' : ''}" data-index="${idx}" onclick="TheaterEngine.handleNavigate('${item.link}')">
+            <img src="${item.cover}" alt="${item.title}">
+            <div class="poster-overlay">
+              <span class="poster-tag">${item.tag}</span>
+              <div class="poster-title">${item.title}</div>
+            </div>
+          </div>
+        `).join('');
+
+        const dotsHtml = posterItems.map((_, idx) => `
+          <div class="poster-dot ${idx === 0 ? 'active' : ''}" data-dot="${idx}" onclick="event.stopPropagation(); TheaterEngine.switchPosterSlide(${idx})"></div>
+        `).join('');
+
+        container.innerHTML += `
+          <div class="poster-showcase" id="posterShowcase">
+            ${slidesHtml}
+            <div class="poster-dots">${dotsHtml}</div>
+          </div>
+        `;
+
+        // 自动轮播计时器
+        if (window._posterInterval) clearInterval(window._posterInterval);
+        let curIdx = 0;
+        window._posterInterval = setInterval(() => {
+          curIdx = (curIdx + 1) % posterItems.length;
+          TheaterEngine.switchPosterSlide(curIdx);
+        }, config.autoplayInterval || 4000);
+      }
+
+      function switchPosterSlide(targetIdx) {
+        const showcase = document.getElementById('posterShowcase');
+        if (!showcase) return;
+        const slides = showcase.querySelectorAll('.poster-slide');
+        const dots = showcase.querySelectorAll('.poster-dot');
+        slides.forEach((s, idx) => s.classList.toggle('active', idx === targetIdx));
+        dots.forEach((d, idx) => d.classList.toggle('active', idx === targetIdx));
+      }
+
+      // 3.3 渲染检票大门
+      function renderTicketBooth(container, config) {
+        container.innerHTML += `
+          <div class="ticket-portal-box">
+            <button class="ticket-btn" onclick="TheaterEngine.handleNavigate('${config.link}')">
+              <span class="ticket-btn-icon">🎟️</span>
+              <span class="ticket-btn-title">${config.label}</span>
+              <span class="ticket-btn-sub">${config.sub}</span>
+            </button>
+          </div>
+        `;
+      }
+
+      // 3.4 渲染排期公告栏
+      function renderNoticeBoard(container, config) {
+        let items = capsulesData;
+        if (!items || items.length === 0) {
+          items = [
+            { title: "在霓虹雨夜，打捞一颗失落的心跳", mood_tag: "治愈", slug: "solitude-in-neon-rain" },
+            { title: "星光下的第三号浮空温室", mood_tag: "温暖", slug: "the-greenhouse-under-starlight" },
+            { title: "AVG 第一章《最初的遗失信件》正式上线", mood_tag: "剧场", slug: "" }
+          ];
+        }
+
+        const listHtml = items.slice(0, 4).map(item => `
+          <a href="${item.slug ? `/capsule/${item.slug}` : '/games'}" class="bulletin-item" onclick="TheaterEngine.handleNavigate(event, '${item.slug ? `/capsule/${item.slug}` : '/games'}')">
+            <span class="bulletin-item-tag">${item.mood_tag || '公告'}</span>
+            <span class="bulletin-item-title">${item.title}</span>
+          </a>
+        `).join('');
+
+        container.innerHTML += `
+          <div class="bulletin-board">
+            <div class="bulletin-header">
+              <span>${config.title}</span>
+              <span style="font-size: 11px; opacity: 0.7;">RECENT</span>
+            </div>
+            ${listHtml}
+          </div>
+        `;
+      }
+
+      // 3.5 渲染侧门
+      function renderSideDoor(container, config) {
+        container.innerHTML += `
+          <div class="sidedoor-box">
+            <a href="${config.link}" class="sidedoor-btn" onclick="TheaterEngine.handleNavigate('${config.link}')">
+              <span style="font-size: 18px;">📮</span>
+              <span style="font-size: 14px; font-weight: 700; margin-top: 2px;">${config.label}</span>
+              <span style="font-size: 10px; opacity: 0.8;">${config.sub}</span>
+            </a>
+          </div>
+        `;
+      }
+
+      // 4. 电影级推门入场转场特效
+      function handleNavigate(link) {
+        if (typeof event !== 'undefined' && event.preventDefault) {
+          event.preventDefault();
+        }
+        playSfx(520, 0.12);
+        const canvas = document.getElementById('sceneCanvas');
+        if (canvas) {
+          canvas.classList.add('zooming');
+        }
+        setTimeout(() => {
+          window.location.href = link;
+        }, 320);
+      }
+
+      // 5. 网页合成环境音效引擎 (Web Audio API)
+      function playSfx(freq = 440, duration = 0.1) {
+        try {
+          if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+          gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start();
+          osc.stop(audioCtx.currentTime + duration);
+        } catch (e) {}
+      }
+
+      function toggleAmbientSound() {
+        isAudioPlaying = !isAudioPlaying;
+        const icon = document.getElementById('audioIcon');
+        const text = document.getElementById('audioText');
+        if (isAudioPlaying) {
+          icon.innerText = '🔊';
+          text.innerText = '音效已开';
+          playSfx(660, 0.15);
+        } else {
+          icon.innerText = '🔈';
+          text.innerText = '环境音效';
+        }
+      }
+
+      // 6. 调试模式开关
+      function toggleDebug() {
+        isDebug = !isDebug;
+        document.body.classList.toggle('debug-active', isDebug);
+        const btn = document.getElementById('debugToggleBtn');
+        if (btn) btn.style.background = isDebug ? '#f43f5e' : '';
+      }
+
+      // 7. 粒子背景特效
+      function initAmbientParticles() {
+        const c = document.getElementById('ambientCanvas');
+        if (!c) return;
+        c.width = 1920;
+        c.height = 1080;
+        const ctx = c.getContext('2d');
+        const particles = Array.from({ length: 45 }, () => ({
+          x: Math.random() * 1920,
+          y: Math.random() * 1080,
+          radius: Math.random() * 2 + 0.8,
+          alpha: Math.random() * 0.6 + 0.2,
+          dx: (Math.random() - 0.5) * 0.4,
+          dy: (Math.random() - 0.5) * 0.4 - 0.15
+        }));
+
+        function draw() {
+          ctx.clearRect(0, 0, 1920, 1080);
+          particles.forEach(p => {
+            p.x += p.dx;
+            p.y += p.dy;
+            if (p.x < 0) p.x = 1920;
+            if (p.x > 1920) p.x = 0;
+            if (p.y < 0) p.y = 1080;
+            if (p.y > 1080) p.y = 0;
+
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(165, 180, 252, ${p.alpha})`;
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = '#6366f1';
+            ctx.fill();
+          });
+          requestAnimationFrame(draw);
+        }
+        draw();
+      }
+
+      // 8. 检查用户 SSO 登录状态
+      function checkAuthStatus() {
+        const capsule = document.getElementById('hudAuthCapsule');
+        if (!capsule) return;
+        
+        let token = null;
+        let user = null;
+        try {
+          const cookieStr = document.cookie;
+          const match = cookieStr.match(/(?:^|;\s*)mcp_token=([^;]+)/);
+          token = match ? decodeURIComponent(match[1]) : (localStorage.getItem('mcp_token') || localStorage.getItem('dreamclip_token'));
+          
+          const rawUser = localStorage.getItem('mcp_user') || localStorage.getItem('dreamclip_user');
+          if (rawUser) user = JSON.parse(rawUser);
+        } catch (e) {}
+
+        const isOnline = window.location.hostname.endsWith('dreamclip.cn');
+        const loginUrl = isOnline ? 'https://login.dreamclip.cn/' : '/login';
+
+        if (token && user) {
+          capsule.innerHTML = `
+            <div class="hud-btn" style="background: rgba(99, 102, 241, 0.25); border-color: #6366f1;">
+              <span>👤</span>
+              <span>${user.real_name || user.username}</span>
+            </div>
+          `;
+        } else {
+          capsule.innerHTML = `
+            <a href="${loginUrl}" class="hud-btn" style="background: rgba(255, 255, 255, 0.12);">
+              <span>🔑 登录</span>
+            </a>
+          `;
+        }
+      }
+
+      function init() {
+        window.addEventListener('resize', resizeScene);
+        window.addEventListener('keydown', (e) => {
+          if (e.key === 'd' || e.key === 'D') toggleDebug();
+        });
+
+        resizeScene();
+        initAmbientParticles();
+        fetchBackendData();
+        checkAuthStatus();
+      }
+
+      return {
+        init,
+        switchPosterSlide,
+        handleNavigate,
+        toggleAmbientSound,
+        toggleDebug
+      };
+    })();
+
+    window.addEventListener('DOMContentLoaded', () => {
+      TheaterEngine.init();
+    });
+  </script>
+</body>
+</html>

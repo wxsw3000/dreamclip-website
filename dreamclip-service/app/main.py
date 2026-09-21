@@ -247,12 +247,22 @@ def serve_static_page(filename: str):
 
 @app.get("/", include_in_schema=False)
 def index_page():
-    return serve_static_page("universe.html")
+    """主入口：默认进入全新的 梦之剧院·场景化沉浸大厅 (theater.html)"""
+    return serve_static_page("theater.html")
+
+@app.get("/theater", include_in_schema=False)
+@app.get("/scene", include_in_schema=False)
+def theater_page():
+    """梦之剧院·场景化沉浸大厅"""
+    return serve_static_page("theater.html")
 
 @app.get("/universe", include_in_schema=False)
 @app.get("/universe/{identifier}", include_in_schema=False)
+@app.get("/classic", include_in_schema=False)
+@app.get("/hall", include_in_schema=False)
 @app.get("/dreamclip", include_in_schema=False)
 def universe_page(identifier: str = None):
+    """梦之厅·经典卡片与瀑布切片流大厅"""
     return serve_static_page("universe.html")
 
 @app.get("/studio", include_in_schema=False)
