@@ -393,8 +393,11 @@ async def host_virtual_routing_middleware(request: Request, call_next):
             return FileResponse(file_path)
         return FileResponse(os.path.join(static_dir, "login.html"))
 
-    # 3. 独立子域名：portal.dreamclip.cn / workbench.dreamclip.cn -> PortalOS 应用桌面
+    # 3. 独立子域名：portal.dreamclip.cn / workbench.dreamclip.cn -> PortalOS 应用桌面 (未登录拦截跳转)
     if host in ["portal.dreamclip.cn", "workbench.dreamclip.cn"]:
+        token = request.cookies.get("mcp_token") or request.cookies.get("dreamclip_token")
+        if not token and path in ["/", "", "/portal", "/workbench"]:
+            return RedirectResponse(url="https://login.dreamclip.cn/?redirect=https://portal.dreamclip.cn/", status_code=302)
         if path in ["/", "", "/portal", "/workbench"]:
             return FileResponse(os.path.join(static_dir, "portal.html"))
         file_path = os.path.join(static_dir, path.lstrip("/"))
@@ -402,8 +405,11 @@ async def host_virtual_routing_middleware(request: Request, call_next):
             return FileResponse(file_path)
         return await call_next(request)
 
-    # 4. 独立子域名：base.dreamclip.cn / admin.dreamclip.cn -> 直达 SuperAdmin 控制台
+    # 4. 独立子域名：base.dreamclip.cn / admin.dreamclip.cn -> 直达 SuperAdmin 控制台 (未登录拦截跳转)
     if host in ["base.dreamclip.cn", "admin.dreamclip.cn"]:
+        token = request.cookies.get("mcp_token") or request.cookies.get("dreamclip_token")
+        if not token and path in ["/", "", "/admin", "/base"]:
+            return RedirectResponse(url="https://login.dreamclip.cn/?redirect=https://base.dreamclip.cn/", status_code=302)
         if path in ["/", "", "/admin", "/base"]:
             return FileResponse(os.path.join(static_dir, "index.html"))
         return await call_next(request)

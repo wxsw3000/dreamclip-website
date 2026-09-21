@@ -100,13 +100,7 @@ window.PortalOS = (function() {
         resp = await fetch('/api/base' + path, { ...options, headers });
       }
       if (resp.status === 401) {
-        // Token expired
-        localStorage.removeItem('mcp_token');
-        localStorage.removeItem('mcp_user');
-        localStorage.removeItem('dreamclip_token');
-        localStorage.removeItem('dreamclip_user');
-        renderStatusBar();
-        renderApps();
+        logout();
         return null;
       }
       return await resp.json();
@@ -555,6 +549,32 @@ window.PortalOS = (function() {
       const newSearch = urlParams.toString();
       const newUrl = window.location.pathname + (newSearch ? '?' + newSearch : '') + window.location.hash;
       window.history.replaceState({}, document.title, newUrl);
+    }
+
+    const token = getToken();
+    if (!token) {
+      goToLogin('login');
+      return;
+    }
+
+    // 严格校验当前在线凭证的合法性并拉取最新用户资料
+    try {
+      const res = await api('/auth/me');
+      if (!res || res.code !== 200 || !res.data) {
+        logout();
+        return;
+      }
+      const freshUser = res.data;
+      const isOnline = window.location.hostname.endsWith('dreamclip.cn');
+      if (!isOnline) {
+        setAuthCookie('mcp_user', JSON.stringify(freshUser), 7);
+        setAuthCookie('dreamclip_user', JSON.stringify(freshUser), 7);
+        localStorage.setItem('mcp_user', JSON.stringify(freshUser));
+        localStorage.setItem('dreamclip_user', JSON.stringify(freshUser));
+      }
+    } catch (e) {
+      logout();
+      return;
     }
 
     startClock();

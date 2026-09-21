@@ -6,6 +6,32 @@
   <title>DreamClip PortalOS - 统一微服务应用平台</title>
   <meta name="description" content="DreamClip 统一应用门户与微服务路由底座，汇聚角色宇宙、情绪胶囊、AVG 互动剧场与 MagicStar 模块化配置底座。">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22><text y=%2222%22 font-size=%2222%22>📱</text></svg>">
+  <script>
+    (function() {
+      function getCookie(name) {
+        if (!document.cookie) return null;
+        var prefix = name + '=';
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+          var c = cookies[i].trim();
+          if (c.indexOf(prefix) === 0) return decodeURIComponent(c.substring(prefix.length));
+        }
+        return null;
+      }
+      var isOnline = window.location.hostname.endsWith('dreamclip.cn');
+      var cookieToken = getCookie('mcp_token') || getCookie('dreamclip_token');
+      var localToken = localStorage.getItem('mcp_token') || localStorage.getItem('dreamclip_token');
+      var token = isOnline ? cookieToken : (cookieToken || localToken);
+      
+      var urlParams = new URLSearchParams(window.location.search);
+      var tokenFromUrl = urlParams.get('mcp_token') || urlParams.get('token');
+
+      if (!token && !tokenFromUrl) {
+        var ssoHost = isOnline ? 'https://login.dreamclip.cn/' : '/login';
+        window.location.replace(ssoHost + '?redirect=' + encodeURIComponent(window.location.href));
+      }
+    })();
+  </script>
   <style>
     /* ==================== PortalOS: Apple iOS Springboard Theme ==================== */
     :root {
