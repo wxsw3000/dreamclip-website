@@ -1,0 +1,47 @@
+================================================================================
+MagicStarPlatform & DreamClip 架构重构与数据库规范日志 - 2026-09-21
+================================================================================
+
+一、架构重构核心背景与决策
+
+1. 痛点根因分析：
+   - 此前将「底座治理 (mcp-base)」与「门户桌面/网关/SSO (mcp-portal)」拆成两个服务，导致了 Portal 承担五重角色（网关、SSO、梦之厅官网、PortalOS、Studio 中台），职责混乱、跨域跳转链路过长。
+   - 用户明确提出并拍板核心架构原则：
+     • 将 Base 与 PortalOS/网关/SSO 合并为统一平台底座 —— 「MagicStarPlatform」；
+     • 将 梦之厅官网、Studio 内容工坊 与 角色宇宙/AVG 合并为第 1 个独立业务节点 —— 「dreamclip」；
+     • 数据库名称与模块一一对应：平台底座对应 magicstar_platform.db，业务服务对应 dreamclip.db。
+
+2. 重构后工程拓扑：
+
+   ┌────────────────────────────────────────────────────────────────────────┐
+   │                       MagicStar & DreamClip 微服务平台                   │
+   ├────────────────────────────────┬───────────────────────────────────────┤
+   │ 🏛️ magicstar-platform (平台底座) │ 🌌 dreamclip (第 1 个业务微服务节点)    │
+   │  - 端口: 8000                  │  - 端口: 8081                         │
+   │  - 数据库: magicstar_platform.db│  - 数据库: dreamclip.db                │
+   │  - 统一网关 & 虚拟主机智能反代   │  - 梦之厅官方公众主站 (universe.html)  │
+   │  - SSO 单点认证中心 (login)     │  - 专属内容工坊中台 (studio.html)      │
+   │  - PortalOS 平台桌面 (portal)   │  - 独立 AVG 互动剧场中心 (games.html)  │
+   │  - IAM / RBAC 用户与角色权限    │  - 情绪胶囊/角色档案/焦点跑马灯数据引擎 │
+   │  - 微服务注册中心与 20s 探活    │  - 启动自注册至 MagicStarPlatform      │
+   │  - SuperAdmin 运维治理控制台    │                                       │
+   └────────────────────────────────┴───────────────────────────────────────┘
+
+二、具体落地与测试验证
+
+1. 数据库与种子数据迁移：
+   - 平台底座数据库统一为 magicstar_platform.db（MySQL: magicstar_platform_db）；
+   - 业务节点数据库统一为 dreamclip.db（MySQL: dreamclip_db）；
+   - 保留全量历史数据，初始化脚本自动注入核心微服务登记（magicstar-platform、dreamclip）与默认角色赋权。
+
+2. 启动脚本与运维配置升级：
+   - start_dreamclip.bat / start_dreamclip.ps1 / start_dreamclip.sh 升级为并发编排两项核心服务；
+   - supervisord.conf 与 Dockerfile 容器构建配置同步更新为 2 个 program（magicstar-platform、dreamclip）。
+
+3. 全链路单元与集成测试：
+   - MagicStarPlatform (/health, /portal, /admin, /api/v1/auth/login, /api/v1/auth/my-apps) 自动化测试 100% 通过；
+   - DreamClip (/health, /, /studio, /games, /api/v1/hall/banners, /api/v1/capsules) 自动化测试 100% 通过。
+
+================================================================================
+记录时间：2026-09-21 10:26
+================================================================================
