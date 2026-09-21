@@ -82,20 +82,25 @@ class TestMagicStarAndDreamClip(unittest.TestCase):
             
             res_games = client.get("/games")
             self.assertEqual(res_games.status_code, 200, "AVG 游戏中心渲染失败")
+
+            # 3. 5 套剧院场景与实验室路由测试
+            for t_route in ["/theater", "/theater-lab", "/theater-svg", "/theater-parallax", "/theater-webp", "/theater-3d", "/theater-video"]:
+                res_t = client.get(t_route)
+                self.assertEqual(res_t.status_code, 200, f"剧院方案路由 {t_route} 渲染失败")
             
-            # 3. 业务 API 数据拉取
-            res_banners = client.get("/api/v1/hall/banners")
+            # 4. 业务 API 数据拉取及多前缀兼容
+            res_banners = client.get("/api/universe/hall/banners")
             self.assertEqual(res_banners.status_code, 200, "跑马灯/焦点接口异常")
             self.assertGreater(len(res_banners.json().get("data", [])), 0, "跑马灯数据为空")
             
-            res_capsules = client.get("/api/v1/capsules")
+            res_capsules = client.get("/api/universe/capsules")
             self.assertEqual(res_capsules.status_code, 200, "情绪胶囊接口异常")
-            self.assertGreater(len(res_capsules.json().get("data", [])), 0, "情绪胶囊数据为空")
+            self.assertGreater(len(res_capsules.json().get("data", {}).get("items", [])), 0, "情绪胶囊数据为空")
             
-            res_characters = client.get("/api/v1/characters")
+            res_characters = client.get("/api/universe/characters")
             self.assertEqual(res_characters.status_code, 200, "角色档案接口异常")
             self.assertGreater(len(res_characters.json().get("data", [])), 0, "角色档案数据为空")
-            print("[PASS] DreamClip Service (6 critical test assertions passed)")
+            print("[PASS] DreamClip Service (10 critical test assertions passed)")
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
