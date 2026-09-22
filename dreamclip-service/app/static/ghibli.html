@@ -9,13 +9,15 @@
   <link rel="stylesheet" href="/static/css/style.css">
 
   <style>
-    /* ==================== 吉卜力治愈手绘大厅核心样式 ==================== */
+    /* ==================== 吉卜力治愈拟物美学系统 ==================== */
     :root {
       --ghibli-amber: #f59e0b;
-      --ghibli-warm-gold: #fbbf24;
-      --ghibli-wood: #78350f;
-      --ghibli-parchment: #fef3c7;
-      --ghibli-dark: #0f172a;
+      --ghibli-gold: #fbbf24;
+      --ghibli-wood-dark: #3e2723;
+      --ghibli-wood-light: #5d4037;
+      --ghibli-parchment: #fdf6e2;
+      --ghibli-parchment-border: #d7ccc8;
+      --ghibli-ink: #2c1810;
       --ghibli-glow: rgba(251, 191, 36, 0.45);
     }
 
@@ -31,12 +33,12 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background-color: #0b0f19;
-      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background-color: #080c14;
+      font-family: "Georgia", "STSong", "Songti SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", serif;
       color: #f8fafc;
     }
 
-    /* 全屏主舞台视口容器 (保持 16:9 居中自适应) */
+    /* 16:9 全屏居中主舞台 */
     .stage-wrapper {
       position: absolute;
       top: 0;
@@ -46,27 +48,26 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: radial-gradient(circle at center, #172033 0%, #080c14 100%);
+      background: radial-gradient(circle at center, #172033 0%, #06090e 100%);
       overflow: hidden;
     }
 
-    /* 16:9 场景主画布容器 */
     .theater-canvas {
       position: relative;
       width: 100vw;
-      height: 56.25vw; /* 16:9 */
+      height: 56.25vw; /* 16:9 黄金自适应 */
       max-height: 100vh;
       max-width: 177.78vh; /* 16:9 */
       background-image: url('/static/ghibli-theater.webp'), url('/static/ghibli-theater.png');
       background-size: 100% 100%;
       background-position: center;
       background-repeat: no-repeat;
-      box-shadow: 0 0 60px rgba(0, 0, 0, 0.85);
+      box-shadow: 0 0 70px rgba(0, 0, 0, 0.95);
       border-radius: 4px;
       overflow: hidden;
     }
 
-    /* 氛围微粒粒子层 */
+    /* 氛围微粒与微风粒子层 */
     #ambientCanvas {
       position: absolute;
       top: 0;
@@ -77,44 +78,45 @@
       z-index: 5;
     }
 
-    /* ==================== 顶部极简导航栏 ==================== */
+    /* ==================== 顶部质感温润导航栏 ==================== */
     .top-bar {
       position: absolute;
-      top: 12px;
-      left: 18px;
-      right: 18px;
-      height: 48px;
+      top: 14px;
+      left: 20px;
+      right: 20px;
+      height: 46px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 16px;
-      background: rgba(15, 23, 42, 0.65);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(251, 191, 36, 0.2);
+      padding: 0 18px;
+      background: rgba(20, 14, 10, 0.72);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(251, 191, 36, 0.25);
       border-radius: 30px;
       z-index: 50;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 4px 25px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
     }
 
     .brand-logo {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
       text-decoration: none;
-      color: #fef08a;
-      font-size: 0.95rem;
+      color: #fef3c7;
+      font-size: 0.96rem;
       font-weight: 700;
-      letter-spacing: 0.5px;
-      text-shadow: 0 0 10px rgba(251, 191, 36, 0.4);
+      letter-spacing: 1px;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8), 0 0 10px rgba(251, 191, 36, 0.4);
     }
 
     .brand-tag {
       font-size: 0.72rem;
       background: rgba(251, 191, 36, 0.15);
-      border: 1px solid rgba(251, 191, 36, 0.3);
-      color: #fef08a;
+      border: 1px solid rgba(251, 191, 36, 0.35);
+      color: #fde68a;
       padding: 2px 8px;
       border-radius: 12px;
+      font-weight: 500;
     }
 
     .top-actions {
@@ -123,32 +125,33 @@
       gap: 12px;
     }
 
-    /* BGM 八音盒播放器按钮 */
+    /* BGM 八音盒播放器 */
     .bgm-btn {
       display: flex;
       align-items: center;
       gap: 6px;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      color: #e2e8f0;
-      padding: 5px 12px;
+      background: rgba(255, 248, 220, 0.08);
+      border: 1px solid rgba(251, 191, 36, 0.3);
+      color: #fef3c7;
+      padding: 5px 13px;
       border-radius: 20px;
       font-size: 0.78rem;
       cursor: pointer;
       transition: all 0.25s ease;
+      font-family: inherit;
     }
     .bgm-btn:hover {
-      background: rgba(251, 191, 36, 0.2);
-      border-color: rgba(251, 191, 36, 0.5);
-      color: #fef08a;
+      background: rgba(251, 191, 36, 0.22);
+      border-color: rgba(251, 191, 36, 0.6);
       transform: translateY(-1px);
+      box-shadow: 0 0 12px rgba(251, 191, 36, 0.3);
     }
     .bgm-disc {
       display: inline-block;
       transition: transform 0.3s;
     }
     .bgm-playing .bgm-disc {
-      animation: rotateDisc 4s linear infinite;
+      animation: rotateDisc 5s linear infinite;
     }
     @keyframes rotateDisc {
       from { transform: rotate(0deg); }
@@ -163,20 +166,18 @@
       font-size: 0.78rem;
       border-radius: 20px;
       text-decoration: none;
-      color: #cbd5e1;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #e2e8f0;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.14);
       transition: all 0.2s ease;
     }
     .nav-link-btn:hover {
       color: #ffffff;
-      background: rgba(255, 255, 255, 0.15);
-      border-color: rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.16);
+      border-color: rgba(251, 191, 36, 0.4);
     }
 
-    /* ==================== 像素级嵌入槽位锚点 ==================== */
-
-    /* 1. 二楼正中【巨型轮播海报画框】 */
+    /* ==================== 1. 二楼正中【巨型画卷轮播 (油画/水彩质感融合)】 ==================== */
     .anchor-poster-frame {
       position: absolute;
       left: 39.15%;
@@ -184,16 +185,17 @@
       width: 21.42%;
       height: 18.56%;
       z-index: 20;
-      border-radius: 3px;
+      border-radius: 2px;
       overflow: hidden;
       cursor: pointer;
-      box-shadow: inset 0 0 15px rgba(0,0,0,0.6);
-      background: #1e1b18;
+      background: #1c140d;
+      /* 关键：深度内阴影与泛光压边，使海报看起来位于雕花木框后方 */
+      box-shadow: inset 0 0 20px rgba(15, 8, 4, 0.9), inset 0 0 8px rgba(0, 0, 0, 0.8);
       transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s;
     }
     .anchor-poster-frame:hover {
-      transform: scale(1.015);
-      box-shadow: 0 0 25px rgba(251, 191, 36, 0.4), inset 0 0 10px rgba(0,0,0,0.4);
+      transform: scale(1.012);
+      box-shadow: 0 0 25px rgba(251, 191, 36, 0.35), inset 0 0 15px rgba(15, 8, 4, 0.8);
     }
 
     .poster-slide-item {
@@ -203,50 +205,58 @@
       width: 100%;
       height: 100%;
       opacity: 0;
-      transition: opacity 0.8s ease-in-out;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
+      transition: opacity 1s ease-in-out;
       background-size: cover;
       background-position: center;
+      /* 关键：给动态海报增加复古油画质感滤镜与色温调和 */
+      filter: contrast(1.08) saturate(0.9) brightness(0.96) sepia(0.08);
     }
     .poster-slide-item.active {
       opacity: 1;
     }
-    .poster-slide-mask {
+    /* 画布上方两盏铜灯的投光光斑遮罩 */
+    .poster-spotlight-mask {
       position: absolute;
       inset: 0;
-      background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(15, 23, 42, 0.85) 100%);
+      background: radial-gradient(ellipse at 50% 10%, rgba(255, 237, 160, 0.28) 0%, transparent 65%),
+                  linear-gradient(180deg, rgba(0, 0, 0, 0.05) 0%, rgba(20, 12, 6, 0.85) 100%);
+      pointer-events: none;
     }
     .poster-content {
-      position: relative;
-      z-index: 2;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
       padding: 6% 8%;
       color: #fff;
+      z-index: 2;
     }
     .poster-badge {
       display: inline-block;
-      background: linear-gradient(135deg, #f59e0b, #d97706);
+      background: rgba(217, 119, 6, 0.85);
       color: #fff;
-      font-size: 0.65rem;
+      font-size: 0.62rem;
       font-weight: 700;
-      padding: 2px 6px;
-      border-radius: 4px;
-      margin-bottom: 3px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      padding: 1px 6px;
+      border-radius: 3px;
+      margin-bottom: 2px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+      letter-spacing: 0.5px;
     }
     .poster-title {
-      font-size: 0.88rem;
+      font-size: 0.86rem;
       font-weight: 700;
       line-height: 1.25;
-      text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+      color: #fef3c7;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9), 0 0 8px rgba(0, 0, 0, 0.5);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      letter-spacing: 0.5px;
     }
     .poster-dots {
       position: absolute;
-      bottom: 4px;
+      bottom: 5px;
       right: 8px;
       z-index: 3;
       display: flex;
@@ -256,16 +266,18 @@
       width: 5px;
       height: 5px;
       border-radius: 50%;
-      background: rgba(255,255,255,0.4);
-      transition: all 0.2s;
+      background: rgba(255,255,255,0.35);
+      transition: all 0.25s;
     }
     .poster-dot.active {
-      width: 12px;
+      width: 14px;
       border-radius: 3px;
       background: #fbbf24;
+      box-shadow: 0 0 6px rgba(251, 191, 36, 0.8);
     }
 
-    /* 2. 一楼门头【跑马灯招牌】 */
+    /* ==================== 2. 一楼门头【纯木纹融入式跑马灯】 ==================== */
+    /* 彻底去除生硬的深色黑底盒，文字直接“浮刻”在门头原本的木质招牌上 */
     .anchor-marquee {
       position: absolute;
       left: 33.71%;
@@ -276,37 +288,36 @@
       display: flex;
       align-items: center;
       overflow: hidden;
-      border-radius: 2px;
-      background: rgba(26, 17, 10, 0.82);
-      border: 1px solid rgba(251, 191, 36, 0.25);
-      box-shadow: inset 0 0 10px rgba(0,0,0,0.8), 0 0 12px rgba(251, 191, 36, 0.15);
+      background: transparent; /* 透明融入底图招牌 */
       cursor: pointer;
     }
     .marquee-track {
       display: flex;
       width: max-content;
-      gap: 30px;
-      animation: tickerLoop 24s linear infinite;
+      gap: 36px;
+      animation: tickerLoop 26s linear infinite;
     }
     .marquee-track:hover {
       animation-play-state: paused;
     }
     .marquee-text-item {
-      font-size: 0.72rem;
+      font-size: 0.74rem;
       color: #fef08a;
       font-weight: 600;
       white-space: nowrap;
-      text-shadow: 0 0 8px rgba(251, 191, 36, 0.6);
+      /* 暖金色微光雕刻质感 */
+      text-shadow: 0 0 8px rgba(251, 191, 36, 0.75), 0 1px 3px rgba(0, 0, 0, 0.95);
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
+      letter-spacing: 1px;
     }
     @keyframes tickerLoop {
       0% { transform: translateX(0); }
       100% { transform: translateX(-50%); }
     }
 
-    /* 3. 一楼正中【AVG 剧场大门】 */
+    /* ==================== 3. 一楼正中【AVG 剧场大门 · 暖金迎宾光芒】 ==================== */
     .anchor-door {
       position: absolute;
       left: 38.27%;
@@ -323,40 +334,42 @@
     }
     .door-glow-pulse {
       position: absolute;
-      inset: 10% 15%;
-      background: radial-gradient(circle, rgba(251, 191, 36, 0.35) 0%, transparent 70%);
+      inset: 5% 10%;
+      background: radial-gradient(circle at center 60%, rgba(251, 191, 36, 0.4) 0%, rgba(245, 158, 11, 0.15) 50%, transparent 75%);
       pointer-events: none;
-      animation: doorPulse 3s ease-in-out infinite alternate;
+      animation: doorPulse 3.5s ease-in-out infinite alternate;
     }
     @keyframes doorPulse {
-      0% { opacity: 0.4; transform: scale(0.95); }
-      100% { opacity: 0.85; transform: scale(1.05); }
+      0% { opacity: 0.35; transform: scale(0.96); }
+      100% { opacity: 0.9; transform: scale(1.06); }
     }
     .door-hint-tag {
       position: relative;
       z-index: 2;
-      background: rgba(15, 23, 42, 0.82);
+      background: rgba(30, 18, 10, 0.88);
       border: 1px solid rgba(251, 191, 36, 0.6);
-      color: #fef08a;
-      font-size: 0.76rem;
+      color: #fef3c7;
+      font-size: 0.78rem;
       font-weight: 700;
-      padding: 6px 14px;
+      padding: 6px 16px;
       border-radius: 20px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.6), 0 0 15px rgba(251, 191, 36, 0.4);
+      box-shadow: 0 4px 18px rgba(0,0,0,0.7), 0 0 15px rgba(251, 191, 36, 0.4);
       opacity: 0;
       transform: translateY(8px);
-      transition: all 0.25s ease;
+      transition: all 0.28s ease;
       pointer-events: none;
+      letter-spacing: 0.5px;
     }
     .anchor-door:hover .door-hint-tag {
       opacity: 1;
       transform: translateY(0);
     }
     .anchor-door:hover {
-      box-shadow: 0 0 35px rgba(251, 191, 36, 0.45);
+      box-shadow: 0 0 40px rgba(251, 191, 36, 0.45);
     }
 
-    /* 4. 一楼左侧【情绪胶囊暖光大凸窗】 */
+    /* ==================== 4. 一楼左侧【凸窗透光与窗台悬挂信笺 (不遮挡窗户)】 ==================== */
+    /* 保持窗户原本的通透金黄光晕，将胶囊提炼为窗边微晃的“悬挂便签/发光信封” */
     .anchor-bay-window {
       position: absolute;
       left: 14.22%;
@@ -365,60 +378,69 @@
       height: 22.19%;
       z-index: 20;
       cursor: pointer;
-      border-radius: 6px;
-      overflow: hidden;
       display: flex;
-      align-items: center;
+      align-items: flex-end;
       justify-content: center;
-      transition: all 0.3s ease;
+      padding-bottom: 8%;
     }
-    .window-card-preview {
+    .window-warm-glow {
       position: absolute;
-      inset: 6% 8%;
-      background: rgba(30, 20, 10, 0.75);
-      border: 1px solid rgba(251, 191, 36, 0.4);
-      border-radius: 4px;
-      padding: 8px 10px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      color: #fff;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-      opacity: 0.88;
-      transition: all 0.25s;
+      inset: 0;
+      background: radial-gradient(circle at 50% 60%, rgba(251, 191, 36, 0.2) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
     }
-    .anchor-bay-window:hover .window-card-preview {
+    .anchor-bay-window:hover .window-warm-glow {
       opacity: 1;
-      transform: scale(1.02);
-      border-color: rgba(251, 191, 36, 0.8);
-      box-shadow: 0 0 20px rgba(251, 191, 36, 0.5);
-    }
-    .window-tag {
-      font-size: 0.62rem;
-      background: rgba(251, 191, 36, 0.2);
-      color: #fef08a;
-      padding: 1px 6px;
-      border-radius: 3px;
-      align-self: flex-start;
-    }
-    .window-title {
-      font-size: 0.74rem;
-      font-weight: 700;
-      color: #f8fafc;
-      line-height: 1.25;
-      overflow: hidden;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-    }
-    .window-meta {
-      font-size: 0.6rem;
-      color: #cbd5e1;
-      display: flex;
-      justify-content: space-between;
     }
 
-    /* 5. 一楼左侧【小红邮筒 (写信/写胶囊)】 */
+    /* 窗台前自然漂浮的手写信卡 */
+    .window-story-tag {
+      position: relative;
+      z-index: 2;
+      background: rgba(253, 246, 226, 0.92); /* 羊皮纸温润质感 */
+      color: #2c1810; /* 手写深墨色 */
+      border: 1px solid #d7ccc8;
+      border-radius: 6px;
+      padding: 6px 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5), 0 0 12px rgba(251, 191, 36, 0.3);
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      max-width: 90%;
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s;
+      animation: floatGentle 4s ease-in-out infinite alternate;
+    }
+    @keyframes floatGentle {
+      0% { transform: translateY(0px) rotate(-0.5deg); }
+      100% { transform: translateY(-4px) rotate(0.8deg); }
+    }
+    .anchor-bay-window:hover .window-story-tag {
+      transform: translateY(-6px) scale(1.04);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6), 0 0 18px rgba(251, 191, 36, 0.5);
+    }
+    .story-tag-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.6rem;
+      color: #8d6e63;
+      font-weight: 700;
+      border-bottom: 1px dashed rgba(141, 110, 99, 0.35);
+      padding-bottom: 2px;
+    }
+    .story-tag-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #3e2723;
+      line-height: 1.25;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ==================== 5. 一楼左侧【小红邮筒 (写信/写胶囊)】 ==================== */
     .anchor-postbox {
       position: absolute;
       left: 30.90%;
@@ -430,14 +452,14 @@
       transition: transform 0.2s ease;
     }
     .anchor-postbox:hover {
-      transform: scale(1.06) rotate(-2deg);
+      transform: scale(1.08) rotate(-2deg);
     }
     .postbox-tooltip {
       position: absolute;
       top: -30px;
       left: 50%;
       transform: translateX(-50%);
-      background: #dc2626;
+      background: #b91c1c;
       color: #fff;
       font-size: 0.68rem;
       font-weight: 700;
@@ -447,14 +469,14 @@
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.2s, top 0.2s;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.5);
     }
     .anchor-postbox:hover .postbox-tooltip {
       opacity: 1;
-      top: -36px;
+      top: -38px;
     }
 
-    /* 6. 一楼右侧【复古告示板 / Google 广告位】 */
+    /* ==================== 6. 一楼右侧【图钉羊皮纸告示板 / Google 广告位】 ==================== */
     .anchor-bulletin {
       position: absolute;
       left: 69.70%;
@@ -462,53 +484,66 @@
       width: 13.69%;
       height: 13.12%;
       z-index: 20;
-      border-radius: 3px;
-      overflow: hidden;
-      background: rgba(40, 26, 15, 0.7);
-      border: 1px solid rgba(217, 119, 6, 0.35);
-      box-shadow: inset 0 0 10px rgba(0,0,0,0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    /* 像一张用铜图钉固定在木板上的复古羊皮纸告示 */
+    .bulletin-parchment-sheet {
+      position: relative;
+      width: 94%;
+      height: 90%;
+      background: #fdf6e2;
+      border-radius: 2px;
+      box-shadow: 0 3px 12px rgba(0, 0, 0, 0.5), inset 0 0 10px rgba(180, 83, 9, 0.18);
+      border: 1px solid #d7ccc8;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       padding: 6px;
       text-align: center;
-      cursor: pointer;
-      transition: all 0.25s;
+      transform: rotate(-0.6deg);
+      transition: transform 0.25s, box-shadow 0.25s;
     }
-    .anchor-bulletin:hover {
-      border-color: rgba(251, 191, 36, 0.6);
-      box-shadow: 0 0 15px rgba(251, 191, 36, 0.25);
+    .anchor-bulletin:hover .bulletin-parchment-sheet {
+      transform: rotate(0deg) scale(1.02);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6), 0 0 15px rgba(251, 191, 36, 0.25);
     }
-    .bulletin-ad-content {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      color: #fef08a;
+    /* 复古铜图钉 */
+    .bulletin-parchment-sheet::before {
+      content: '';
+      position: absolute;
+      top: 3px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #fef08a 0%, #b45309 80%);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.5);
     }
     .bulletin-badge {
-      font-size: 0.58rem;
-      background: rgba(251, 191, 36, 0.2);
-      border: 1px solid rgba(251, 191, 36, 0.4);
+      font-size: 0.56rem;
+      background: rgba(180, 83, 9, 0.15);
+      color: #92400e;
       padding: 1px 5px;
       border-radius: 3px;
+      font-weight: 700;
       margin-bottom: 2px;
     }
     .bulletin-title {
       font-size: 0.72rem;
       font-weight: 700;
-      color: #fff;
+      color: #2c1810;
+      line-height: 1.2;
     }
     .bulletin-sub {
-      font-size: 0.58rem;
-      color: #cbd5e1;
+      font-size: 0.56rem;
+      color: #78350f;
       margin-top: 2px;
     }
 
-    /* 7. 一楼右侧【长椅与小黑猫互动区】 */
+    /* ==================== 7. 一楼右侧【长椅与小黑猫互动区】 ==================== */
     .anchor-bench-cat {
       position: absolute;
       left: 70.75%;
@@ -521,14 +556,15 @@
     .cat-dialogue-bubble {
       position: absolute;
       top: -46px;
-      left: 20%;
-      background: #ffffff;
-      color: #1e293b;
+      left: 15%;
+      background: #fdf6e2;
+      color: #2c1810;
+      border: 1px solid #d7ccc8;
       font-size: 0.72rem;
       font-weight: 600;
-      padding: 5px 10px;
+      padding: 5px 12px;
       border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      box-shadow: 0 4px 18px rgba(0,0,0,0.4);
       white-space: nowrap;
       opacity: 0;
       transform: translateY(6px);
@@ -539,22 +575,22 @@
       content: '';
       position: absolute;
       bottom: -6px;
-      left: 18px;
+      left: 20px;
       border-width: 6px 6px 0 6px;
       border-style: solid;
-      border-color: #ffffff transparent transparent transparent;
+      border-color: #fdf6e2 transparent transparent transparent;
     }
     .anchor-bench-cat:hover .cat-dialogue-bubble {
       opacity: 1;
       transform: translateY(0);
     }
 
-    /* ==================== 通用治愈风弹窗 (Modal) ==================== */
+    /* ==================== 羊皮纸手绘风格弹窗 (Ghibli Modal) ==================== */
     .ghibli-modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(10, 15, 26, 0.75);
-      backdrop-filter: blur(8px);
+      background: rgba(8, 12, 20, 0.78);
+      backdrop-filter: blur(10px);
       z-index: 100;
       display: none;
       align-items: center;
@@ -566,11 +602,12 @@
     }
     .ghibli-modal-card {
       width: 100%;
-      max-width: 580px;
-      background: #1e293b;
-      border: 1px solid rgba(251, 191, 36, 0.3);
-      border-radius: 16px;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.7), 0 0 25px rgba(251, 191, 36, 0.2);
+      max-width: 600px;
+      background: #fdf6e2; /* 温暖羊皮纸色 */
+      color: #2c1810;
+      border: 2px solid #8d6e63;
+      border-radius: 12px;
+      box-shadow: 0 15px 50px rgba(0,0,0,0.85), inset 0 0 30px rgba(141, 110, 99, 0.15);
       overflow: hidden;
       display: flex;
       flex-direction: column;
@@ -581,17 +618,17 @@
       to { transform: scale(1); opacity: 1; }
     }
     .ghibli-modal-header {
-      padding: 14px 20px;
-      background: rgba(15, 23, 42, 0.85);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 14px 22px;
+      background: #efebe9;
+      border-bottom: 1px dashed #bcaaa4;
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
     .ghibli-modal-title {
-      font-size: 0.95rem;
+      font-size: 0.98rem;
       font-weight: 700;
-      color: #fef08a;
+      color: #3e2723;
       display: flex;
       align-items: center;
       gap: 6px;
@@ -599,21 +636,22 @@
     .ghibli-modal-close {
       background: transparent;
       border: none;
-      color: #94a3b8;
-      font-size: 1.2rem;
+      color: #8d6e63;
+      font-size: 1.3rem;
       cursor: pointer;
       padding: 4px;
+      line-height: 1;
     }
     .ghibli-modal-close:hover {
-      color: #ffffff;
+      color: #3e2723;
     }
     .ghibli-modal-body {
-      padding: 20px;
+      padding: 22px;
       max-height: 70vh;
       overflow-y: auto;
-      color: #e2e8f0;
-      font-size: 0.88rem;
-      line-height: 1.6;
+      color: #3e2723;
+      font-size: 0.92rem;
+      line-height: 1.8;
     }
   </style>
 </head>
@@ -644,10 +682,10 @@
         </div>
       </header>
 
-      <!-- 1. 二楼正中【巨型轮播海报画框】 -->
+      <!-- 1. 二楼正中【巨型画卷轮播 (油画/水彩质感融合)】 -->
       <div class="anchor-poster-frame" id="posterFrame" title="点击探索主推故事">
         <div class="poster-slide-item active" style="background-image: url('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1200&auto=format&fit=crop');">
-          <div class="poster-slide-mask"></div>
+          <div class="poster-spotlight-mask"></div>
           <div class="poster-content">
             <span class="poster-badge">#本周主推</span>
             <div class="poster-title" id="posterTitle">深空信箱：2099</div>
@@ -660,7 +698,7 @@
         </div>
       </div>
 
-      <!-- 2. 一楼门头【跑马灯招牌】 -->
+      <!-- 2. 一楼门头【纯木纹融入式跑马灯】 -->
       <div class="anchor-marquee" id="marqueeBar" title="全站实时广播">
         <div class="marquee-track" id="marqueeTrack">
           <div class="marquee-text-item">🌟 欢迎来到 DreamClip 梦之剧场 · 愿为你拂去都市的疲惫</div>
@@ -678,15 +716,15 @@
         <div class="door-hint-tag">🚪 推门进入 · AVG 剧场</div>
       </div>
 
-      <!-- 4. 一楼左侧【情绪胶囊暖光大凸窗】 -->
+      <!-- 4. 一楼左侧【凸窗透光与窗台悬挂信笺 (不遮挡窗户)】 -->
       <div class="anchor-bay-window" id="bayWindow" title="点击打捞精选情绪故事">
-        <div class="window-card-preview" id="windowCardPreview">
-          <span class="window-tag" id="windowMoodTag">🌿 治愈</span>
-          <div class="window-title" id="windowStoryTitle">在喧嚣散去后的深夜，给未来的自己写一封信</div>
-          <div class="window-meta">
-            <span>📖 情绪胶囊</span>
+        <div class="window-warm-glow"></div>
+        <div class="window-story-tag" id="windowStoryTag">
+          <div class="story-tag-header">
+            <span id="windowMoodTag">🌿 治愈信笺</span>
             <span>打捞 ✨</span>
           </div>
+          <div class="story-tag-title" id="windowStoryTitle">在喧嚣散去后的深夜，给未来的自己写一封信</div>
         </div>
       </div>
 
@@ -695,10 +733,10 @@
         <div class="postbox-tooltip">📮 寄一封情绪信件</div>
       </div>
 
-      <!-- 6. 一楼右侧【复古告示板 / Google 广告位】 -->
-      <div class="anchor-bulletin" id="bulletinBoard" title="告示栏">
-        <div class="bulletin-ad-content" id="adPlaceholder">
-          <span class="bulletin-badge">📢 今日小告示</span>
+      <!-- 6. 一楼右侧【图钉羊皮纸告示板 / Google 广告位】 -->
+      <div class="anchor-bulletin" id="bulletinBoard" title="小镇告示板">
+        <div class="bulletin-parchment-sheet" id="adPlaceholder">
+          <span class="bulletin-badge">📢 小镇告示</span>
           <div class="bulletin-title">DreamClip 赞助展板</div>
           <div class="bulletin-sub">为治愈与共鸣提供恒久动力</div>
         </div>
@@ -720,14 +758,14 @@
         <button class="ghibli-modal-close" id="closeLetterModal">&times;</button>
       </div>
       <div class="ghibli-modal-body">
-        <form id="letterForm" style="display:flex; flex-direction:column; gap:12px;">
+        <form id="letterForm" style="display:flex; flex-direction:column; gap:14px;">
           <div>
-            <label style="display:block; font-size:0.8rem; color:#fef08a; margin-bottom:4px;">信件标题</label>
-            <input type="text" id="letterTitle" required placeholder="如：下雨天的温暖热可可" style="width:100%; padding:8px 12px; background:rgba(0,0,0,0.3); border:1px solid rgba(251,191,36,0.3); border-radius:6px; color:#fff; font-size:0.85rem;">
+            <label style="display:block; font-size:0.82rem; color:#5d4037; font-weight:700; margin-bottom:4px;">信件标题</label>
+            <input type="text" id="letterTitle" required placeholder="如：下雨天的温暖热可可" style="width:100%; padding:9px 12px; background:#fff8e1; border:1px solid #bcaaa4; border-radius:6px; color:#3e2723; font-size:0.88rem; font-family:inherit;">
           </div>
           <div>
-            <label style="display:block; font-size:0.8rem; color:#fef08a; margin-bottom:4px;">情绪色彩</label>
-            <select id="letterMood" style="width:100%; padding:8px 12px; background:rgba(0,0,0,0.3); border:1px solid rgba(251,191,36,0.3); border-radius:6px; color:#fff; font-size:0.85rem;">
+            <label style="display:block; font-size:0.82rem; color:#5d4037; font-weight:700; margin-bottom:4px;">情绪色彩</label>
+            <select id="letterMood" style="width:100%; padding:9px 12px; background:#fff8e1; border:1px solid #bcaaa4; border-radius:6px; color:#3e2723; font-size:0.88rem; font-family:inherit;">
               <option value="治愈">🌿 治愈 (Healing)</option>
               <option value="温暖">☀️ 温暖 (Warmth)</option>
               <option value="释怀">🍃 释怀 (Release)</option>
@@ -736,11 +774,11 @@
             </select>
           </div>
           <div>
-            <label style="display:block; font-size:0.8rem; color:#fef08a; margin-bottom:4px;">信件内容 (800~1500字为佳)</label>
-            <textarea id="letterContent" rows="5" required placeholder="写下今天让你感到温暖或释怀的一瞬间..." style="width:100%; padding:8px 12px; background:rgba(0,0,0,0.3); border:1px solid rgba(251,191,36,0.3); border-radius:6px; color:#fff; font-size:0.85rem; resize:vertical;"></textarea>
+            <label style="display:block; font-size:0.82rem; color:#5d4037; font-weight:700; margin-bottom:4px;">信件正文</label>
+            <textarea id="letterContent" rows="5" required placeholder="写下今天让你感到温暖、触动或释怀的一瞬间..." style="width:100%; padding:9px 12px; background:#fff8e1; border:1px solid #bcaaa4; border-radius:6px; color:#3e2723; font-size:0.88rem; resize:vertical; font-family:inherit;"></textarea>
           </div>
-          <button type="submit" style="margin-top:6px; padding:10px; background:linear-gradient(135deg, #f59e0b, #d97706); border:none; border-radius:8px; color:#fff; font-weight:700; cursor:pointer; box-shadow:0 4px 15px rgba(245,158,11,0.4);">
-            ✨ 投递信件并生成情绪胶囊
+          <button type="submit" style="margin-top:6px; padding:11px; background:linear-gradient(135deg, #d97706, #b45309); border:none; border-radius:8px; color:#fff; font-weight:700; cursor:pointer; box-shadow:0 4px 15px rgba(180,83,9,0.35); font-family:inherit; font-size:0.9rem;">
+            ✨ 投递信件并封存到深空信箱
           </button>
         </form>
       </div>
@@ -751,7 +789,7 @@
   <div class="ghibli-modal-overlay" id="readModal">
     <div class="ghibli-modal-card">
       <div class="ghibli-modal-header">
-        <div class="ghibli-modal-title" id="readModalTitle">📖 故事详情</div>
+        <div class="ghibli-modal-title" id="readModalTitle">📖 故事手卷</div>
         <button class="ghibli-modal-close" id="closeReadModal">&times;</button>
       </div>
       <div class="ghibli-modal-body" id="readModalBody">
@@ -785,13 +823,13 @@
           osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
 
           gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 2.2);
+          gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 2.4);
 
           osc.connect(gain);
           gain.connect(audioCtx.destination);
 
           osc.start();
-          osc.stop(audioCtx.currentTime + 2.3);
+          osc.stop(audioCtx.currentTime + 2.5);
         } catch(e) {}
       }, delay);
     }
@@ -803,7 +841,7 @@
         const currentChord = chords[chordIdx % chords.length];
         chordIdx++;
         currentChord.forEach((note, idx) => {
-          playMusicBoxNote(note, idx * 380 + Math.random() * 50);
+          playMusicBoxNote(note, idx * 380 + Math.random() * 40);
         });
       }, 2400);
     }
@@ -822,10 +860,9 @@
         btn.classList.add('bgm-playing');
         text.innerText = "播放中 · 久石让风";
         startMusicBoxLoop();
-        // 立即播一串音
         playMusicBoxNote(523.25, 0);
-        playMusicBoxNote(659.25, 250);
-        playMusicBoxNote(783.99, 500);
+        playMusicBoxNote(659.25, 240);
+        playMusicBoxNote(783.99, 480);
       } else {
         btn.classList.remove('bgm-playing');
         text.innerText = "久石让风·八音盒";
@@ -833,7 +870,7 @@
       }
     });
 
-    // ==================== 2. 场景氛围微粒动效 ====================
+    // ==================== 2. 场景微粒动效 ====================
     (function initParticles() {
       const canvas = document.getElementById('ambientCanvas');
       const ctx = canvas.getContext('2d');
@@ -845,12 +882,12 @@
       resize();
       window.addEventListener('resize', resize);
 
-      const particles = Array.from({ length: 30 }, () => ({
+      const particles = Array.from({ length: 28 }, () => ({
         x: Math.random() * w,
         y: Math.random() * h,
         r: Math.random() * 2 + 1,
-        vx: (Math.random() - 0.5) * 0.4,
-        vy: -Math.random() * 0.5 - 0.2,
+        vx: (Math.random() - 0.5) * 0.35,
+        vy: -Math.random() * 0.45 - 0.15,
         alpha: Math.random() * 0.7 + 0.3
       }));
 
@@ -865,7 +902,7 @@
 
           ctx.beginPath();
           ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(251, 191, 36, ${p.alpha * 0.6})`;
+          ctx.fillStyle = `rgba(251, 191, 36, ${p.alpha * 0.55})`;
           ctx.shadowBlur = 8;
           ctx.shadowColor = 'rgba(251, 191, 36, 0.8)';
           ctx.fill();
@@ -882,7 +919,6 @@
 
     async function loadTheaterContent() {
       try {
-        // 1. 拉取跑马灯 / 焦点
         const bannerResp = await fetch('/api/universe/hall/banners');
         if (bannerResp.ok) {
           const res = await bannerResp.json();
@@ -892,11 +928,10 @@
           }
         }
       } catch (e) {
-        console.log("Using default banner data:", e);
+        console.log("Default banners used:", e);
       }
 
       try {
-        // 2. 拉取情绪胶囊
         const capResp = await fetch('/api/universe/capsules');
         if (capResp.ok) {
           const res = await capResp.json();
@@ -908,7 +943,7 @@
           }
         }
       } catch (e) {
-        console.log("Using default capsules:", e);
+        console.log("Default capsules used:", e);
       }
     }
 
@@ -916,12 +951,12 @@
       const track = document.getElementById('marqueeTrack');
       if (!track || !banners || banners.length === 0) return;
       const html = banners.map(b => `<div class="marquee-text-item">🌟 ${b.title} ${b.subtitle ? '· ' + b.subtitle : ''}</div>`).join('');
-      track.innerHTML = html + html; // 双倍无缝循环
+      track.innerHTML = html + html;
     }
 
     function renderBayWindow(capsule) {
       if (!capsule) return;
-      document.getElementById('windowMoodTag').innerText = `🌿 ${capsule.mood_tag || '治愈'}`;
+      document.getElementById('windowMoodTag').innerText = `🌿 ${capsule.mood_tag || '治愈信笺'}`;
       document.getElementById('windowStoryTitle').innerText = capsule.title;
     }
 
@@ -943,7 +978,6 @@
     }
 
     // ==================== 4. 交互弹窗事件 ====================
-    // 点击二楼海报 / 左凸窗 -> 打开故事详情
     function openStoryModal(item) {
       const modal = document.getElementById('readModal');
       const title = document.getElementById('readModalTitle');
@@ -954,14 +988,14 @@
         content_html: "<p>在这座喧嚣而孤独的城市里，每一粒情绪微光都值得被细心安放。推开小剧场的木门，点亮那一盏属于你的温暖烛火。</p>"
       };
 
-      title.innerHTML = `📖 ${cap.title} <span style="font-size:0.75rem; color:#fef08a; margin-left:8px;">[${cap.mood_tag || '治愈'}]</span>`;
+      title.innerHTML = `📖 ${cap.title} <span style="font-size:0.75rem; color:#b45309; margin-left:8px;">[${cap.mood_tag || '治愈'}]</span>`;
       body.innerHTML = `
-        <div style="font-size:0.92rem; line-height:1.8; color:#f1f5f9;">
+        <div style="font-size:0.95rem; line-height:1.9; color:#3e2723;">
           ${cap.content_html || cap.content_md || cap.summary || '<p>故事正文暂未录入...</p>'}
         </div>
-        <div style="margin-top:20px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center;">
-          <span style="font-size:0.8rem; color:#94a3b8;">✨ 共鸣打捞成功 · 愿你今夜好梦</span>
-          <button onclick="document.getElementById('readModal').classList.remove('active')" style="padding:6px 16px; background:#f59e0b; border:none; border-radius:6px; color:#fff; font-weight:700; cursor:pointer;">已读完</button>
+        <div style="margin-top:22px; padding-top:14px; border-top:1px dashed #bcaaa4; display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:0.8rem; color:#8d6e63;">✨ 共鸣打捞成功 · 愿你今夜好梦</span>
+          <button onclick="document.getElementById('readModal').classList.remove('active')" style="padding:6px 16px; background:#d97706; border:none; border-radius:6px; color:#fff; font-weight:700; cursor:pointer; font-family:inherit;">已读完</button>
         </div>
       `;
       modal.classList.add('active');
