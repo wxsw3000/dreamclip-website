@@ -428,13 +428,13 @@ async def host_virtual_routing_middleware(request: Request, call_next):
         target_url = f"{settings.DREAMCLIP_SERVICE_URL.rstrip('/')}{path}"
         return await forward_request(request, target_url)
 
-    # 6. 业务主站路径智能代理转发 (梦之剧院场景、吉卜力大厅、梦之厅、内容工坊、AVG游戏、胶囊阅读、合规页面)
+    # 6. 业务主站路径智能代理转发 (公开主页、梦之剧院场景、吉卜力大厅、梦之厅、内容工坊、AVG游戏、胶囊阅读、合规页面)
     business_prefixes = [
         "/theater", "/scene", "/ghibli", "/fairytale", "/dream-theater", "/theater-ghibli",
         "/studio", "/capsule", "/character", "/games", "/game",
         "/about", "/privacy", "/terms", "/contact", "/universe", "/classic", "/hall"
     ]
-    if any(path == prefix or path.startswith(prefix + "/") or path.startswith(prefix) for prefix in business_prefixes):
+    if path in ["/", ""] or any(path == prefix or path.startswith(prefix + "/") or path.startswith(prefix) for prefix in business_prefixes):
         target_url = f"{settings.DREAMCLIP_SERVICE_URL.rstrip('/')}{path}"
         return await forward_request(request, target_url)
 
