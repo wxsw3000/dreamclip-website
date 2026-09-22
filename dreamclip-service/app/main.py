@@ -261,6 +261,14 @@ def universe_page(identifier: str = None):
     """梦之厅 经典卡片与瀑布切片流"""
     return serve_static_page("universe.html")
 
+@app.get("/ghibli", include_in_schema=False)
+@app.get("/theater-ghibli", include_in_schema=False)
+@app.get("/fairytale", include_in_schema=False)
+@app.get("/dream-theater", include_in_schema=False)
+def ghibli_theater_page():
+    """吉卜力治愈手绘风梦幻剧场首页 (ghibli.html)"""
+    return serve_static_page("ghibli.html")
+
 @app.get("/theater", include_in_schema=False)
 @app.get("/scene", include_in_schema=False)
 def theater_page():
