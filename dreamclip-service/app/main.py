@@ -261,6 +261,13 @@ def universe_page(identifier: str = None):
     """梦之厅 经典卡片与瀑布切片流"""
     return serve_static_page("universe.html")
 
+@app.get("/workshop", include_in_schema=False)
+@app.get("/picturebook", include_in_schema=False)
+@app.get("/fairytale-workshop", include_in_schema=False)
+def workshop_page():
+    """吉卜力童话工坊与绘本大跨页独立新页面 (workshop.html)"""
+    return serve_static_page("workshop.html")
+
 @app.get("/ghibli", include_in_schema=False)
 @app.get("/theater-ghibli", include_in_schema=False)
 @app.get("/fairytale", include_in_schema=False)

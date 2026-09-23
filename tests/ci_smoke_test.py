@@ -83,10 +83,10 @@ class TestMagicStarAndDreamClip(unittest.TestCase):
             res_games = client.get("/games")
             self.assertEqual(res_games.status_code, 200, "AVG 游戏中心渲染失败")
 
-            # 3. 剧院场景、吉卜力治愈大厅与实验室路由测试
-            for t_route in ["/ghibli", "/theater-ghibli", "/theater", "/theater-lab", "/theater-svg", "/theater-parallax", "/theater-webp", "/theater-3d", "/theater-video"]:
+            # 3. 剧院场景、童话绘本工坊、吉卜力治愈大厅与实验室路由测试
+            for t_route in ["/workshop", "/picturebook", "/fairytale-workshop", "/ghibli", "/theater-ghibli", "/theater", "/theater-lab", "/theater-svg", "/theater-parallax", "/theater-webp", "/theater-3d", "/theater-video"]:
                 res_t = client.get(t_route)
-                self.assertEqual(res_t.status_code, 200, f"剧院方案路由 {t_route} 渲染失败")
+                self.assertEqual(res_t.status_code, 200, f"剧院/工坊方案路由 {t_route} 渲染失败")
             
             # 4. 业务 API 数据拉取及多前缀兼容
             res_banners = client.get("/api/universe/hall/banners")

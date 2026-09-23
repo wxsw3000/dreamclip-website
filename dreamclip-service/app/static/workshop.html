@@ -1,0 +1,1611 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>DreamClip - 童话工坊 (Fairy-tale Workshop) · 绘本大跨页</title>
+  <meta name="description" content="DreamClip 治愈系童话工坊与绘本大跨页 —— 温暖安静的海边高处小工坊。巨型绘本画卷、麻绳Tips便签卡片、白鸽流光丝带与小黑猫。">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎨</text></svg>">
+  <link rel="stylesheet" href="/static/css/style.css">
+
+  <style>
+    /* ==================== 吉卜力童话工坊·美学系统 ==================== */
+    :root {
+      --wk-amber: #f59e0b;
+      --wk-gold: #fbbf24;
+      --wk-wood-dark: #3a2215;
+      --wk-wood-light: #5c3822;
+      --wk-parchment: #fcf6e8;
+      --wk-parchment-subtle: #f7eed7;
+      --wk-ink: #2b1810;
+      --wk-tea-brown: #78350f;
+      --wk-glow: rgba(251, 191, 36, 0.45);
+      --wk-shadow: rgba(30, 16, 8, 0.5);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #0b0f19;
+      font-family: "Georgia", "STSong", "Songti SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", serif;
+      color: #f8fafc;
+    }
+
+    /* 16:9 视口黄金自适应舞台 */
+    .stage-wrapper {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at center, #1b273d 0%, #080c14 100%);
+      overflow: hidden;
+    }
+
+    .workshop-canvas {
+      position: relative;
+      width: 100vw;
+      height: 56.25vw; /* 16:9 标准 */
+      max-height: 100vh;
+      max-width: 177.78vh; /* 16:9 */
+      background-image: url('/static/workshop-ghibli.webp'), url('/static/workshop-ghibli.png');
+      background-size: 100% 100%;
+      background-position: center;
+      background-repeat: no-repeat;
+      box-shadow: 0 0 80px rgba(0, 0, 0, 0.95);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    /* 氛围微风与暖光粒子层 */
+    #ambientCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    /* ==================== 顶部导航栏 (Top Bar) ==================== */
+    .top-bar {
+      position: absolute;
+      top: 14px;
+      left: 20px;
+      right: 20px;
+      height: 46px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px;
+      background: rgba(26, 17, 12, 0.76);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(251, 191, 36, 0.28);
+      border-radius: 30px;
+      z-index: 60;
+      box-shadow: 0 4px 25px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    }
+
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: #fef3c7;
+      font-size: 0.96rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8), 0 0 10px rgba(251, 191, 36, 0.4);
+    }
+
+    .brand-tag {
+      font-size: 0.72rem;
+      background: rgba(251, 191, 36, 0.18);
+      border: 1px solid rgba(251, 191, 36, 0.4);
+      color: #fde68a;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: 500;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* BGM 八音盒控制按钮 */
+    .bgm-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 248, 220, 0.08);
+      border: 1px solid rgba(251, 191, 36, 0.35);
+      color: #fef3c7;
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      font-family: inherit;
+    }
+    .bgm-btn:hover {
+      background: rgba(251, 191, 36, 0.25);
+      border-color: rgba(251, 191, 36, 0.7);
+      transform: translateY(-1px);
+      box-shadow: 0 0 14px rgba(251, 191, 36, 0.4);
+    }
+    .bgm-disc {
+      display: inline-block;
+      transition: transform 0.3s;
+    }
+    .bgm-playing .bgm-disc {
+      animation: rotateDisc 5s linear infinite;
+    }
+    @keyframes rotateDisc {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .nav-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 5px 12px;
+      font-size: 0.78rem;
+      border-radius: 20px;
+      text-decoration: none;
+      color: #f1f5f9;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      transition: all 0.2s ease;
+    }
+    .nav-btn:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.18);
+      border-color: rgba(251, 191, 36, 0.5);
+    }
+
+    /* ==================== 1. 核心左侧【巨型绘本主画卷】 ==================== */
+    /* 精确对应底图中的木雕大画框内芯 */
+    .anchor-main-frame {
+      position: absolute;
+      left: 13.20%;
+      top: 26.25%;
+      width: 33.99%;
+      height: 35.94%;
+      z-index: 20;
+      border-radius: 3px;
+      overflow: hidden;
+      cursor: pointer;
+      background: #18100a;
+      box-shadow: inset 0 0 25px rgba(20, 10, 5, 0.95), inset 0 0 10px rgba(0, 0, 0, 0.8);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s;
+    }
+    .anchor-main-frame:hover {
+      transform: scale(1.008);
+      box-shadow: 0 0 30px rgba(251, 191, 36, 0.35), inset 0 0 18px rgba(20, 10, 5, 0.85);
+    }
+
+    .frame-slide-item {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity 1s ease-in-out;
+      background-size: cover;
+      background-position: center;
+      filter: contrast(1.06) saturate(0.92) brightness(0.96) sepia(0.06);
+    }
+    .frame-slide-item.active {
+      opacity: 1;
+    }
+
+    /* 画框聚光灯投射双光斑（与背景图上方两盏小铜灯完美对应） */
+    .frame-spotlights-mask {
+      position: absolute;
+      inset: 0;
+      background: 
+        radial-gradient(ellipse at 25% 0%, rgba(255, 240, 160, 0.38) 0%, transparent 58%),
+        radial-gradient(ellipse at 78% 0%, rgba(255, 240, 160, 0.38) 0%, transparent 58%),
+        linear-gradient(180deg, rgba(0, 0, 0, 0.05) 0%, rgba(26, 14, 8, 0.88) 100%);
+      pointer-events: none;
+    }
+
+    .frame-content {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 5% 6%;
+      color: #fff;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .frame-badge {
+      display: inline-block;
+      align-self: flex-start;
+      background: rgba(217, 119, 6, 0.88);
+      color: #fff;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 1px 7px;
+      border-radius: 4px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+      letter-spacing: 0.5px;
+    }
+    .frame-title {
+      font-size: 0.92rem;
+      font-weight: 700;
+      line-height: 1.25;
+      color: #fef3c7;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.95), 0 0 10px rgba(0, 0, 0, 0.6);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .frame-desc {
+      font-size: 0.68rem;
+      color: #fde68a;
+      opacity: 0.9;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+    }
+    .frame-dots {
+      position: absolute;
+      bottom: 6px;
+      right: 10px;
+      z-index: 3;
+      display: flex;
+      gap: 4px;
+    }
+    .frame-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.35);
+      transition: all 0.25s;
+    }
+    .frame-dot.active {
+      width: 14px;
+      border-radius: 3px;
+      background: #fbbf24;
+      box-shadow: 0 0 6px rgba(251, 191, 36, 0.8);
+    }
+
+    /* ==================== 2. 顶部【白鸽衔带与彩色吊旗跑马灯】 ==================== */
+    .anchor-marquee {
+      position: absolute;
+      left: 16.15%;
+      top: 5.94%;
+      width: 68.12%;
+      height: 8.75%;
+      z-index: 25;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      background: transparent;
+      cursor: pointer;
+    }
+    .marquee-track {
+      display: flex;
+      width: max-content;
+      gap: 42px;
+      animation: tickerLoop 30s linear infinite;
+    }
+    .marquee-track:hover {
+      animation-play-state: paused;
+    }
+    .marquee-text-item {
+      font-size: 0.78rem;
+      color: #fef08a;
+      font-weight: 600;
+      white-space: nowrap;
+      text-shadow: 0 0 8px rgba(251, 191, 36, 0.8), 0 1px 3px rgba(0, 0, 0, 0.95);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      letter-spacing: 1px;
+    }
+    @keyframes tickerLoop {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    /* ==================== 3. 右侧【麻绳木夹 Tips 便签卡片群】 ==================== */
+    /* 4 张悬挂卡片，精准覆盖画面右上方的 4 处手写 Tips 便签 */
+    .anchor-tip-card {
+      position: absolute;
+      z-index: 22;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      padding: 8px 10px;
+      border-radius: 3px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4), 0 0 8px rgba(251, 191, 36, 0.2);
+      transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+      transform-origin: top center;
+    }
+
+    /* 卡片 1 (左一 Tips) */
+    .card-tip-1 {
+      left: 61.20%;
+      top: 18.50%;
+      width: 7.20%;
+      height: 19.50%;
+      background: rgba(254, 243, 199, 0.92); /* 浅暖黄 */
+      color: #3b2011;
+      transform: rotate(-5deg);
+      border: 1px solid #e5d5b7;
+      animation: swayNote1 5s ease-in-out infinite alternate;
+    }
+    /* 卡片 2 (左二 今天也要发光) */
+    .card-tip-2 {
+      left: 68.80%;
+      top: 22.80%;
+      width: 7.20%;
+      height: 19.50%;
+      background: rgba(236, 253, 245, 0.92); /* 晨光绿 */
+      color: #064e3b;
+      transform: rotate(3deg);
+      border: 1px solid #bbf7d0;
+      animation: swayNote2 6s ease-in-out infinite alternate;
+    }
+    /* 卡片 3 (左三 把愿望寄给风) */
+    .card-tip-3 {
+      left: 76.20%;
+      top: 26.50%;
+      width: 7.20%;
+      height: 19.50%;
+      background: rgba(254, 242, 242, 0.92); /* 樱花粉 */
+      color: #881337;
+      transform: rotate(-2deg);
+      border: 1px solid #fecdd3;
+      animation: swayNote3 5.5s ease-in-out infinite alternate;
+    }
+    /* 卡片 4 (右四 午后红茶约定) */
+    .card-tip-4 {
+      left: 83.80%;
+      top: 26.80%;
+      width: 8.20%;
+      height: 19.50%;
+      background: rgba(255, 251, 235, 0.92); /* 暖白 */
+      color: #78350f;
+      transform: rotate(4deg);
+      border: 1px solid #fde68a;
+      animation: swayNote4 6.5s ease-in-out infinite alternate;
+    }
+
+    @keyframes swayNote1 {
+      0% { transform: rotate(-5deg) translateY(0); }
+      100% { transform: rotate(-2deg) translateY(-2px); }
+    }
+    @keyframes swayNote2 {
+      0% { transform: rotate(3deg) translateY(0); }
+      100% { transform: rotate(5.5deg) translateY(-2px); }
+    }
+    @keyframes swayNote3 {
+      0% { transform: rotate(-2deg) translateY(0); }
+      100% { transform: rotate(-4deg) translateY(-2px); }
+    }
+    @keyframes swayNote4 {
+      0% { transform: rotate(4deg) translateY(0); }
+      100% { transform: rotate(1.5deg) translateY(-2px); }
+    }
+
+    .anchor-tip-card:hover {
+      z-index: 35;
+      transform: scale(1.14) translateY(-8px) rotate(0deg) !important;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6), 0 0 18px rgba(251, 191, 36, 0.5);
+    }
+
+    .tip-header {
+      font-size: 0.62rem;
+      font-weight: 700;
+      opacity: 0.85;
+      margin-bottom: 2px;
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px dashed currentColor;
+      padding-bottom: 2px;
+    }
+    .tip-title {
+      font-size: 0.74rem;
+      font-weight: 700;
+      line-height: 1.25;
+      margin-top: 3px;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+    .tip-author {
+      font-size: 0.58rem;
+      margin-top: auto;
+      opacity: 0.75;
+      text-align: right;
+    }
+
+    /* ==================== 4. 右侧【小镇工坊公告栏 / Google 广告位】 ==================== */
+    .anchor-notice-board {
+      position: absolute;
+      left: 71.10%;
+      top: 44.69%;
+      width: 11.76%;
+      height: 11.56%;
+      z-index: 22;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 6px 8px;
+      background: transparent;
+      border-radius: 2px;
+      transition: transform 0.25s, box-shadow 0.25s;
+    }
+    .notice-board-inner {
+      background: rgba(253, 246, 226, 0.94);
+      color: #3b2011;
+      border: 1px solid #d7ccc8;
+      border-radius: 4px;
+      padding: 5px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      height: 100%;
+      justify-content: center;
+    }
+    .anchor-notice-board:hover {
+      transform: scale(1.04);
+    }
+    .anchor-notice-board:hover .notice-board-inner {
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5), 0 0 12px rgba(251, 191, 36, 0.4);
+    }
+    .notice-title {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #78350f;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .notice-desc {
+      font-size: 0.58rem;
+      color: #573117;
+      line-height: 1.2;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    /* ==================== 5. 正中【暖光拱窗 · 许愿瓶互动台】 ==================== */
+    .anchor-window-potions {
+      position: absolute;
+      left: 55.48%;
+      top: 30.00%;
+      width: 11.24%;
+      height: 25.00%;
+      z-index: 21;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .potion-aura {
+      position: absolute;
+      inset: 0;
+      border-radius: 50% 50% 0 0;
+      background: radial-gradient(circle at center, rgba(251, 191, 36, 0.25) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .anchor-window-potions:hover .potion-aura {
+      opacity: 1;
+    }
+    .potion-tooltip {
+      position: relative;
+      background: rgba(30, 18, 10, 0.9);
+      border: 1px solid rgba(251, 191, 36, 0.6);
+      color: #fef3c7;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 5px 12px;
+      border-radius: 16px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.7), 0 0 12px rgba(251, 191, 36, 0.4);
+      opacity: 0;
+      transform: translateY(6px);
+      transition: all 0.25s ease;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    .anchor-window-potions:hover .potion-tooltip {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ==================== 6. 正中【工坊正门与石阶 · AVG 互动剧场】 ==================== */
+    .anchor-door-steps {
+      position: absolute;
+      left: 53.72%;
+      top: 55.00%;
+      width: 14.75%;
+      height: 43.12%;
+      z-index: 21;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .door-glow-cone {
+      position: absolute;
+      bottom: 20%;
+      width: 80%;
+      height: 50%;
+      background: radial-gradient(ellipse at 50% 80%, rgba(251, 191, 36, 0.35) 0%, transparent 70%);
+      pointer-events: none;
+      animation: doorWarmBreath 4s ease-in-out infinite alternate;
+    }
+    @keyframes doorWarmBreath {
+      0% { opacity: 0.3; transform: scale(0.96); }
+      100% { opacity: 0.85; transform: scale(1.05); }
+    }
+    .door-tooltip {
+      position: relative;
+      z-index: 2;
+      background: rgba(36, 20, 12, 0.92);
+      border: 1px solid rgba(251, 191, 36, 0.65);
+      color: #fef3c7;
+      font-size: 0.76rem;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 20px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.7), 0 0 15px rgba(251, 191, 36, 0.4);
+      opacity: 0;
+      transform: translateY(8px);
+      transition: all 0.28s ease;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    .anchor-door-steps:hover .door-tooltip {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ==================== 7. 左下【红色小木邮筒 (一键写信)】 ==================== */
+    .anchor-postbox {
+      position: absolute;
+      left: 38.97%;
+      top: 65.94%;
+      width: 7.02%;
+      height: 28.75%;
+      z-index: 26;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .postbox-tag {
+      position: absolute;
+      top: 5%;
+      background: rgba(185, 28, 28, 0.92);
+      border: 1px solid rgba(254, 202, 202, 0.6);
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 12px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.6);
+      opacity: 0;
+      transform: translateY(4px);
+      transition: all 0.25s ease;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    .anchor-postbox:hover .postbox-tag {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .anchor-postbox:hover {
+      animation: mailboxWiggle 0.5s ease-in-out;
+    }
+    @keyframes mailboxWiggle {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(-3deg); }
+      75% { transform: rotate(3deg); }
+    }
+
+    /* ==================== 8. 左下【长椅打盹小黑猫与热红茶】 ==================== */
+    .anchor-cat {
+      position: absolute;
+      left: 16.50%;
+      top: 76.25%;
+      width: 9.50%;
+      height: 10.00%;
+      z-index: 26;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .cat-speech-bubble {
+      position: absolute;
+      bottom: 95%;
+      background: rgba(253, 246, 226, 0.96);
+      color: #2c1810;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 5px 10px;
+      border-radius: 10px;
+      border: 1px solid #d7ccc8;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5), 0 0 10px rgba(251, 191, 36, 0.3);
+      white-space: nowrap;
+      opacity: 0;
+      transform: scale(0.85);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+    }
+    .anchor-cat:hover .cat-speech-bubble,
+    .cat-speech-bubble.show {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .anchor-tea {
+      position: absolute;
+      left: 30.90%;
+      top: 72.50%;
+      width: 4.60%;
+      height: 11.25%;
+      z-index: 26;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .tea-tooltip {
+      position: absolute;
+      bottom: 90%;
+      background: rgba(120, 53, 15, 0.92);
+      color: #fef3c7;
+      font-size: 0.68rem;
+      padding: 4px 8px;
+      border-radius: 8px;
+      border: 1px solid rgba(251, 191, 36, 0.5);
+      white-space: nowrap;
+      opacity: 0;
+      transform: translateY(4px);
+      transition: all 0.25s ease;
+      pointer-events: none;
+    }
+    .anchor-tea:hover .tea-tooltip {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ==================== 9. 右下【水彩画笔桶 · Studio 工坊入口】 ==================== */
+    .anchor-brushes {
+      position: absolute;
+      left: 73.03%;
+      top: 75.62%;
+      width: 7.72%;
+      height: 19.38%;
+      z-index: 26;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .brushes-tooltip {
+      position: absolute;
+      top: 10%;
+      background: rgba(30, 18, 10, 0.92);
+      border: 1px solid rgba(251, 191, 36, 0.65);
+      color: #fef3c7;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 14px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.6);
+      white-space: nowrap;
+      opacity: 0;
+      transform: translateY(4px);
+      transition: all 0.25s ease;
+      pointer-events: none;
+    }
+    .anchor-brushes:hover .brushes-tooltip {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .anchor-brushes:hover {
+      transform: translateY(-2px);
+    }
+
+    /* ==================== 羊皮纸质感通用弹窗系统 ==================== */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 6, 4, 0.78);
+      backdrop-filter: blur(10px);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .modal-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .parchment-modal {
+      width: 90%;
+      max-width: 620px;
+      max-height: 85vh;
+      background: #fdf8e8;
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(245, 230, 200, 0.6) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(235, 215, 180, 0.6) 0%, transparent 40%);
+      color: #2b1810;
+      border-radius: 12px;
+      border: 2px solid #d5c3aa;
+      box-shadow: 0 15px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(251, 191, 36, 0.25);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transform: scale(0.92) translateY(15px);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .modal-backdrop.open .parchment-modal {
+      transform: scale(1) translateY(0);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 22px;
+      border-bottom: 2px dashed #d7ccc8;
+      background: rgba(251, 191, 36, 0.08);
+    }
+    .modal-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #3a2215;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .modal-close-btn {
+      background: none;
+      border: none;
+      font-size: 1.4rem;
+      cursor: pointer;
+      color: #78350f;
+      transition: transform 0.2s;
+    }
+    .modal-close-btn:hover {
+      transform: scale(1.15) rotate(90deg);
+    }
+
+    .modal-body {
+      padding: 22px;
+      overflow-y: auto;
+      font-size: 0.95rem;
+      line-height: 1.8;
+      color: #2c1810;
+    }
+    .modal-body h3 {
+      font-size: 1.1rem;
+      margin-bottom: 12px;
+      color: #78350f;
+    }
+    .modal-body p {
+      margin-bottom: 12px;
+      text-indent: 2em;
+    }
+
+    .modal-footer {
+      padding: 14px 22px;
+      border-top: 1px solid #e7ded0;
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      background: rgba(255, 255, 255, 0.4);
+    }
+
+    .btn-wood {
+      background: linear-gradient(180deg, #5c3822 0%, #3a2215 100%);
+      color: #fef3c7;
+      border: 1px solid #78350f;
+      padding: 7px 18px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      transition: all 0.2s;
+    }
+    .btn-wood:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
+    }
+
+    /* 信件输入表单样式 */
+    .form-group {
+      margin-bottom: 14px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #78350f;
+      margin-bottom: 4px;
+    }
+    .form-input, .form-textarea {
+      width: 100%;
+      background: #fff9ea;
+      border: 1px solid #d5c3aa;
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      color: #2c1810;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-input:focus, .form-textarea:focus {
+      border-color: #f59e0b;
+      box-shadow: 0 0 8px rgba(245, 158, 11, 0.25);
+    }
+    .mood-select {
+      display: flex;
+      gap: 8px;
+      margin-top: 6px;
+    }
+    .mood-option {
+      padding: 4px 10px;
+      border-radius: 12px;
+      border: 1px solid #d5c3aa;
+      font-size: 0.78rem;
+      cursor: pointer;
+      background: #fff;
+    }
+    .mood-option.selected {
+      background: #f59e0b;
+      color: #fff;
+      border-color: #d97706;
+    }
+
+    /* 飘心与粒子动效 */
+    .floating-heart {
+      position: absolute;
+      pointer-events: none;
+      animation: floatUpHeart 1.8s forwards ease-out;
+      font-size: 1.2rem;
+      z-index: 99;
+    }
+    @keyframes floatUpHeart {
+      0% { transform: translateY(0) scale(0.6); opacity: 1; }
+      100% { transform: translateY(-70px) scale(1.4); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="stage-wrapper">
+    <div class="workshop-canvas" id="workshopCanvas">
+
+      <!-- 氛围粒子微动效 Canvas -->
+      <canvas id="ambientCanvas"></canvas>
+
+      <!-- 顶栏环境与导航 HUD -->
+      <header class="top-bar">
+        <a href="/workshop" class="brand-logo">
+          <span>🌿 DreamClip · 童话工坊</span>
+          <span class="brand-tag">绘本大跨页</span>
+        </a>
+
+        <div class="top-actions">
+          <button class="bgm-btn" id="bgmToggleBtn" title="播放治愈八音盒背景音乐">
+            <span class="bgm-disc">🎵</span>
+            <span id="bgmStatusText">八音盒 (治愈旋律)</span>
+          </button>
+
+          <button class="nav-btn" id="refreshNotesBtn" title="刷新麻绳便签">
+            🔄 吹拂便签
+          </button>
+
+          <a href="/" class="nav-btn" title="经典宇宙首页">🌌 经典首页</a>
+          <a href="/theater" class="nav-btn" title="梦之剧院">🎭 剧场大厅</a>
+          <a href="/ghibli" class="nav-btn" title="吉卜力大厅">🌿 吉卜力大厅</a>
+          <a href="/studio" class="nav-btn" title="Studio 创作者工坊">🎨 工坊</a>
+        </div>
+      </header>
+
+      <!-- 1. 核心左侧【巨型绘本主画卷】 -->
+      <div class="anchor-main-frame" id="mainFramePoster" title="点击展开阅读精选故事">
+        <div class="frame-spotlights-mask"></div>
+        <div id="slideContainer">
+          <!-- 动态幻灯片将由 JS 载入 -->
+          <div class="frame-slide-item active" style="background-image: url('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1200&auto=format&fit=crop');"></div>
+        </div>
+        <div class="frame-content">
+          <span class="frame-badge" id="frameBadge">#主线推荐</span>
+          <h2 class="frame-title" id="frameTitle">凌晨三点的雨与未拆封的记忆信件</h2>
+          <p class="frame-desc" id="frameDesc">新安托利亚的雨总是带着微弱的金属酸味。一封泛黄的信件静静躺在角落...</p>
+        </div>
+        <div class="frame-dots" id="frameDots">
+          <span class="frame-dot active"></span>
+          <span class="frame-dot"></span>
+          <span class="frame-dot"></span>
+        </div>
+      </div>
+
+      <!-- 2. 顶部【白鸽衔带与彩色吊旗跑马灯】 -->
+      <div class="anchor-marquee" id="marqueeBar" title="点击查看全站公告">
+        <div class="marquee-track" id="marqueeTrack">
+          <div class="marquee-text-item">🕊️ 欢迎来到 DreamClip 童话小店工坊</div>
+          <div class="marquee-text-item">💌 愿你今天也被世界温柔以待</div>
+          <div class="marquee-text-item">✨ 今日已有 1,280 位旅人在此投递情绪微光</div>
+          <div class="marquee-text-item">📖 全新 AVG 剧情篇章已随海风上线</div>
+          <div class="marquee-text-item">🕊️ 欢迎来到 DreamClip 童话小店工坊</div>
+          <div class="marquee-text-item">💌 愿你今天也被世界温柔以待</div>
+        </div>
+      </div>
+
+      <!-- 3. 右侧【麻绳木夹 Tips 便签卡片群】 -->
+      <!-- 4 张动态水彩便签 -->
+      <div class="anchor-tip-card card-tip-1" id="tipCard1">
+        <div class="tip-header">
+          <span>🌿 晨光</span>
+          <span>#01</span>
+        </div>
+        <div class="tip-title">温室里的最后一片发光叶子</div>
+        <div class="tip-author">—— 露娜莉亚</div>
+      </div>
+
+      <div class="anchor-tip-card card-tip-2" id="tipCard2">
+        <div class="tip-header">
+          <span>✨ 愿景</span>
+          <span>#02</span>
+        </div>
+        <div class="tip-title">今天也要在风里好好发光呀</div>
+        <div class="tip-author">—— 奇迹星</div>
+      </div>
+
+      <div class="anchor-tip-card card-tip-3" id="tipCard3">
+        <div class="tip-header">
+          <span>💌 寄语</span>
+          <span>#03</span>
+        </div>
+        <div class="tip-title">把未说出口的心愿寄给海风</div>
+        <div class="tip-author">—— 云端信使</div>
+      </div>
+
+      <div class="anchor-tip-card card-tip-4" id="tipCard4">
+        <div class="tip-header">
+          <span>☕ 约定</span>
+          <span>#04</span>
+        </div>
+        <div class="tip-title">下午茶与红茶的暖心之约</div>
+        <div class="tip-author">—— 工坊手记</div>
+      </div>
+
+      <!-- 4. 右侧【小镇工坊公告栏 / Google 广告位】 -->
+      <div class="anchor-notice-board" id="noticeBoard" title="点击查看小镇工坊公告">
+        <div class="notice-board-inner">
+          <div class="notice-title">📢 小镇工坊公告</div>
+          <div class="notice-desc">欢迎来到治愈童话剧场！每一束微光都在为你守候。</div>
+        </div>
+      </div>
+
+      <!-- 5. 正中【暖光拱窗 · 许愿瓶互动台】 -->
+      <div class="anchor-window-potions" id="windowPotions" title="点击打捞情绪许愿瓶">
+        <div class="potion-aura"></div>
+        <div class="potion-tooltip">✨ 打捞今日情绪药水</div>
+      </div>
+
+      <!-- 6. 正中【工坊正门与石阶 · AVG 互动剧场】 -->
+      <div class="anchor-door-steps" id="doorSteps" title="推门进入 AVG 互动剧场">
+        <div class="door-glow-cone"></div>
+        <div class="door-tooltip">🚪 推门进入 · AVG 互动剧场</div>
+      </div>
+
+      <!-- 7. 左下【红色小木邮筒 (一键写信)】 -->
+      <div class="anchor-postbox" id="mailboxBtn" title="点击投递情绪信件">
+        <div class="postbox-tag">📮 寄一封信</div>
+      </div>
+
+      <!-- 8. 左下【长椅打盹小黑猫与热红茶】 -->
+      <div class="anchor-cat" id="catBtn" title="摸摸打盹的小黑猫">
+        <div class="cat-speech-bubble" id="catBubble">呼噜呼噜... 愿你今天也被温柔以待 ~ 🐾</div>
+      </div>
+
+      <div class="anchor-tea" id="teaBtn" title="热气腾腾的红茶">
+        <div class="tea-tooltip">☕ 刚煮好的暖胃红茶</div>
+      </div>
+
+      <!-- 9. 右下【水彩画笔桶 · Studio 工坊入口】 -->
+      <div class="anchor-brushes" id="brushesBtn" title="前往 Studio 创作者工坊">
+        <div class="brushes-tooltip">🎨 Studio 创作工坊</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ==================== 模态弹窗系统 ==================== -->
+
+  <!-- 1. 故事/胶囊详情弹窗 -->
+  <div class="modal-backdrop" id="storyModal">
+    <div class="parchment-modal">
+      <div class="modal-header">
+        <div class="modal-title" id="modalStoryTitle">📜 故事详情</div>
+        <button class="modal-close-btn" onclick="closeModal('storyModal')">✕</button>
+      </div>
+      <div class="modal-body" id="modalStoryBody">
+        <p>正在读取故事内容...</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-wood" id="modalLikeBtn">❤️ 共鸣 (<span id="modalLikeCount">42</span>)</button>
+        <button class="btn-wood" onclick="closeModal('storyModal')">合上画卷</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. 寄信写胶囊弹窗 -->
+  <div class="modal-backdrop" id="letterModal">
+    <div class="parchment-modal">
+      <div class="modal-header">
+        <div class="modal-title">📮 寄出一封情绪信件</div>
+        <button class="modal-close-btn" onclick="closeModal('letterModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>信件标题 / 心情主题：</label>
+          <input type="text" id="letterTitle" class="form-input" placeholder="例如：给今晚风中的自己..." maxlength="50">
+        </div>
+        <div class="form-group">
+          <label>情绪色彩：</label>
+          <div class="mood-select">
+            <span class="mood-option selected" data-mood="治愈">🌿 治愈</span>
+            <span class="mood-option" data-mood="温暖">☀️ 温暖</span>
+            <span class="mood-option" data-mood="释怀">🌊 释怀</span>
+            <span class="mood-option" data-mood="梦幻">✨ 梦幻</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>信件内容：</label>
+          <textarea id="letterContent" class="form-textarea" rows="5" placeholder="写下你此刻的心情、愿望或悄悄话，它会化作工坊里的一张便签..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-wood" id="sendLetterSubmitBtn">投进邮筒 🕊️</button>
+        <button class="btn-wood" onclick="closeModal('letterModal')">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. 许愿药水瓶弹窗 -->
+  <div class="modal-backdrop" id="potionModal">
+    <div class="parchment-modal" style="max-width: 480px; text-align: center;">
+      <div class="modal-header">
+        <div class="modal-title">✨ 今日情绪药水</div>
+        <button class="modal-close-btn" onclick="closeModal('potionModal')">✕</button>
+      </div>
+      <div class="modal-body" style="padding: 30px 20px;">
+        <div style="font-size: 3rem; margin-bottom: 12px;" id="potionIcon">🧪</div>
+        <h3 id="potionName" style="color: #78350f; font-size: 1.25rem; margin-bottom: 8px;">琥珀金·晴朗微光</h3>
+        <p id="potionQuote" style="font-size: 0.98rem; line-height: 1.8; color: #451a03; text-indent: 0;">
+          “把所有的烦恼都揉碎丢给昨天的晚霞，今天的你，值得被所有人真诚地喜欢着。”
+        </p>
+      </div>
+      <div class="modal-footer" style="justify-content: center;">
+        <button class="btn-wood" onclick="drawPotion()">再抽一瓶 🌟</button>
+        <button class="btn-wood" onclick="closeModal('potionModal')">收下祝福</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. AVG 剧场大门预览弹窗 -->
+  <div class="modal-backdrop" id="theaterModal">
+    <div class="parchment-modal" style="max-width: 560px;">
+      <div class="modal-header">
+        <div class="modal-title">🚪 AVG 互动剧场中心</div>
+        <button class="modal-close-btn" onclick="closeModal('theaterModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="text-indent: 0; margin-bottom: 16px;">
+          欢迎推开工坊大门！在这里，你可以与剧场的旅伴们开启沉浸式剧情对话、探索世界观秘密。
+        </p>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <div style="background: rgba(255,255,255,0.6); padding: 12px; border-radius: 8px; border: 1px solid #d5c3aa; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="font-weight: 700; color: #78350f;">第一章：深空信使的初遇</div>
+              <div style="font-size: 0.78rem; opacity: 0.8;">与雷文共同破解未拆封的晶体信件</div>
+            </div>
+            <a href="/games" class="btn-wood" style="text-decoration: none; font-size: 0.78rem;">立即体验</a>
+          </div>
+          <div style="background: rgba(255,255,255,0.6); padding: 12px; border-radius: 8px; border: 1px solid #d5c3aa; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="font-weight: 700; color: #78350f;">第二章：浮空温室的发光叶</div>
+              <div style="font-size: 0.78rem; opacity: 0.8;">与露娜莉亚倾听植物与心跳的微光</div>
+            </div>
+            <a href="/games" class="btn-wood" style="text-decoration: none; font-size: 0.78rem;">前往剧场</a>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <a href="/theater" class="btn-wood" style="text-decoration: none;">进入剧场全景大厅 🎭</a>
+        <button class="btn-wood" onclick="closeModal('theaterModal')">留在工坊</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. 公告弹窗 -->
+  <div class="modal-backdrop" id="noticeModal">
+    <div class="parchment-modal" style="max-width: 520px;">
+      <div class="modal-header">
+        <div class="modal-title">📢 小镇工坊每日通告</div>
+        <button class="modal-close-btn" onclick="closeModal('noticeModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <p><strong>【工坊开放日记】</strong></p>
+        <p>每一位途经此处的旅人，都可以在这里写下属于自己的故事便签，或者在长椅上听着八音盒喝一杯茶。</p>
+        <p>如果你也是创作者，欢迎点击右下角的画笔筒进入 <strong>Studio 创作者工坊</strong>，铸造属于你的专属世界观与情绪胶囊！</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-wood" onclick="closeModal('noticeModal')">我知道啦</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 前端交互与音频逻辑脚本 ==================== -->
+  <script>
+    // ==================== 1. Web Audio 吉卜力八音盒合成器 ====================
+    let audioCtx = null;
+    let isBgmPlaying = false;
+    let bgmTimer = null;
+    let melodyIndex = 0;
+
+    // 久石让五声音阶治愈旋律 (Hz)
+    const ghibliNotes = [
+      261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25, 783.99, 880.00,
+      523.25, 440.00, 392.00, 329.63, 293.66, 261.63, 329.63, 392.00, 523.25, 659.25
+    ];
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function playMusicBoxNote(freq, timeOffset = 0, duration = 1.2) {
+      if (!audioCtx) return;
+      const now = audioCtx.currentTime + timeOffset;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now);
+
+      // 八音盒清脆衰减包络
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.exponentialRampToValueAtTime(0.18, now + 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc.start(now);
+      osc.stop(now + duration);
+    }
+
+    function playPurrSound() {
+      initAudio();
+      if (!audioCtx) return;
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(80, now);
+      osc.frequency.linearRampToValueAtTime(95, now + 0.3);
+      osc.frequency.linearRampToValueAtTime(75, now + 0.6);
+
+      gain.gain.setValueAtTime(0.01, now);
+      gain.gain.linearRampToValueAtTime(0.12, now + 0.3);
+      gain.gain.linearRampToValueAtTime(0.001, now + 0.6);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.6);
+    }
+
+    function playChimeSound() {
+      initAudio();
+      playMusicBoxNote(880, 0, 0.8);
+      playMusicBoxNote(1046.5, 0.08, 1.0);
+      playMusicBoxNote(1318.5, 0.16, 1.2);
+    }
+
+    function toggleBgm() {
+      initAudio();
+      isBgmPlaying = !isBgmPlaying;
+      const btn = document.getElementById('bgmToggleBtn');
+      const text = document.getElementById('bgmStatusText');
+
+      if (isBgmPlaying) {
+        btn.classList.add('bgm-playing');
+        text.innerText = "播放中 · 治愈旋律";
+        startBgmLoop();
+      } else {
+        btn.classList.remove('bgm-playing');
+        text.innerText = "八音盒 (已暂停)";
+        stopBgmLoop();
+      }
+    }
+
+    function startBgmLoop() {
+      if (bgmTimer) clearInterval(bgmTimer);
+      bgmTimer = setInterval(() => {
+        if (!isBgmPlaying) return;
+        const note = ghibliNotes[melodyIndex % ghibliNotes.length];
+        playMusicBoxNote(note, 0, 1.5);
+        if (melodyIndex % 4 === 0) {
+          playMusicBoxNote(note / 2, 0.05, 2.0); // 暖底低音
+        }
+        melodyIndex++;
+      }, 550);
+    }
+
+    function stopBgmLoop() {
+      if (bgmTimer) {
+        clearInterval(bgmTimer);
+        bgmTimer = null;
+      }
+    }
+
+    document.getElementById('bgmToggleBtn').addEventListener('click', toggleBgm);
+
+    // ==================== 2. 氛围粒子 Canvas 微动效 ====================
+    const canvas = document.getElementById('ambientCanvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+
+    function resizeCanvas() {
+      canvas.width = canvas.parentElement.clientWidth;
+      canvas.height = canvas.parentElement.clientHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    class Particle {
+      constructor() {
+        this.reset();
+      }
+      reset() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.size = Math.random() * 2.5 + 1;
+        this.speedX = (Math.random() - 0.4) * 0.6;
+        this.speedY = -(Math.random() * 0.5 + 0.2); // 向上漂浮
+        this.opacity = Math.random() * 0.5 + 0.2;
+        this.pulse = Math.random() * 0.05;
+      }
+      update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        this.opacity += Math.sin(Date.now() * 0.002) * this.pulse;
+        if (this.y < 0 || this.x < 0 || this.x > canvas.width) {
+          this.reset();
+          this.y = canvas.height + 5;
+        }
+      }
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(251, 191, 36, ${Math.max(0.1, Math.min(0.8, this.opacity))})`;
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = 'rgba(251, 191, 36, 0.6)';
+        ctx.fill();
+      }
+    }
+
+    for (let i = 0; i < 28; i++) {
+      particles.push(new Particle());
+    }
+
+    function animateParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => {
+        p.update();
+        p.draw();
+      });
+      requestAnimationFrame(animateParticles);
+    }
+    animateParticles();
+
+    // ==================== 3. 动态数据与轮播画卷 ====================
+    let capsulesData = [
+      {
+        id: 1,
+        title: "凌晨三点的雨与未拆封的记忆信件",
+        author: "雷文",
+        tag: "#治愈",
+        desc: "新安托利亚的雨总是带着微弱的金属酸味。一封泛黄的信件静静躺在角落...",
+        content: `新安托利亚的雨总是带着微弱的金属酸味。雨滴撞击在生锈的霓虹灯牌上，发出噼啪的微弱声响。\n\n雷文推开地下三十层旧仓库的卷帘门，幽蓝色的义眼在黑暗中微微聚焦。货架角落里，一只密封在晶体树脂中的信封正散发着极淡的暖黄色荧光——那是一段没有被中央记忆库归档的「原始情绪残留」。\n\n「现在的年轻人，连告别都要用加密信道一键抹除了。」雷文低声自语，小心翼翼地托起那枚晶体。\n\n晶体接触到手套的瞬间，一段微弱的声音震颤传入他的心间：“如果有一天我忘记了春天草地的味道，请帮我把这首歌放给第七街区的老槐树听……”\n\n雷文没有将它丢弃，而是轻轻放进了离心口最近的口袋。「至少在这个雨夜，这份记忆还没过期。」`,
+        likes: 128,
+        bg: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        id: 2,
+        title: "温室里的最后一片发光叶子",
+        author: "露娜莉亚",
+        tag: "#温暖",
+        desc: "露娜莉亚用手指轻轻触碰薄荷草。植物脉络里流动着昨夜收集的温暖笑声...",
+        content: `浮空温室穹顶外的星尘正在缓慢旋转。露娜莉亚蹲在第三试验区前，指尖轻触着一株低垂的星环夜光草。\n\n「别难过，今天收集到的是一位老水手回忆家乡海风的情绪能量哦。」她轻声细语。\n\n随着温度的传递，原本暗淡的叶片边缘突然泛起了一圈金黄色的微光。整座温室里，数以百计的发光植物像被唤醒的萤火虫一般，依次亮起了温暖的呼吸律动。\n\n「送给今天感到疲惫的每一个人，愿你们的梦境里都有温暖的光。」她微笑着对着星空举起玻璃管。`,
+        likes: 96,
+        bg: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        id: 3,
+        title: "只要火花还在跳动，黑夜就无法吞没前路",
+        author: "伊格尼斯",
+        tag: "#释怀",
+        desc: "猩红推进器的引擎轰鸣划破荒原，每一次点火都是对未知明天的浪漫宣言...",
+        content: `赤红色短发的少年跳下机车，护目镜推在额头上，擦了擦脸上的机油与汗水。\n\n「喂！别垂头丧气的嘛！」他大笑着拍了拍身旁的金属护栏，「你看这片废土，虽然白天到处是风沙，但只要一到晚上，漫天都是亮得发烫的银河！」\n\n等离子喷射扳手在黑夜中划出一道漂亮的弧光。「只要火花还在跳动，黑夜就永远无法吞没前路！」`,
+        likes: 85,
+        bg: "https://images.unsplash.com/photo-1563089145-599997674d42?q=80&w=1200&auto=format&fit=crop"
+      }
+    ];
+
+    let currentSlide = 0;
+    let slideTimer = null;
+
+    function renderSlideshow() {
+      const container = document.getElementById('slideContainer');
+      const dots = document.getElementById('frameDots');
+      container.innerHTML = '';
+      dots.innerHTML = '';
+
+      capsulesData.forEach((cap, idx) => {
+        const slide = document.createElement('div');
+        slide.className = `frame-slide-item ${idx === currentSlide ? 'active' : ''}`;
+        slide.style.backgroundImage = `url('${cap.bg}')`;
+        container.appendChild(slide);
+
+        const dot = document.createElement('span');
+        dot.className = `frame-dot ${idx === currentSlide ? 'active' : ''}`;
+        dot.addEventListener('click', (e) => {
+          e.stopPropagation();
+          setSlide(idx);
+        });
+        dots.appendChild(dot);
+      });
+
+      updateSlideContent();
+    }
+
+    function updateSlideContent() {
+      const cap = capsulesData[currentSlide];
+      document.getElementById('frameBadge').innerText = cap.tag;
+      document.getElementById('frameTitle').innerText = cap.title;
+      document.getElementById('frameDesc').innerText = cap.desc;
+
+      const slides = document.querySelectorAll('.frame-slide-item');
+      const dots = document.querySelectorAll('.frame-dot');
+      slides.forEach((s, i) => s.classList.toggle('active', i === currentSlide));
+      dots.forEach((d, i) => d.classList.toggle('active', i === currentSlide));
+    }
+
+    function setSlide(idx) {
+      currentSlide = idx % capsulesData.length;
+      updateSlideContent();
+    }
+
+    function startSlideTimer() {
+      if (slideTimer) clearInterval(slideTimer);
+      slideTimer = setInterval(() => {
+        setSlide(currentSlide + 1);
+      }, 5000);
+    }
+    renderSlideshow();
+    startSlideTimer();
+
+    // 点击大画框打开故事弹窗
+    document.getElementById('mainFramePoster').addEventListener('click', () => {
+      playChimeSound();
+      openStoryModal(capsulesData[currentSlide]);
+    });
+
+    // ==================== 4. 便签卡片数据绑定与交互 ====================
+    function bindTipCards() {
+      const cards = [
+        document.getElementById('tipCard1'),
+        document.getElementById('tipCard2'),
+        document.getElementById('tipCard3'),
+        document.getElementById('tipCard4')
+      ];
+
+      cards.forEach((card, idx) => {
+        card.addEventListener('click', () => {
+          playChimeSound();
+          const cap = capsulesData[idx % capsulesData.length];
+          openStoryModal(cap);
+        });
+      });
+    }
+    bindTipCards();
+
+    // 刷新便签按钮
+    document.getElementById('refreshNotesBtn').addEventListener('click', () => {
+      playChimeSound();
+      // 随机重排
+      capsulesData.sort(() => Math.random() - 0.5);
+      renderSlideshow();
+      bindTipCards();
+      spawnHearts(document.getElementById('refreshNotesBtn'));
+    });
+
+    // ==================== 5. 模态弹窗控制 ====================
+    function openStoryModal(cap) {
+      document.getElementById('modalStoryTitle').innerText = `📜 ${cap.title}`;
+      document.getElementById('modalStoryBody').innerHTML = `
+        <div style="font-size:0.8rem; color:#78350f; font-weight:700; margin-bottom:8px;">
+          作者：${cap.author} · 情绪标签：${cap.tag}
+        </div>
+        ${cap.content.split('\n\n').map(p => `<p>${p}</p>`).join('')}
+      `;
+      document.getElementById('modalLikeCount').innerText = cap.likes;
+      document.getElementById('storyModal').classList.add('open');
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.remove('open');
+    }
+
+    // 点赞共鸣
+    document.getElementById('modalLikeBtn').addEventListener('click', () => {
+      playChimeSound();
+      const countEl = document.getElementById('modalLikeCount');
+      countEl.innerText = parseInt(countEl.innerText) + 1;
+      spawnHearts(document.getElementById('modalLikeBtn'));
+    });
+
+    // 邮筒写信
+    document.getElementById('mailboxBtn').addEventListener('click', () => {
+      playChimeSound();
+      document.getElementById('letterModal').classList.add('open');
+    });
+
+    // 提交信件
+    document.getElementById('sendLetterSubmitBtn').addEventListener('click', () => {
+      const title = document.getElementById('letterTitle').value.trim();
+      const content = document.getElementById('letterContent').value.trim();
+      if (!title || !content) {
+        alert('请填写信件标题与内容哦~ 🕊️');
+        return;
+      }
+      playChimeSound();
+      alert('💌 信件已成功投入小木邮筒！愿风把你的心愿带到远方。');
+      closeModal('letterModal');
+      document.getElementById('letterTitle').value = '';
+      document.getElementById('letterContent').value = '';
+    });
+
+    // 心情选项点击
+    document.querySelectorAll('.mood-option').forEach(opt => {
+      opt.addEventListener('click', () => {
+        document.querySelectorAll('.mood-option').forEach(o => o.classList.remove('selected'));
+        opt.classList.add('selected');
+      });
+    });
+
+    // 许愿药水瓶
+    const potions = [
+      { icon: "🧪", name: "琥珀金 · 晴朗微光", quote: "“把所有的烦恼都揉碎丢给昨天的晚霞，今天的你，值得被所有人真诚地喜欢着。”" },
+      { icon: "✨", name: "薄荷绿 · 释怀甘露", quote: "“有些事并不是非要一个答案不可，随风飘走的声音，往往最动听。”" },
+      { icon: "🍵", name: "暖茶红 · 治愈温存", quote: "“即便一个人走在冷风里，也别忘了这世上总有一盏灯在为你悄悄亮着。”" },
+      { icon: "🌌", name: "星海蓝 · 绮丽梦境", quote: "“闭上眼睛，今晚的星空会为你下一场只属于你一人的流星雨。”" }
+    ];
+
+    function drawPotion() {
+      playChimeSound();
+      const p = potions[Math.floor(Math.random() * potions.length)];
+      document.getElementById('potionIcon').innerText = p.icon;
+      document.getElementById('potionName').innerText = p.name;
+      document.getElementById('potionQuote').innerText = p.quote;
+      document.getElementById('potionModal').classList.add('open');
+    }
+    document.getElementById('windowPotions').addEventListener('click', drawPotion);
+
+    // 工坊正门 -> AVG 剧场
+    document.getElementById('doorSteps').addEventListener('click', () => {
+      playChimeSound();
+      document.getElementById('theaterModal').classList.add('open');
+    });
+
+    // 小镇告示板
+    document.getElementById('noticeBoard').addEventListener('click', () => {
+      playChimeSound();
+      document.getElementById('noticeModal').classList.add('open');
+    });
+
+    // 摸摸小黑猫
+    const catQuotes = [
+      "呼噜呼噜... 愿你今天也被温柔以待 ~ 🐾",
+      "喵呜~ 今天的风里有烤面包的香味呢 🍞",
+      "阳光真暖和，要不要一起眯一会儿呀？☀️",
+      "踩奶中... 已经把今天的好运分给你啦！🐱"
+    ];
+    let catQuoteIdx = 0;
+    document.getElementById('catBtn').addEventListener('click', (e) => {
+      playPurrSound();
+      const bubble = document.getElementById('catBubble');
+      catQuoteIdx = (catQuoteIdx + 1) % catQuotes.length;
+      bubble.innerText = catQuotes[catQuoteIdx];
+      bubble.classList.add('show');
+      spawnHearts(e.currentTarget);
+      setTimeout(() => {
+        bubble.classList.remove('show');
+      }, 3000);
+    });
+
+    // 红茶点击
+    document.getElementById('teaBtn').addEventListener('click', (e) => {
+      playChimeSound();
+      spawnHearts(e.currentTarget, '☕');
+    });
+
+    // 画笔筒点击
+    document.getElementById('brushesBtn').addEventListener('click', () => {
+      playChimeSound();
+      window.location.href = '/studio';
+    });
+
+    // 飘心/粒子辅助函数
+    function spawnHearts(targetEl, char = '❤️') {
+      const rect = targetEl.getBoundingClientRect();
+      const heart = document.createElement('div');
+      heart.className = 'floating-heart';
+      heart.innerText = char;
+      heart.style.left = `${rect.left + rect.width / 2 + (Math.random() * 20 - 10)}px`;
+      heart.style.top = `${rect.top}px`;
+      document.body.appendChild(heart);
+      setTimeout(() => heart.remove(), 1800);
+    }
+
+    // ESC 快捷键关闭弹窗
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        document.querySelectorAll('.modal-backdrop.open').forEach(m => m.classList.remove('open'));
+      }
+    });
+  </script>
+</body>
+</html>
